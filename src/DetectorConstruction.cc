@@ -64,6 +64,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
   G4NistManager* nist = G4NistManager::Instance();
   G4Material* silicon = nist->FindOrBuildMaterial("G4_Si");
   G4Material* default_mat = nist->FindOrBuildMaterial("G4_Galactic");
+  G4Material* BGO = nist->FindOrBuildMaterial("G4_BGO");
 
   G4double world_diameter = 400. * cm;
   G4Sphere* solidWorld = new G4Sphere("World", 0., 0.5 * world_diameter, 0., 2*pi, 0., pi); //For compatibility with VGM [V.F.]
@@ -87,8 +88,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
   G4double pad_y = 20  * cm;
   G4double pad_z = 0.3 * mm;
 
+  G4double lp = 5*(2*pad_z+2*mm) + 4*(2*cm); //lunghezza pacchetto di silicio
 
-  G4Box* padMother = new G4Box("pad", 0.5 * (pad_x + l), 0.5 * (pad_y + l), 0.5 * (pad_z + l));
+  G4Box* padMother = new G4Box("pad", 0.5 * (pad_x + l), 0.5 * (pad_y + l), 0.5 * (lp + l));
   G4LogicalVolume* padLogic = new G4LogicalVolume(padMother, default_mat, "pad");
   new G4PVPlacement(0,                     //no rotation
     G4ThreeVector(),       //at (0,0,0)
@@ -102,9 +104,16 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
   G4Box* siLayer = new G4Box("siLayer", 0.5 * pad_x, 0.5 * pad_y, 0.5 * pad_z);
   G4LogicalVolume* siLayerLogic = new G4LogicalVolume(siLayer, silicon, "siLayer");
 
-  new G4PVPlacement(0,
-    G4ThreeVector(0, 0, 0), //at (0,0,0)
-    siLayerLogic, "siLayer", padLogic, false, 0, fCheckOverlaps);
+G4int z=0;
+for(int i=0; i<5; i++){
+  z= i*(2*cm + 2*mm + 0.3*mm);
+  new G4PVPlacement(0,G4ThreeVector(0, 0, z),siLayerLogic, "siLayer", padLogic, false, 2*i, fCheckOverlaps);
+  new G4PVPlacement(0,G4ThreeVector(0, 0, z+2*mm),siLayerLogic, "siLayer", padLogic, false, 2*i+1, fCheckOverlaps);
+}
+
+//  G4Box* calorimeter = new G4Box("calorimetro", 60*cm, 60*cm, 60*cm);
+//  G4LogicalVolume* calorimeterLogic = new G4LogicalVolume(calorimeter, BGO, "calorimeter");
+//  new G4PVPlacement(0,G4ThreeVector(0, 0, 60*cm + lp + 2*cm), calorimeterLogic, "calorimeter", logicWorld, false, 0, fCheckOverlaps);
 
   //always return the physical World
   return fPhysicalWorld;
