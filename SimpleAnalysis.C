@@ -7,25 +7,27 @@
 
 /* Analysis ROOT script for the output file created by SimpleRun.mac. */
 
-/* ********** INSTRUCTIONS ***********
- * Before loading this script in the Root shell you must load the dictionaries
- * for the GGS analysis classes, e.g.:
- *
- *   gROOT->ProcessLine(".include /path/to/GGSinstallation/lib);
- *   gSystem->Load("libGGSReader.so");
- *   gSystem->Load("libGGSDataObjects.so");
- *
- */
-
 // GGS headers
 #include "utils/GGSSmartLog.h"
+#include <vector>
+#include<iostream>
+using namespace std;
+
+struct TrCluster{
+	double segm;
+	double pos[2];
+	double time;
+	double eDep; 
+	double spRes;
+	double tRes;
+};
 
 void SimpleAnalysis(TString inputFileName, TString outputFileName) {
-  static const std::string routineName("simpleanalysis");
+static const string routineName("simpleanalysis");
 
-  GGSSmartLog::verboseLevel = GGSSmartLog::INFO; // Print only INFO messages or more important
+GGSSmartLog::verboseLevel = GGSSmartLog::INFO; // Print only INFO messages or more important
 
-  COUT(INFO) << "Begin analysis" << ENDL;
+COUT(INFO) << "Begin analysis" << ENDL;
 
   // Create the reader container and open the data file
   GGSTRootReader reader;
@@ -44,59 +46,62 @@ void SimpleAnalysis(TString inputFileName, TString outputFileName) {
   // Create and retrieve the hits sub-reader
   GGSTHitsReader *hReader = reader.GetReader<GGSTHitsReader>();
   // Set which hit detectors are to be read
-  hReader->SetDetector("siLayer", kTRUE); // The name is the same of the sensitive logical volume name in the simulation
+  hReader->SetDetector("siSensor", kTRUE); // The name is the same of the sensitive logical volume name in the simulation
 
   // Retrieve the MC truth sub-reader
   GGSTMCTruthReader *mcReader = reader.GetReader<GGSTMCTruthReader>();
 
-  // Create and retrieve the hadronic interaction sub-reader
-  GGSTHadrIntReader *hadrReader = reader.GetReader<GGSTHadrIntReader>();
+  TTree *tree = new TTree("Tree","siSensorHits");
+  //TH1F *h = new TH1F("h", "test", 1000, 0, 5);
+  
+COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
 
-  // Prepare the histograms
-  TH1F *eDepHisto = new TH1F("eDepHisto", "Total energy deposit;E (MeV); Counts", 1000, 0, 15); // Total energy release
-  TH1F *zIntHisto = new TH1F("zIntHisto", "Z coordinate of interaction point [cm]", 1000, -0.05, 0.05); // Interaction point
+int numberoflayers=10;
+int N=5;
+vector<vector<TrCluster> > v(numberoflayers, vector<TrCluster>());
+TBranch *Events = tree->Branch("Events", "vector<vector<TrCluster> >", &v);
 
-  // Event loop
-  int nInt = 0;
-  COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
-  for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
-  // for (int iEv = 0; iEv < 1; iEv++) {
-    reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
+for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
+	reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
+	GGSTPartHit* phit;
+	GGSTIntHit* inthit;
+	int nHits = hReader->GetNHits("siSensor"); //Number of hit siLayers for current event
 
+	v.clear();
 
-    // Retrieve inelastic interaction information
-    GGSTHadrIntInfo *intInfo = hadrReader->GetInelastic(); // Get info about the inelastic interaction of the primary particle
-    // Check if the inelastic interaction actually happened for this event
-    if (intInfo) {
-      zIntHisto->Fill(intInfo->GetInteractionPoint()[2]);
-      nInt++;
-    }
-
-    // Compute total energy release
-    GGSTIntHit* thisHit;
-    GGSTPartHit* thisPHit;
-    int nHits = hReader->GetNHits("siLayer"); //Number of hit siLayers for current event
-    float totEDep = 0.;
-    // Hits loop
-    for (int iHit = 0; iHit < nHits; iHit++) {
-      thisHit  = hReader->GetHit("siLayer", iHit);
-      totEDep += hReader->GetHit("siLayer", iHit)->eDep;
-    }
-    if(!intInfo) eDepHisto->Fill(1e3*totEDep);
-
-
-  }
-
+	// Hits loop
+	for (int iHit = 0; iHit < nHits; iHit++) {
+	TrCluster c;
+	inthit  = hReader->GetHit("siSensor", iHit);
+	phit  = inthit->GetPartHit(iHit);
+	int layer = inthit->GetVolumeID()/(N*N);
+	
+	if(layer%2==0) c.segm= 0.5*(phit->entrancePoint[0]+phit->exitPoint[0]);
+	else c.segm= 0.5*(phit->entrancePoint[1]+phit->exitPoint[1]);
+	c.pos[0]= c.segm; //posizione lungo x o y
+	c.pos[1]= 0.5*(phit->entrancePoint[2]+phit->exitPoint[2]); //posizione lungo z
+	c.time= phit->time;
+	c.eDep= phit->eDep;
+	c.spRes= 0.00007;
+	
+	v[layer].push_back(c);
+	}
+	
+	tree->Fill();
+}
 
 
-  COUT(INFO) << "Event loop finished" << ENDL;
+
+COUT(INFO) << "Event loop finished" << ENDL;
+
+tree->Fill();
 
   // Save histograms
   outFile->cd();
-  eDepHisto->Write();
+  tree->Write();
   outFile->Close();
   delete outFile;
 
-  COUT(INFO) << "Analysis finished" << ENDL;
+COUT(INFO) << "Analysis finished" << ENDL;
 
 }
