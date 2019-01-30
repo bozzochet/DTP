@@ -1,53 +1,77 @@
-#include"TH1F.h"
-#include"TCanvas.h"
-#include"TTree.h"
-#include"TFile.h"
-#include"iostream"
-#include"TStyle.h"
-#include"TF1.h"
-#include"TrCluster.hh"
-#include<vector>
-#include"TClonesArray.h"
-#include<iostream>
-#include"TTreeReader.h"
+#include "TCanvas.h"
+#include "TClonesArray.h"
+#include "TF1.h"
+#include "TFile.h"
+#include "TH1F.h"
+#include "TStyle.h"
+#include "TTree.h"
+#include "TTreeReader.h"
+#include "TrCluster.hh"
+#include "iostream"
+#include <iostream>
+#include <vector>
 using namespace std;
 
-int main(int argc,char** argv){
+int main(int argc, char **argv) {
 
-auto inFile = TFile::Open(argv[1]);
+  const int nLayer = 10;
 
-TTree *events;
-inFile->GetObject("Tree", events);
-events->Print();
-TClonesArray *a = new TClonesArray("TrCluster", 200);
-events->SetBranchAddress("Events", &a);
+  auto inFile = TFile::Open(argv[1]);
 
-TCanvas* c=new TCanvas();
-TH1F* h=new TH1F("h","h",100,0,1000);
+  TTree *events;
+  inFile->GetObject("Tree", events);
+  events->Print();
+  TClonesArray *a = new TClonesArray("TrCluster", 200);
+  events->SetBranchAddress("Events", &a);
 
-vector< vector<TrCluster> > v(events->GetEntries(), vector<TrCluster>());
+  TFile *outFile = new TFile("histos.root", "recreate");
 
-for (int i=0; i< events->GetEntries(); i++) {
-	events->GetEntry(i);
-	for (int j=0; j< a->GetEntries(); j++){
-		TrCluster *cl = (TrCluster*)a->At(j);
-		v[cl->layer].push_back(*cl);
-	}
+  TH1F *h = new TH1F("h", "h", 100, -0.5, 0.5);
+
+  vector<vector<TrCluster>> v;
+
+  for (int i = 0; i < events->GetEntries(); i++) {
+    v.resize(nLayer);
+
+    std::cout << " ------------ " << std::endl;
+    std::cout << "Event " << i << std::endl;
+
+    events->GetEntry(i);
+    for (int j = 0; j < a->GetEntries(); j++) {
+      TrCluster *cl = (TrCluster *)a->At(j);
+      v[cl->layer].push_back(*cl);
+    }
+
+    // Analisi
+    float tMean = 0;
+    int _n = 0;
+    for (auto il : v) {
+      for (auto hit : il) {
+        if (hit.parID != 0)
+          continue;
+
+        tMean += hit.time;
+        _n++;
+        // std::cout << hit.time << std::endl;
+      }
+    }
+    tMean /= _n;
+
+    for (auto il : v) {
+      for (auto hit : il) {
+        if (hit.parID != 0)
+          continue;
+
+        std::cout << hit.time - tMean << std::endl;
+        h->Fill(hit.time - tMean);
+      }
+    }
+
+    std::cout << " ------------ " << std::endl;
+
+    v.clear();
+  }
+
+  outFile->WriteTObject(h);
+  outFile->Close();
 }
-
-int tot=0;
-
-for (int i=0; i< events->GetEntries(); i++) {
-	for (int j=0; j< v[i].size(); j++){
-		tot++;
-	}
-}
-
-cout<<tot<<endl;
-
-//h->Draw();
-//c->SaveAs("test.pdf");
-}
-
-
-
