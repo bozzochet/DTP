@@ -6,7 +6,8 @@ public:
 	double eDep;
 	double spRes;
 	double tRes;
+	int parID;
 	int layer;
 
-ClassDef(TrCluster, 0)
+ClassDef(TrCluster, 1)
 };

@@ -68,13 +68,15 @@ for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
 	a.Clear();
 
 	// Hits loop
+	int iCl=0;
 	for (int iHit = 0; iHit < nHits; iHit++) {
-	TrCluster *c = (TrCluster*)a.ConstructedAt(iHit);
 	inthit  = hReader->GetHit("siSensor", iHit);
 	int nPHit = inthit->GetNPartHits();
 	int llayer = inthit->GetVolumeID()/(N*N);
 
 	for(int i=0; i<nPHit ; i++){
+		TrCluster *c = (TrCluster*)a.ConstructedAt(iCl++);
+
 		phit  = inthit->GetPartHit(i);
 	
 		if(llayer%2==0) c->segm= 0.5*(phit->entrancePoint[0]+phit->exitPoint[0]);
@@ -85,9 +87,11 @@ for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
 		c->eDep= phit->eDep;
 		c->spRes= 0.00007;
 		c->layer= llayer;
+		c->parID= phit->parentID;
+
 		}
 	}
-	a.Compress();
+	//a.Compress();
 	tree->Fill();
 
 }
