@@ -77,7 +77,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
   logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
 
   fPhysicalWorld = new G4PVPlacement(0,                     //no rotation
-      G4ThreeVector(),       //at (0,0,0)
+      G4ThreeVector(0,0,0),       //at (0,0,0)
       logicWorld,            //its logical volume
       "World",               //its name
       0,                     //its mother  volume
@@ -92,11 +92,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
   G4double pad_y = N * dim;
   G4double pad_z = 0.3 * mm;
 
-  G4double lp = 5*(2*pad_z+2*mm) + 4*(2*cm); //lunghezza pacchetto di silicio
+  G4double lp = N*(2*pad_z+2*mm) + 4*(2*cm); //lunghezza pacchetto di silicio
   G4Box* padMother = new G4Box("pad", 0.5*(pad_x + l), 0.5*(pad_y + l), 0.5*(lp + l));
   G4LogicalVolume* padLogic = new G4LogicalVolume(padMother, default_mat, "pad");
   new G4PVPlacement(0,                     //no rotation
-    G4ThreeVector(),       //at (0,0,0)
+    G4ThreeVector(0,0,-lp/2),       //at (0,0,0)
     padLogic,              //its logical volume
     "pad",                 //its name
     logicWorld,            //its mother  volume
@@ -110,23 +110,29 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
   G4Box* siLadder = new G4Box("siLadder", 0.5*dim, 0.5*pad_y, 0.5*pad_z);
   G4LogicalVolume* siLadderLogic = new G4LogicalVolume(siLadder, silicon, "siLadder");
 
-  new G4PVReplica("siLadderp", siLadderLogic, siLayerLogic, kXAxis, N, dim);
+for(int i=0; i<N; i++){
+  new G4PVPlacement(0,G4ThreeVector(i*dim-0.5*(pad_x-dim), 0, 0.5*pad_z),siLadderLogic, "siLadder", siLayerLogic, false, i, fCheckOverlaps);
+}
+//  new G4PVReplica("siLadderp", siLadderLogic, siLayerLogic, kXAxis, N, dim);
 
   G4Box* siSensor = new G4Box("siSensor", 0.5*dim, 0.5*dim, 0.5*pad_z);
   G4LogicalVolume* siSensorLogic = new G4LogicalVolume(siSensor, silicon, "siSensor");
 
   new G4PVReplica("siSensorp", siSensorLogic, siLadderLogic, kYAxis, N, dim);
 
-G4int z=0;
+G4double z= -0.5 * lp;
 for(int i=0; i<5; i++){
-  z= i*(2*cm + 2*mm + 0.3*mm);
   new G4PVPlacement(0,G4ThreeVector(0, 0, z),siLayerLogic, "siLayer", padLogic, false, 2*i, fCheckOverlaps);
-  new G4PVPlacement(0,G4ThreeVector(0, 0, z+2*mm),siLayerLogic, "siLayer", padLogic, false, 2*i+1, fCheckOverlaps);
+  new G4PVPlacement(0,G4ThreeVector(0, 0, z+2*mm),siLayerLogic, "siLayer", padLogic, false, 2*i+1, fCheckOverlaps); //va ruotato!!
+  z += (2*cm + 2*mm + 0.3*mm);
 }
+
+G4double TrkCaloGap =2*cm;
+G4double caloSide = 60*cm;
 
   G4Box* calorimeter = new G4Box("calorimetro", 30*cm, 30*cm, 30*cm);
   G4LogicalVolume* calorimeterLogic = new G4LogicalVolume(calorimeter, BGO, "calorimeter");
-  new G4PVPlacement(0,G4ThreeVector(0, 0, 30*cm + lp + 2*cm), calorimeterLogic, "calorimeter", logicWorld, false, 0, fCheckOverlaps);
+  new G4PVPlacement(0,G4ThreeVector(0, 0, -1.* caloSide/2 -lp -TrkCaloGap ), calorimeterLogic, "calorimeter", logicWorld, false, 0, fCheckOverlaps);
 
   //always return the physical World
   return fPhysicalWorld;
