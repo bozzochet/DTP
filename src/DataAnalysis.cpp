@@ -14,64 +14,70 @@ using namespace std;
 
 int main(int argc, char **argv) {
 
-  const int nLayer = 10;
+	const int nLayer = 10;
 
-  auto inFile = TFile::Open(argv[1]);
+	auto inFile = TFile::Open(argv[1]);
 
-  TTree *events;
-  inFile->GetObject("Tree", events);
-  events->Print();
-  TClonesArray *a = new TClonesArray("TrCluster", 200);
-  events->SetBranchAddress("Events", &a);
+	TTree *events;
+	inFile->GetObject("Tree", events);
+	events->Print();
+	TClonesArray *a = new TClonesArray("TrCluster", 200);
+	events->SetBranchAddress("Events", &a);
 
-  TFile *outFile = new TFile("histos.root", "recreate");
+	TFile *outFile = new TFile("histos.root", "recreate");
 
-  TH1F *h = new TH1F("h", "h", 100, -0.5, 0.5);
+	TH1F *h = new TH1F("h", "h", 100, -0.5, 0.5);
+	TH1F *h1 = new TH1F("h1", "h1", 1000, 0, 500);
+	vector<vector<TrCluster>> v;
 
-  vector<vector<TrCluster>> v;
+	for (int i = 0; i < events->GetEntries(); i++) {
+		v.resize(nLayer);
 
-  for (int i = 0; i < events->GetEntries(); i++) {
-    v.resize(nLayer);
+		cout << " ------------ " << endl;
+		cout << "Event " << i << endl;
 
-    std::cout << " ------------ " << std::endl;
-    std::cout << "Event " << i << std::endl;
+		events->GetEntry(i);
+		for (int j = 0; j < a->GetEntries(); j++) {
+			TrCluster *cl = (TrCluster *)a->At(j);
+			v[cl->layer].push_back(*cl);
+		}
 
-    events->GetEntry(i);
-    for (int j = 0; j < a->GetEntries(); j++) {
-      TrCluster *cl = (TrCluster *)a->At(j);
-      v[cl->layer].push_back(*cl);
-    }
+		// Analisi 
 
-    // Analisi
-    float tMean = 0;
-    int _n = 0;
-    for (auto il : v) {
-      for (auto hit : il) {
-        if (hit.parID != 0)
-          continue;
+		float tStart = v[0][0].time;
+		float tMean = 0;
+		int _n = 0;
+		for (auto il : v) {
+			for (auto hit : il) {
+				if(tStart>hit.time) tStart = hit.time;
+        
+				if (hit.parID != 0) continue;
 
-        tMean += hit.time;
-        _n++;
-        // std::cout << hit.time << std::endl;
-      }
-    }
-    tMean /= _n;
+				tMean += hit.time;
+				_n++;
 
-    for (auto il : v) {
-      for (auto hit : il) {
-        if (hit.parID != 0)
-          continue;
+			}
+		}
+		tMean /= _n;
+		cout<<"tempo minimo "<<tStart<<endl;
 
-        std::cout << hit.time - tMean << std::endl;
-        h->Fill(hit.time - tMean);
-      }
-    }
+		for (int il = 0; il<v.size(); il++) {
+			for (int hit = 0; hit<v[il].size(); hit++) {
+				if(v[9].size()>5) h1->Fill(v[il][hit].time - tStart);
 
-    std::cout << " ------------ " << std::endl;
+				if (v[il][hit].parID != 0) continue;
 
-    v.clear();
-  }
+				cout << v[il][hit].time - tMean << endl;
+				h->Fill(v[il][hit].time - tMean); //ns
+			}
+		}
 
-  outFile->WriteTObject(h);
-  outFile->Close();
+		std::cout << " ------------ " << std::endl;
+
+		v.clear();
+	}
+
+	outFile->WriteTObject(h);
+	outFile->WriteTObject(h1);
+	outFile->Close();
 }

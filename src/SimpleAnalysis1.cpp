@@ -56,6 +56,7 @@ COUT(INFO) << "Begin analysis" << ENDL;
 COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
 
 int N=5;
+int nLayer = 10;
 
 TClonesArray a("TrCluster", 200);
 tree->Branch("Events", &a, 32000, 0);
@@ -73,6 +74,7 @@ for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
 	inthit  = hReader->GetHit("siSensor", iHit);
 	int nPHit = inthit->GetNPartHits();
 	int llayer = inthit->GetVolumeID()/(N*N);
+	llayer = nLayer - 1 - llayer;
 
 	for(int i=0; i<nPHit ; i++){
 		TrCluster *c = (TrCluster*)a.ConstructedAt(iCl++);
