@@ -52,14 +52,14 @@ COUT(INFO) << "Begin analysis" << ENDL;
   GGSTMCTruthReader *mcReader = reader.GetReader<GGSTMCTruthReader>();
 
   TTree *tree = new TTree("Tree","siSensorHits");
+  //TH1F *h = new TH1F("h", "test", 1000, 0, 5);
 
 COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
 
 int N=5;
-int nLayer = 10;
 
 TClonesArray a("TrCluster", 200);
-tree->Branch("Events", &a, 32000, 0);
+tree->Branch("Events", &a);
 
 for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
 	reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
@@ -69,16 +69,13 @@ for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
 	a.Clear();
 
 	// Hits loop
-	int iCl=0;
 	for (int iHit = 0; iHit < nHits; iHit++) {
+	TrCluster *c = (TrCluster*)a.ConstructedAt(iHit);
 	inthit  = hReader->GetHit("siSensor", iHit);
 	int nPHit = inthit->GetNPartHits();
 	int llayer = inthit->GetVolumeID()/(N*N);
-	llayer = nLayer - 1 - llayer;
 
 	for(int i=0; i<nPHit ; i++){
-		TrCluster *c = (TrCluster*)a.ConstructedAt(iCl++);
-
 		phit  = inthit->GetPartHit(i);
 	
 		if(llayer%2==0) c->segm= 0.5*(phit->entrancePoint[0]+phit->exitPoint[0]);
@@ -89,11 +86,10 @@ for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
 		c->eDep= phit->eDep;
 		c->spRes= 0.00007;
 		c->layer= llayer;
-		c->parID= phit->parentID;
-
 		}
+
 	}
-	//a.Compress();
+
 	tree->Fill();
 
 }
