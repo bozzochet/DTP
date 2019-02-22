@@ -13,3 +13,6 @@ set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES ${includ
 
 
 add_subdirectory(src)
+add_subdirectory(ManualMakefile)
+configure_file(compila_e_mostra.sh compila_e_mostra.sh COPYONLY)
+configure_file(runna.sh runna.sh COPYONLY)

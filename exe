@@ -1,8 +1,0 @@
-cd build/src
-rm libTestGeometry.so libTestGeometry.so.1 TestGeometry.gdml
-cd ..
-cmake ..
-make -j4
-cd ..
-GGSWolowitz -g build/src/libTestGeometry.so -o build/src/TestGeometry.gdml -t gdml
-GGSLeonard -G build/src/TestGeometry.gdml
