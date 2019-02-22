@@ -9,7 +9,8 @@
 
 ##### Setup the particle generator #####
 /GGS/generatorActions/set gun                          # Use the GGS gun generator
-/GGS/generatorActions/gun/particle e-              # Shoot protons
+/GGS/generatorActions/gun/particle proton              # Shoot protons
+#/GGS/generatorActions/gun/particle e-              # Shoot electron
 #/GGS/generatorActions/gun/particle ion                 # Shoot ?...
 #/gun/ion 8 16                     # Shoot ?...
 /GGS/generatorActions/gun/energy 100 GeV               # ... of 100 GeV ...
@@ -29,4 +30,4 @@
 /GGS/userActions/addGGSHadrIntAction                   # Save information about 1st hadronic interaction...
 /GGS/userActions/hadrIntAction/outProducts true        # ... and also informations about the produced particles
 
-/run/beamOn 500000
+/run/beamOn 500

@@ -131,8 +131,8 @@ G4double TrkCaloGap =2*cm;
 G4double caloSide = 60*cm;
 
   G4Box* calorimeter = new G4Box("calorimetro", 30*cm, 30*cm, 30*cm);
-  //  G4LogicalVolume* calorimeterLogic = new G4LogicalVolume(calorimeter, BGO, "calorimeter");
-  //  new G4PVPlacement(0,G4ThreeVector(0, 0, -1.* caloSide/2 -lp -TrkCaloGap ), calorimeterLogic, "calorimeter", logicWorld, false, 0, fCheckOverlaps);
+  G4LogicalVolume* calorimeterLogic = new G4LogicalVolume(calorimeter, BGO, "calorimeter");
+  new G4PVPlacement(0,G4ThreeVector(0, 0, -1.* caloSide/2 -lp -TrkCaloGap ), calorimeterLogic, "calorimeter", logicWorld, false, 0, fCheckOverlaps);
 
   //always return the physical World
   return fPhysicalWorld;
