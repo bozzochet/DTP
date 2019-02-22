@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
 
 					//cout<<	v[il][hit].parPdg <<endl;
 
-					h1->Fill(log10(v[il][hit].time - tStart + 1)); 
+					h1->Fill(log10(v[il][hit].time - tStart + 1));
 /*					if (v[il][hit].parID == 0) h7->Fill(log(v[il][hit].time - tStart + 1));
 					if(v[il][hit].parPdg == 2212 && v[il][hit].parID > 0) h2->Fill(log(v[il][hit].time - tStart + 1));
 					if(v[il][hit].parPdg == 2112) { h3->Fill(log(v[il][hit].time - tStart + 1)); h6->Fill(v[il][hit].eDep);}

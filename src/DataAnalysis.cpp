@@ -29,9 +29,12 @@ int main(int argc, char **argv) {
 	TH1F *h = new TH1F("disttemp", "disttemp", 100, -0.5, 0.5);
 	TH1F *h1 = new TH1F("bt", "bt", 1000, 0, 2);
 	TH1F *h2 = new TH1F("btls", "btls", 1000, 0, 2000);
-	TH1F *h3 = new TH1F("btls_log", "btls_log", 1000, 0, 10);
+	TH1F *h3 = new TH1F("btls_log", "btls_log", 1000, 0, 4);
 	TH1F *h4 = new TH1F("bt_sim", "bt_sim", 1000, 0, 2);
-	TH1F *h5 = new TH1F("bt_sim", "bt_sim", 1000, 0, 10);
+	TH1F *h5 = new TH1F("btls_sim", "btls_sim", 1500, 0, 15);
+	TH1F *h5cut = new TH1F("btls_sim_cut", "btls_sim_cut", 1500, 0, 15);
+	TH1F *h5nopri = new TH1F("btls_sim_nopri", "btls_sim_nopri", 1500, 0, 15);
+	TH1F *h5nomip = new TH1F("btls_sim_nomip", "btls_sim_nomip", 1500, 0, 15);
 	TRandom3 *tr = new TRandom3();
 	vector<vector<TrCluster>> v;
 
@@ -47,7 +50,7 @@ int main(int argc, char **argv) {
 			v[cl->layer].push_back(*cl);
 		}
 
-		// Analisi 
+		// Analisi
 
 		float tStart = v[0][0].time;
 		float tMean = 0;
@@ -55,7 +58,7 @@ int main(int argc, char **argv) {
 		for (auto il : v) {
 			for (auto hit : il) {
 				if(tStart>hit.time) tStart = hit.time;
-        
+
 				if (hit.parID != 0) continue;
 
 				tMean += hit.time;
@@ -68,20 +71,26 @@ int main(int argc, char **argv) {
 
 		for (int il = 0; il<v.size(); il++) {
 			for (int hit = 0; hit<v[il].size(); hit++) {
-				if(v[9].size()>5 && v[il][hit].eDep>0.00001){
-					
-//					cout<<	v[il][hit].parPdg <<endl;					
-					 
-					h1->Fill(v[il][hit].time - tStart); 
+				if(
+					1 &&
+//					v[9].size()>5 &&
+					v[il][hit].eDep>0.00001 //10 keV
+				){
+					//					cout<<	v[il][hit].parPdg <<endl;
+					h1->Fill(v[il][hit].time - tStart);
 					h2->Fill(v[il][hit].time - tStart);
-					h3->Fill(log(v[il][hit].time - tStart + 1));
-					h4->Fill(tr->Gaus(v[il][hit].time - tStart,0.1));
-					h5->Fill(tr->Gaus(v[il][hit].time - tStart,0.1));
+					double smearedtime = tr->Gaus(v[il][hit].time - tStart,0.1);
+					h3->Fill(log10(v[il][hit].time - tStart + 1));
+					h4->Fill(smearedtime);
+					h5->Fill(smearedtime);
+					if (smearedtime<0.55) h5cut->Fill(smearedtime);
+					if (v[il][hit].parID != 0) h5nopri->Fill(smearedtime);
+					if (v[9].size()>5) h5nomip->Fill(smearedtime);
 				}
-				if (v[il][hit].parID != 0) continue;
-
-//				cout << v[il][hit].time - tMean << endl;
-				h->Fill(v[il][hit].time - tMean); //ns
+				if (v[il][hit].parID == 0) {
+					//				cout << v[il][hit].time - tMean << endl;
+					h->Fill(v[il][hit].time - tMean); //ns
+				}
 			}
 		}
 
@@ -96,5 +105,8 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(h3);
 	outFile->WriteTObject(h4);
 	outFile->WriteTObject(h5);
+	outFile->WriteTObject(h5cut);
+	outFile->WriteTObject(h5nopri);
+	outFile->WriteTObject(h5nomip);
 	outFile->Close();
 }

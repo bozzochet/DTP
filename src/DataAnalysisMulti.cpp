@@ -12,7 +12,7 @@
 #include <vector>
 #include "TRandom3.h"
 #include "TLegend.h"
-using namespace std;                         
+using namespace std;
 
 int main(int argc, char **argv) {
 
@@ -27,15 +27,21 @@ int main(int argc, char **argv) {
 	events->SetBranchAddress("Events", &a);
 
 	TFile *outFile = new TFile("histos-multi.root", "recreate");
-//	TCanvas *c1 = new TCanvas();
-/*	TH1F *h1 = new TH1F("totale", "a", 1000, 0, 10);
-	TH1F *h2 = new TH1F("protoni", "b", 1000, 0, 10);
-	TH1F *h3 = new TH1F("neutroni", "c", 1000, 0, 10);
-	TH1F *h4 = new TH1F("elettroni/positroni", "d", 1000, 0, 10);
-	TH1F *h5 = new TH1F("pi", "e", 1000, 0, 10);
-	TH1F *h7 = new TH1F("protoni primari", "f", 1000, 0, 10);
+	TCanvas *c1 = new TCanvas();
+	TH1F *htotal = new TH1F("totale", "totale", 1000, 0, 4);
+	TH1F *hprotons = new TH1F("protoni", "protoni", 1000, 0, 4);
+	TH1F *hantip = new TH1F("antiprotoni", "antiprotoni", 1000, 0, 4);
+	TH1F *hneutrons = new TH1F("neutroni", "neutroni", 1000, 0, 4);
+	TH1F *hgamma = new TH1F("fotoni", "gamma", 1000, 0, 4);
+	TH1F *hisotopes = new TH1F("isotopo", "isotopo", 1000, 0, 4);
+	TH1F *helectron = new TH1F("elettroni", "elettroni", 1000, 0, 4);
+	TH1F *hpositron = new TH1F("positroni", "positroni", 1000, 0, 4);
+	TH1F *helectronmu = new TH1F("muoni", "muoni", 1000, 0, 4);
+	TH1F *hpi = new TH1F("pi", "pi", 1000, 0, 4);
+	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
+	TH1F *hprimari = new TH1F("primari", "primari", 1000, 0, 4);
 	TH1F *h6 = new TH1F("edep", "edep", 100, 0, 0.0001);
-*/	TH1F *h8 = new TH1F("edep1", "edep", 100, 0, 0.001);
+	TH1F *h8 = new TH1F("edep1", "edep", 100, 0, 0.001);
 	TH1F *h9 = new TH1F("edep2", "edep", 100, 0, 0.001);
 	TRandom3 *tr = new TRandom3();
 	vector<vector<TrCluster>> v;
@@ -52,7 +58,7 @@ int main(int argc, char **argv) {
 			v[cl->layer].push_back(*cl);
 		}
 
-		// Analisi 
+		// Analisi
 
 		float tStart = v[0][0].time;
 		float tMean = 0;
@@ -60,7 +66,7 @@ int main(int argc, char **argv) {
 		for (auto il : v) {
 			for (auto hit : il) {
 				if(tStart>hit.time) tStart = hit.time;
-        
+
 				if (hit.parID != 0) continue;
 
 				tMean += hit.time;
@@ -69,65 +75,134 @@ int main(int argc, char **argv) {
 			}
 		}
 		tMean /= _n;
-//		cout<<"tempo minimo "<<tStart<<endl;
+		//		cout<<"tempo minimo "<<tStart<<endl;
 
 		for (int il = 0; il<v.size(); il++) {
 			for (int hit = 0; hit<v[il].size(); hit++) {
-				if(v[9].size()>5 && v[il][hit].eDep>0.00001){
-					
-					//cout<<	v[il][hit].parPdg <<endl;					
-					 
-/*					h1->Fill(log(v[il][hit].time - tStart + 1)); 
-					if (v[il][hit].parID == 0) h7->Fill(log(v[il][hit].time - tStart + 1));
-					if(v[il][hit].parPdg == 2212 && v[il][hit].parID > 0) h2->Fill(log(v[il][hit].time - tStart + 1));
-					if(v[il][hit].parPdg == 2112) { 
-						h3->Fill(log(v[il][hit].time - tStart + 1)); 
-						h6->Fill(v[il][hit].eDep);
+				if(
+					v[9].size()>5 &&
+					v[il][hit].eDep>0.00001 //10 keV
+				){
+					//cout<<	v[il][hit].parPdg <<endl;
+					htotal->Fill(log10(v[il][hit].time - tStart + 1));
+					if(v[il][hit].parID == 0) {//primario
+						hprimari->Fill(log10(v[il][hit].time - tStart + 1));
 					}
-*/					if(v[il][hit].parPdg == 11 || v[il][hit].parPdg == -11 ){
-//						h4->Fill(log(v[il][hit].time - tStart + 1));
-						if(v[il][hit].time - tStart < 10000) h8->Fill(v[il][hit].eDep);
-						if(v[il][hit].time - tStart >= 10000) h9->Fill(v[il][hit].eDep);
+					else {//secondari
+						if(v[il][hit].parPdg == 2212) {
+							hprotons->Fill(log10(v[il][hit].time - tStart + 1));
+						}
+						else if(v[il][hit].parPdg == -2212) {
+							hantip->Fill(log10(v[il][hit].time - tStart + 1));
+						}
+						else if(v[il][hit].parPdg == 2112) {
+							hneutrons->Fill(log10(v[il][hit].time - tStart + 1));
+							h6->Fill(v[il][hit].eDep);
+						}
+						else if(v[il][hit].parPdg == 11){
+							helectron->Fill(log10(v[il][hit].time - tStart + 1));
+							if(v[il][hit].time - tStart < 10000) h8->Fill(v[il][hit].eDep);
+							if(v[il][hit].time - tStart >= 10000) h9->Fill(v[il][hit].eDep);
+						}
+						else if(v[il][hit].parPdg == -11 ){
+							hpositron->Fill(log10(v[il][hit].time - tStart + 1));
+							if(v[il][hit].time - tStart < 10000) h8->Fill(v[il][hit].eDep);
+							if(v[il][hit].time - tStart >= 10000) h9->Fill(v[il][hit].eDep);
+						}
+						else if(v[il][hit].parPdg == 211 || v[il][hit].parPdg == -211) {
+							hpi->Fill(log10(v[il][hit].time - tStart + 1));
+						}
+						else if(v[il][hit].parPdg == 130 || v[il][hit].parPdg == 310 || v[il][hit].parPdg == 311 || v[il][hit].parPdg == 321 || v[il][hit].parPdg == -321) {
+							hk->Fill(log10(v[il][hit].time - tStart + 1));
+						}
+						else if(v[il][hit].parPdg == 13 || v[il][hit].parPdg == -13) {
+							helectronmu->Fill(log10(v[il][hit].time - tStart + 1));
+						}
+						else if(v[il][hit].parPdg == 22) {
+							hgamma->Fill(log10(v[il][hit].time - tStart + 1));
+						}
+						else if (v[il][hit].parPdg>1000000000){//isotope
+							hisotopes->Fill(log10(v[il][hit].time - tStart + 1));
+							int code = v[il][hit].parPdg - 1000000000;
+							int Z = (int)(code/10000);
+							int A = code-Z*10000;
+							A = (int)(A/10);
+							//						printf("%d -> Z=%d, A=%d\n", v[il][hit].parPdg, Z, A);
+						}
+						else {
+							printf("%d\n", v[il][hit].parPdg);
+						}
 					}
-//					if(v[il][hit].parPdg == -211) h5->Fill(log(v[il][hit].time - tStart + 1));
 				}
 			}
 		}
 
 		v.clear();
 	}
-/*
-	h1->SetLineColor(1);
-	h1->Draw();
-	h2->SetLineColor(2);
-	h2->Draw("SAME");
-	h3->SetLineColor(5);
-	h3->Draw("SAME");
-	h4->SetLineColor(4);
-	h4->Draw("SAME");
-	h5->SetLineColor(3);
-	h5->Draw("SAME");
-	h7->SetLineColor(6);
-	h7->Draw("SAME");
 
-   auto legend = new TLegend();
-   legend->SetHeader("Legenda","C"); 
-   legend->AddEntry(h1,"totale","l");
-   legend->AddEntry(h2,"protoni","l");
-   legend->AddEntry(h3,"neutroni","l");
-   legend->AddEntry(h4,"elettroni/positroni","l");
-   legend->AddEntry(h5,"pioni","l");
-   legend->AddEntry(h7,"protoni primari","l");
-   legend->Draw();
+	htotal->SetLineColor(kBlack);
+	htotal->Draw();
+	hprotons->SetLineColor(kRed);
+	hprotons->Draw("SAME");
+	hantip->SetLineColor(kRed-2);
+	hantip->Draw("SAME");
+	hneutrons->SetLineColor(kYellow);
+	hneutrons->Draw("SAME");
+	hgamma->SetLineColor(kGreen+1);
+	hgamma->Draw("SAME");
+	hisotopes->SetLineColor(kRed+2);
+	hisotopes->Draw("SAME");
+	helectron->SetLineColor(kBlue+1);
+	helectron->Draw("SAME");
+	hpositron->SetLineColor(kCyan);
+	hpositron->Draw("SAME");
+	helectronmu->SetLineColor(kOrange+1);
+	helectronmu->Draw("SAME");
+	hpi->SetLineColor(kGreen);
+	hpi->Draw("SAME");
+	hk->SetLineColor(kGray);
+	hk->Draw("SAME");
+	hprimari->SetLineColor(kViolet);
+	hprimari->Draw("SAME");
+
+	auto legend = new TLegend();
+	legend->SetHeader("Legenda","C");
+	legend->AddEntry(htotal,"totale","l");
+	legend->AddEntry(hprotons,"protoni","l");
+	legend->AddEntry(hneutrons,"neutroni","l");
+	legend->AddEntry(hgamma,"gamma","l");
+	legend->AddEntry(hisotopes,"isotopo","l");
+	legend->AddEntry(helectron,"elettroni","l");
+	legend->AddEntry(hpositron,"positroni","l");
+	legend->AddEntry(helectronmu,"muoni","l");
+	legend->AddEntry(hpi,"pioni","l");
+	legend->AddEntry(hk,"kaoni","l");
+	legend->AddEntry(hprimari,"primari","l");
+	legend->Draw();
 
 	outFile->WriteTObject(c1);
+
 	outFile->WriteTObject(h6);
-*/
+
 	TCanvas *c2 = new TCanvas();
 	h8->SetLineColor(1);
 	h8->Draw();
 	h9->SetLineColor(2);
 	h9->Draw("SAME");
+
 	outFile->WriteTObject(c2);
+
+	outFile->WriteTObject(htotal);
+	outFile->WriteTObject(hprotons);
+	outFile->WriteTObject(hneutrons);
+	outFile->WriteTObject(hgamma);
+	outFile->WriteTObject(hisotopes);
+	outFile->WriteTObject(helectron);
+	outFile->WriteTObject(hpositron);
+	outFile->WriteTObject(helectronmu);
+	outFile->WriteTObject(hpi);
+	outFile->WriteTObject(hk);
+	outFile->WriteTObject(hprimari);
+
 	outFile->Close();
 }
