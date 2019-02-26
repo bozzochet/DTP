@@ -18,6 +18,15 @@ target_link_libraries(TestGeometry
 
 set_target_properties(TestGeometry PROPERTIES VERSION 1)
 
+add_library(TestGeometry_nocalo SHARED ${TestGeometry_SOURCE} )
+target_compile_definitions(TestGeometry_nocalo PRIVATE _NOCALO_)
+target_link_libraries(TestGeometry_nocalo
+  ${Geant4_LIBRARIES}
+  ${GGS_GEO_LIBRARIES}
+)
+set_target_properties(TestGeometry_nocalo PROPERTIES VERSION 1)
+
+
 # Set install rules
 install(TARGETS TestGeometry DESTINATION plugins)
 
