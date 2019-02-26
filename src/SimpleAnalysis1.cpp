@@ -80,16 +80,15 @@ int main(int argc, char **argv) {
       for (int i = 0; i < nPHit; i++) {
         phit = inthit->GetPartHit(i);
 
-        if (llayer % 2 == 0)
-          c->segm = 0.5 * (phit->entrancePoint[0] + phit->exitPoint[0]);
-        else
-          c->segm = 0.5 * (phit->entrancePoint[1] + phit->exitPoint[1]);
+        c->segm = llayer % 2 == 0;
         c->pos[0] = c->segm;                                             // posizione lungo x o y
         c->pos[1] = 0.5 * (phit->entrancePoint[2] + phit->exitPoint[2]); // posizione lungo z
         c->time = phit->time;
         c->eDep = phit->eDep;
         c->spRes = 0.00007;
         c->layer = llayer;
+        c->parID = phit->parentID;
+        c->parPdg = phit->particlePdg;
       }
     }
 
