@@ -33,9 +33,9 @@ set(SimpleAnalysis_SRC
 
 add_executable(SimpleAnalysis ${SimpleAnalysis_SRC})
 target_link_libraries(SimpleAnalysis
-                      ${ROOT_LIBRARIES}
-                      ${GGS_ANALYSIS_LIBRARIES}
-                     )
+  ${ROOT_LIBRARIES}
+  ${GGS_ANALYSIS_LIBRARIES}
+)
 
 set(DataAnalysis_SRC
 	DataAnalysis.cpp
@@ -44,9 +44,44 @@ set(DataAnalysis_SRC
 
 add_executable(DataAnalysis ${DataAnalysis_SRC})
 target_link_libraries(DataAnalysis
-                      ${ROOT_LIBRARIES}
-                      ${GGS_ANALYSIS_LIBRARIES}
-                     )
+  ${ROOT_LIBRARIES}
+  ${GGS_ANALYSIS_LIBRARIES}
+)
+
+set(DataAnalysisGhosts_SRC
+	DataAnalysisGhosts.cpp
+	G__TrCluster.cxx
+)
+
+add_executable(DataAnalysisGhosts ${DataAnalysisGhosts_SRC})
+target_link_libraries(DataAnalysisGhosts
+  ${ROOT_LIBRARIES}
+  ${GGS_ANALYSIS_LIBRARIES}
+)
+
+set(DataAnalysisHough_SRC
+	DataAnalysisHough.cpp
+	G__TrCluster.cxx
+)
+
+add_executable(DataAnalysisHough ${DataAnalysisHough_SRC})
+target_link_libraries(DataAnalysisHough
+  ${ROOT_LIBRARIES}
+  ${GGS_ANALYSIS_LIBRARIES}
+)
+
+set(DataAnalysisMulti_SRC
+	DataAnalysisMulti.cpp
+	G__TrCluster.cxx
+)
+
+add_executable(DataAnalysisMulti ${DataAnalysisMulti_SRC})
+target_link_libraries(DataAnalysisMulti
+  ${ROOT_LIBRARIES}
+  ${GGS_ANALYSIS_LIBRARIES}
+)
+
+
 
 set(alternative_simple_analysis_SRC
         alternative_simple_analysis.cpp
@@ -55,6 +90,6 @@ set(alternative_simple_analysis_SRC
 
 add_executable(alternative_simple_analysis ${alternative_simple_analysis_SRC})
 target_link_libraries(alternative_simple_analysis
-                      ${ROOT_LIBRARIES}
-                      ${GGS_ANALYSIS_LIBRARIES}
-                     )
+  ${ROOT_LIBRARIES}
+  ${GGS_ANALYSIS_LIBRARIES}
+)

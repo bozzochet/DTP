@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.11)
+
 project(TestGeometry)
 
 find_package(GGS 2.3.1 REQUIRED)
