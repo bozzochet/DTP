@@ -166,17 +166,17 @@ int main(int argc, char **argv) {
 
   auto legend = new TLegend();
   legend->SetHeader("Legenda", "C");
-  legend->AddEntry(htotal, "totale", "l");
-  legend->AddEntry(hprotons, "protoni", "l");
-  legend->AddEntry(hneutrons, "neutroni", "l");
-  legend->AddEntry(hgamma, "gamma", "l");
-  legend->AddEntry(hisotopes, "isotopo", "l");
-  legend->AddEntry(helectron, "elettroni", "l");
-  legend->AddEntry(hpositron, "positroni", "l");
-  legend->AddEntry(helectronmu, "muoni", "l");
-  legend->AddEntry(hpi, "pioni", "l");
-  legend->AddEntry(hk, "kaoni", "l");
-  legend->AddEntry(hprimari, "primari", "l");
+  legend->AddEntry(htotal, "Total", "l");
+  legend->AddEntry(hprotons, "Protons", "l");
+  legend->AddEntry(hneutrons, "Neutrons", "l");
+  legend->AddEntry(hgamma, "Gamma", "l");
+  legend->AddEntry(hisotopes, "Isotopes", "l");
+  legend->AddEntry(helectron, "Electrons", "l");
+  legend->AddEntry(hpositron, "Positrons", "l");
+  legend->AddEntry(helectronmu, "Muons", "l");
+  legend->AddEntry(hpi, "Pions", "l");
+  legend->AddEntry(hk, "Kaons", "l");
+  legend->AddEntry(hprimari, "Primaries", "l");
   legend->Draw();
 
   outFile->WriteTObject(c1);

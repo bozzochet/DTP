@@ -35,70 +35,83 @@ int main(int argc, char **argv) {
 	TH1F *h5cut = new TH1F("btls_sim_cut", "btls_sim_cut", 1500, 0, 15);
 	TH1F *h5nopri = new TH1F("btls_sim_nopri", "btls_sim_nopri", 1500, 0, 15);
 	TH1F *h5nomip = new TH1F("btls_sim_nomip", "btls_sim_nomip", 1500, 0, 15);
+	TH1F *hPrimEdep = new TH1F("PrimaryEdep", "edep", 500, 0, 0.001);
+	TH1F *hEdep = new TH1F("Edep", "edep", 500, 0, 0.001);
 	TRandom3 *tr = new TRandom3();
 	vector<vector<TrCluster>> v;
-
+	
 	for (int i = 0; i < events->GetEntries(); i++) {
-		v.resize(nLayer);
-
-//		cout << " ------------ " << endl;
-//		cout << "Event " << i << endl;
-
-		events->GetEntry(i);
-		for (int j = 0; j < a->GetEntries(); j++) {
-			TrCluster *cl = (TrCluster *)a->At(j);
-			v[cl->layer].push_back(*cl);
-		}
-
-		// Analisi
-
-		float tStart = v[0][0].time;
-		float tMean = 0;
-		int _n = 0;
-		for (auto il : v) {
-			for (auto hit : il) {
-				if(tStart>hit.time) tStart = hit.time;
-
-				if (hit.parID != 0) continue;
-
-				tMean += hit.time;
-				_n++;
-
-			}
-		}
-		tMean /= _n;
-//		cout<<"tempo minimo "<<tStart<<endl;
-
-		for (int il = 0; il<v.size(); il++) {
-			for (int hit = 0; hit<v[il].size(); hit++) {
-				if(
-					1 &&
-//					v[9].size()>5 &&
-					v[il][hit].eDep>0.00001 //10 keV
-				){
-					//					cout<<	v[il][hit].parPdg <<endl;
-					h1->Fill(v[il][hit].time - tStart);
-					h2->Fill(v[il][hit].time - tStart);
-					double smearedtime = tr->Gaus(v[il][hit].time - tStart,0.1);
-					h3->Fill(log10(v[il][hit].time - tStart + 1));
-					h4->Fill(smearedtime);
-					h5->Fill(smearedtime);
-					if (smearedtime<0.55) h5cut->Fill(smearedtime);
-					if (v[il][hit].parID != 0) h5nopri->Fill(smearedtime);
-					if (v[9].size()>5) h5nomip->Fill(smearedtime);
-				}
-				if (v[il][hit].parID == 0) {
-					//				cout << v[il][hit].time - tMean << endl;
-					h->Fill(v[il][hit].time - tMean); //ns
-				}
-			}
-		}
-
-//		std::cout << " ------------ " << std::endl;
-
-		v.clear();
+	  v.resize(nLayer);
+	  
+	  //		cout << " ------------ " << endl;
+	  //		cout << "Event " << i << endl;
+	  
+	  events->GetEntry(i);
+	  if (a->GetEntries()>10) {
+	    printf("Event %d: %d hits\n", i, a->GetEntries());
+	    for (int j = 0; j < a->GetEntries(); j++) {
+	      TrCluster *cl = (TrCluster *)a->At(j);
+	      printf("%d) %d %f\n", j, cl->parID, cl->eDep);
+	    }
+	  }
+	  for (int j = 0; j < a->GetEntries(); j++) {
+	    TrCluster *cl = (TrCluster *)a->At(j);
+	    v[cl->layer].push_back(*cl);
+	    if (cl->parID == 0) { // primario                                                                                                                                                                                                                                                                  
+	      hPrimEdep->Fill(cl->eDep);
+	    }
+	    hEdep->Fill(cl->eDep);
+	  }
+	  
+	  // Analisi
+	  
+	  float tStart = v[0][0].time;
+	  float tMean = 0;
+	  int _n = 0;
+	  for (auto il : v) {
+	    for (auto hit : il) {
+	      if(tStart>hit.time) tStart = hit.time;
+	      
+	      if (hit.parID != 0) continue;
+	      
+	      tMean += hit.time;
+	      _n++;
+	      
+	    }
+	  }
+	  tMean /= _n;
+	  //		cout<<"tempo minimo "<<tStart<<endl;
+	  
+	  for (int il = 0; il<v.size(); il++) {
+	    for (int hit = 0; hit<v[il].size(); hit++) {
+	      if(
+		 1 &&
+		 //					v[9].size()>5 &&
+		 v[il][hit].eDep>0.00001 //10 keV
+		 ){
+		//					cout<<	v[il][hit].parPdg <<endl;
+		h1->Fill(v[il][hit].time - tStart);
+		h2->Fill(v[il][hit].time - tStart);
+		double smearedtime = tr->Gaus(v[il][hit].time - tStart,0.1);
+		h3->Fill(log10(v[il][hit].time - tStart + 1));
+		h4->Fill(smearedtime);
+		h5->Fill(smearedtime);
+		if (smearedtime<0.55) h5cut->Fill(smearedtime);
+		if (v[il][hit].parID != 0) h5nopri->Fill(smearedtime);
+		if (v[9].size()>5) h5nomip->Fill(smearedtime);
+	      }
+	      if (v[il][hit].parID == 0) {
+		//				cout << v[il][hit].time - tMean << endl;
+		h->Fill(v[il][hit].time - tMean); //ns
+	      }
+	    }
+	  }
+	  
+	  //		std::cout << " ------------ " << std::endl;
+	  
+	  v.clear();
 	}
-
+	
 	outFile->WriteTObject(h);
 	outFile->WriteTObject(h1);
 	outFile->WriteTObject(h2);
@@ -108,5 +121,7 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(h5cut);
 	outFile->WriteTObject(h5nopri);
 	outFile->WriteTObject(h5nomip);
+	outFile->WriteTObject(hPrimEdep);
+	outFile->WriteTObject(hEdep);
 	outFile->Close();
 }
