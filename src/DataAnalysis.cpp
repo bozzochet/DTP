@@ -3,6 +3,7 @@
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
+#include "TRandom3.h"
 #include "TStyle.h"
 #include "TTree.h"
 #include "TTreeReader.h"
@@ -10,7 +11,6 @@
 #include "iostream"
 #include <iostream>
 #include <vector>
-#include "TRandom3.h"
 using namespace std;
 
 int main(int argc, char **argv) {
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 	  for (int j = 0; j < a->GetEntries(); j++) {
 	    TrCluster *cl = (TrCluster *)a->At(j);
 	    v[cl->layer].push_back(*cl);
-	    if (cl->parID == 0) { // primario                                                                                                                                                                                                                                                                  
+	    if (cl->parID == 0) { // primario
 	      hPrimEdep->Fill(cl->eDep);
 	    }
 	    hEdep->Fill(cl->eDep);
@@ -71,12 +71,9 @@ int main(int argc, char **argv) {
 	  for (auto il : v) {
 	    for (auto hit : il) {
 	      if(tStart>hit.time) tStart = hit.time;
-	      
 	      if (hit.parID != 0) continue;
-	      
 	      tMean += hit.time;
 	      _n++;
-	      
 	    }
 	  }
 	  tMean /= _n;

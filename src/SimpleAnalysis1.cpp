@@ -12,6 +12,7 @@
 #include "TString.h"
 #include "TTree.h"
 #include "TrCluster.hh"
+#include "montecarlo/readers/GGSTHadrIntReader.h"
 #include "montecarlo/readers/GGSTHitsReader.h"
 #include "montecarlo/readers/GGSTMCTruthReader.h"
 #include "montecarlo/readers/GGSTRootReader.h"
@@ -53,6 +54,9 @@ int main(int argc, char **argv) {
   // Retrieve the MC truth sub-reader
   GGSTMCTruthReader *mcReader = reader.GetReader<GGSTMCTruthReader>();
 
+  // Create and retrieve the hadronic interaction sub-reader
+  GGSTHadrIntReader *hadrReader = reader.GetReader<GGSTHadrIntReader>();
+
   TTree *tree = new TTree("Tree", "siSensorHits");
   // TH1F *h = new TH1F("h", "test", 1000, 0, 5);
 
@@ -70,19 +74,35 @@ int main(int argc, char **argv) {
     int nHits = hReader->GetNHits("siSensor"); // Number of hit siLayers for current event
     a.Clear();
 
+    std::cout << " ---------- " << std::endl;
+    std::cout << "  Event  " << iEv << std::endl;
+    std::cout << " ---------- " << std::endl;
+
+    std::cout << nHits << " hits" << std::endl;
+    GGSTHadrIntInfo *intInfo = hadrReader->GetInelastic();
+    if (intInfo)
+      std::cout << "  Inelastic interaction happened at z = " << intInfo->GetInteractionPoint()[2] << std::endl;
+    if (hadrReader->GetNQuasiElastic() > 0) {
+      for (int iqe = 0; iqe < hadrReader->GetNQuasiElastic(); iqe++) {
+        GGSTHadrIntInfo *qintInfo = hadrReader->GetQuasiElastic(iqe);
+        if (qintInfo)
+          std::cout << "  QuasiElastic interaction happened at z = " << qintInfo->GetInteractionPoint()[2] << std::endl;
+      }
+    }
     // Hits loop
+    int ncluster = 0;
     for (int iHit = 0; iHit < nHits; iHit++) {
-      TrCluster *c = (TrCluster *)a.ConstructedAt(iHit);
       inthit = hReader->GetHit("siSensor", iHit);
       int nPHit = inthit->GetNPartHits();
       int llayer = inthit->GetVolumeID() / (N * N);
 
       for (int i = 0; i < nPHit; i++) {
+        TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
         phit = inthit->GetPartHit(i);
 
         c->segm = llayer % 2 == 0;
-        c->pos[0] = c->segm;                                             // posizione lungo x o y
-        c->pos[1] = 0.5 * (phit->entrancePoint[2] + phit->exitPoint[2]); // posizione lungo z
+        c->pos[0] = 0.5 * (phit->entrancePoint[c->segm] + phit->exitPoint[c->segm]); // posizione lungo x o y
+        c->pos[1] = 0.5 * (phit->entrancePoint[2] + phit->exitPoint[2]);             // posizione lungo z
         c->time = phit->time;
         c->eDep = phit->eDep;
         c->spRes = 0.00007;

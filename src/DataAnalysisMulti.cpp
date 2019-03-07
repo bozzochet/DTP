@@ -59,7 +59,9 @@ int main(int argc, char **argv) {
       TrCluster *cl = (TrCluster *)a->At(j);
       v[cl->layer].push_back(*cl);
     }
-
+    // for (auto il : v) {
+    //   std::cout << il.size() << std::endl;
+    // }
     // Analisi
 
     float tStart = v[0][0].time;
@@ -78,6 +80,8 @@ int main(int argc, char **argv) {
       }
     }
     tMean /= _n;
+
+    if( _n < 10 ) std::cout << i << ": Less than 10 primary hits!" << std::endl;
 
     for (int il = 0; il < v.size(); il++) {
       for (int hit = 0; hit < v[il].size(); hit++) {
