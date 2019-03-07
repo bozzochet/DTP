@@ -90,13 +90,14 @@ int main(int argc, char **argv) {
       }
     }
     // Hits loop
+    int ncluster = 0;
     for (int iHit = 0; iHit < nHits; iHit++) {
-      TrCluster *c = (TrCluster *)a.ConstructedAt(iHit);
       inthit = hReader->GetHit("siSensor", iHit);
       int nPHit = inthit->GetNPartHits();
       int llayer = inthit->GetVolumeID() / (N * N);
 
       for (int i = 0; i < nPHit; i++) {
+        TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
         phit = inthit->GetPartHit(i);
 
         c->segm = llayer % 2 == 0;
@@ -109,11 +110,6 @@ int main(int argc, char **argv) {
         c->parID = phit->parentID;
         c->parPdg = phit->particlePdg;
       }
-
-      std::cout << " ---------- " << std::endl;
-      std::cout << "  Hit " << iHit << std::endl;
-      c->Dump();
-      std::cout << " ---------- " << std::endl;
     }
 
     tree->Fill();
