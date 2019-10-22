@@ -74,11 +74,11 @@ int main(int argc, char **argv) {
     int nHits = hReader->GetNHits("siSensor"); // Number of hit siLayers for current event
     a.Clear();
 
-    std::cout << " ---------- " << std::endl;
-    std::cout << "  Event  " << iEv << std::endl;
-    std::cout << " ---------- " << std::endl;
+    // std::cout << " ---------- " << std::endl;
+    // std::cout << "  Event  " << iEv << std::endl;
+    // std::cout << " ---------- " << std::endl;
 
-    std::cout << nHits << " hits" << std::endl;
+    //    std::cout << nHits << " hits" << std::endl;
     GGSTHadrIntInfo *intInfo = hadrReader->GetInelastic();
     if (intInfo)
       std::cout << "  Inelastic interaction happened at z = " << intInfo->GetInteractionPoint()[2] << std::endl;

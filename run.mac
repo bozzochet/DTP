@@ -11,7 +11,7 @@
 /GGS/generatorActions/set gun                          # Use the GGS gun generator
 #/gun/List
 #/GGS/generatorActions/gun/particle d_quark              # Shoot
-/GGS/generatorActions/gun/particle u_quark              # Shoot
+#/GGS/generatorActions/gun/particle u_quark              # Shoot
 /GGS/generatorActions/gun/particle proton              # Shoot protons
 #/GGS/generatorActions/gun/particle e-              # Shoot electron
 #/GGS/generatorActions/gun/particle ion                 # Shoot ?...

@@ -34,7 +34,7 @@ GeometryPlugin(DetectorConstruction)
 
     //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-    DetectorConstruction::DetectorConstruction()
+DetectorConstruction::DetectorConstruction()
     : GGSVGeometryConstruction(), fCheckOverlaps(false), fPhysicalWorld(NULL) {
   DefineMaterials();
   detMessenger = new DetectorMessenger(this);
