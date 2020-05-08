@@ -1,6 +1,6 @@
 echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 
-cmake ../myggsrepo -DGGS_DIR=../../GGSSoftware_install/
+cmake ${PWD/%_build} -DGGS_DIR=$GGS_SYS/
 make
 rm -v src/TestGeometry.gdml
 GGSWolowitz -g src/libTestGeometry.dylib -o src/TestGeometry.gdml -t gdml
