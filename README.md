@@ -4,10 +4,10 @@ GGS Simulation of POX prototype detector
 
 Ingredients:
 
-- macros/vis.mac: datacard, a la Geant, to set the simulation parameters 
-- macros/geo.mac: datacard for the parametric geometry
+- macros/rin.mac: datacard, a la Geant, to set the simulation parameters 
+#- macros/geo.mac: datacard for the parametric geometry
 - {src,include}/DetectorConstruction.{cc,hh}: definition, a la Geant, of the geometry 
-- Analysis/Analysis.C: ROOT macro to read the GGS output file
+#- Analysis/Analysis.C: ROOT macro to read the GGS output file
 
 Typical commands:
 
