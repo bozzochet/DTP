@@ -1,4 +1,4 @@
-# POXsimu
+# DTP
 
 GGS Simulation of POX prototype detector
 
