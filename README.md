@@ -45,7 +45,7 @@ GSLeonard -g lib/TestGeometry.gdml -i test.root
 
 Working examples can be found in `useful_commands/show_geometry.sh` and  `useful_commands/show_events.sh`
 
-- conversion from parametric geometry to GDML
+##### - conversion from parametric geometry to GDML
 ```
 GGSWolowitz -g lib/libTestGeometry.so -o lib/TestGeometry.gdml -t gdml
 ```
