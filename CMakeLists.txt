@@ -1,8 +1,21 @@
 cmake_minimum_required(VERSION 3.11)
 
-project(TestGeometry)
+project(DTP)
 
-find_package(GGS 2.3.1 REQUIRED)
+SET(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY TRUE)
+
+# use, i.e. don't skip the full RPATH for the build tree
+SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+
+# when building, don't use the install RPATH already
+# (but later on when installing)
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+find_package(GGS 2.6.0 REQUIRED)
 set(CMAKE_CXX_FLAGS "${GGS_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 # Remove /usr/include from list of include folders.
 # This folder is added by Geant4 through GGS, and it causes this error:
@@ -13,10 +26,19 @@ get_property(include_dirs DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY INCLUDE_DIRECTO
 list(REMOVE_ITEM include_dirs "/usr/include")
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES ${include_dirs})
 
+##################################################
+
+set(INC_DIR "${CMAKE_BINARY_DIR}/include")
+set(LIB_DIR "${CMAKE_BINARY_DIR}/lib")
+set(BIN_DIR "${CMAKE_BINARY_DIR}/exe")
+set(INSTALL_INC_DIR "include")
+set(INSTALL_LIB_DIR "lib")
+set(INSTALL_BIN_DIR "exe")
+
+##################################################
 
 add_subdirectory(src)
-add_subdirectory(ManualMakefile)
-configure_file(compila_e_mostra.sh compila_e_mostra.sh COPYONLY)
-configure_file(runna.sh runna.sh COPYONLY)
-configure_file(mostra_eventi.sh mostra_eventi.sh COPYONLY)
-configure_file(run.mac run.mac COPYONLY)
+add_subdirectory(include)
+#add_subdirectory(ManualMakefile)
+add_subdirectory(macros)
+add_subdirectory(useful_commands)
