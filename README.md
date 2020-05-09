@@ -1,61 +1,63 @@
 # DTP
 
-GGS Simulation of POX prototype detector
+## Simulation with GGS
+
+GGS Simulation of a simple detector with the silicon detectors with timing capabilities
 
 Ingredients:
 
-- macros/rin.mac: datacard, a la Geant, to set the simulation parameters 
+- macros/rin.mac: datacard, a la Geant, to set the simulation parameters
 <!-- - macros/geo.mac: datacard for the parametric geometry -->
-- {src,include}/DetectorConstruction.{cc,hh}: definition, a la Geant, of the geometry 
+- {src,include}/DetectorConstruction.{cc,hh}: definition, a la Geant, of the geometry
 <!-- - Analysis/Analysis.C: ROOT macro to read the GGS output file -->
 
 Typical commands:
 
 - compilation and installation:
-
 ```
-cd <build_path>
-cmake -DCMAKE_INSTALL_PREFIX=<installation_path> <source_path>
+cd <build_path> 
+cmake -DCMAKE_INSTALL_PREFIX=<installation_path> <source_path> -DGGS_DIR=$GGS_SYS/
 make
 make install
 ```
 
-- simulation:
+ The `make install` is not required and even not suggested. All the pieces are both copied in the build directory and installed: everything should work even in the build directory.
 
+ A working example can be found in `useful_commands/cmake_and_compile.sh` that includes also the creation of the `gdml` version of the geometry:
 ```
-GGSPenny -g plugins/libTestGeometry.so -gd macros/geo.mac -d macros/vis.mac -ro GGSRootOutput.root > GGSOut.txt
+GGSWolowitz -g lib/libTestGeometry.so -o lib/TestGeometry.gdml -t gdml
 ```
-  
-produces the file GGSRootOutput.root, and the .wrl files of the first 100 events, see for example g4_03.wrl for converted gamma  
-(the creation of the .wrl event display is suppressed commenting the
+
+- simulation:
 ```
-/vis/open VRML2FILE
+GGSPenny -g lib/libTestGeometry.so -d macros/run.mac -ro test.root
 ```
-line in the vis.mac macro)
+
+ A working example can be found in `useful_commands/run.sh`
+
+- visualization of the geometry and of the simulated events:
+```
+GGSLeonard -g lib/TestGeometry.gdml
+```
+```
+GSLeonard -g lib/TestGeometry.gdml -i test.root
+```
+
+ Working examples can be found in `useful_commands/show_geometry.sh` and  `useful_commands/show_events.sh`
 
 - conversion from parametric geometry to GDML
 ```
-GGSWolowitz -g plugins/libTestGeometry.so -gd macros/geo.mac -t gdml -o plugins/libTestGeometry.gdml
+GGSWolowitz -g lib/libTestGeometry.so -o lib/TestGeometry.gdml -t gdml
 ```
 
 - conversion from parametric geometry to VGM (http://ivana.home.cern.ch/ivana/VGM.html)
 ```
-GGSWolowitz -g plugins/libTestGeometry.so -gd macros/geo.mac -t vgm -o plugins/libTestGeometry.vgm.root
+GGSWolowitz -g lib/libTestGeometry.so -t vgm -o lib/TestGeometry.vgm.root
 ```
 
-- opening of the geometry display:
-```
-GGSLeonard -g plugins/libTestGeometry.vgm.root
-```
-
-- opening of the event display:
-```
-GGSLeonard -g plugins/libTestGeometry.vgm.root -i GGSRootOutput.root
-```
+## Analysis (to be written correctly)
 
 - conversion from GGS output to plain ROOT file:
 ```
-root [0] .L Analysis/Analysis.C 
+root [0] .L Analysis/Analysis.C
 root [1] SimpleAnalysis("GGSRootOutput.root", "anaOut.root")
-```
-
