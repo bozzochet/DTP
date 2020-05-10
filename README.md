@@ -23,10 +23,17 @@ make install
 
 The `make install` is not required and even not suggested. All the pieces are both copied in the build directory and installed: everything should work even in the build directory.
 
-A working example can be found in `useful_commands/cmake_and_compile.sh` that includes also the creation of the `gdml` version of the geometry:
+A working example can be found in `useful_commands/cmake_and_compile.sh` that includes also the creation of the `gdml` version of the geometry (see below). A reasonable approch could be to call the build dir as the source one but with the suffic `_build`, then:
 ```
-GGSWolowitz -g lib/libTestGeometry.so -o lib/TestGeometry.gdml -t gdml
+cd <git_clone_name>_build
+cmake -DCMAKE_INSTALL_PREFIX=${PWD/%_build}_install ${PWD/%_build} -DGGS_DIR=$GGS_SYS/
+./useful_commands/cmake_and_compile.sh
 ```
+and then, everytime the source code or the scripts are change is enough to launch a
+```
+./useful_commands/cmake_and_compile.sh
+```
+(if you change the source `cmake_and_compile.sh` you have to call it twice: first time is **fully** executed in its previous version but the `cmake` call changes it; second time the new versions is exectued).
 
 ##### - simulation:
 ```
