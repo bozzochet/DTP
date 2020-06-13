@@ -62,7 +62,9 @@ int main(int argc, char **argv) {
 
   COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
 
-  int N = 5;
+	int Nsquares = 8; //squares per side
+	int Nlad = Nsquares*5; //number of ladders
+	int Nstrips = 640; //strips per ladder
 
   TClonesArray a("TrCluster", 200);
   tree->Branch("Events", &a);
@@ -91,26 +93,35 @@ int main(int argc, char **argv) {
     }
     // Hits loop
     int ncluster = 0;
-    for (int iHit = 0; iHit < nHits; iHit++) {
-      inthit = hReader->GetHit("siSensor", iHit);
-      int nPHit = inthit->GetNPartHits();
-      int llayer = inthit->GetVolumeID() / (N * N);
 
-      for (int i = 0; i < nPHit; i++) {
-        TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
-        phit = inthit->GetPartHit(i);
+	for (int iHit = 0; iHit < nHits; iHit++) {
+		inthit = hReader->GetHit("siSensor", iHit);
+		int nPHit = inthit->GetNPartHits();
+		int llayer = inthit->GetVolumeID() / (Nsquares * Nsquares);
+		cout<<"layer : "<<llayer<<endl;
+		cout<<"square : "<<inthit->GetVolumeID()<<endl;	
+	
+	
 
-        c->segm = llayer % 2 == 0;
-        c->pos[0] = 0.5 * (phit->entrancePoint[c->segm] + phit->exitPoint[c->segm]); // posizione lungo x o y
-        c->pos[1] = 0.5 * (phit->entrancePoint[2] + phit->exitPoint[2]);             // posizione lungo z
-        c->time = phit->time;
-        c->eDep = phit->eDep;
-        c->spRes = 0.00007;
-        c->layer = llayer;
-        c->parID = phit->parentID;
-        c->parPdg = phit->particlePdg;
+		for (int i = 0; i < nPHit; i++) {
+			TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
+			phit = inthit->GetPartHit(i);
+			c->segm = llayer % 2 == 0;
+			c->pos[0] = 0.5 * (phit->entrancePoint[0] + phit->exitPoint[0]); // x coordinate
+			c->pos[1] = 0.5 * (phit->entrancePoint[1] + phit->exitPoint[1]); // y coordinate
+ 			c->pos[2] = 0.5 * (phit->entrancePoint[2] + phit->exitPoint[2]); // z coordinate
+			cout << c->pos[1] <<endl;
+			c->time = phit->time;
+			c->eDep = phit->eDep;
+			c->spRes = 0.00007;
+			c->layer = llayer;
+			c->parID = phit->parentID;
+			c->parPdg = phit->particlePdg;
+			c->ID = inthit->GetVolumeID();
+			
       }
     }
+	
 
     tree->Fill();
   }
