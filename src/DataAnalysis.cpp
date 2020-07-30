@@ -1,7 +1,6 @@
 #include "TCanvas.h"
 #include "TClonesArray.h"
 #include "TF1.h"
-#include "TF2.h"
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH2D.h"
@@ -11,15 +10,18 @@
 #include "TTree.h"
 #include "TTreeReader.h"
 #include "TrCluster.hh"
-#include <TApplication.h>
 #include <iostream>
-#include <cmath>
 #include <vector>
+#include "montecarlo/readers/GGSTHadrIntReader.h"
+#include "montecarlo/readers/GGSTHitsReader.h"
+#include "montecarlo/readers/GGSTMCTruthReader.h"
+#include "montecarlo/readers/GGSTRootReader.h"
+#include "utils/GGSSmartLog.h"
 using namespace std;
 
 int main(int argc, char **argv) {
 
-	const int nLayer = 25;
+	const int nLayer = 26;
 	auto inFile = TFile::Open(argv[1]);
 
 	TTree *events;
@@ -52,22 +54,34 @@ int main(int argc, char **argv) {
 	TH1F *helectronmu = new TH1F("muoni", "muoni", 1000, 0, 4);
 	TH1F *hpi = new TH1F("pi", "pi", 1000, 0, 4);
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
-	TH2D *realp= new TH2D("positions","positions",640*16,0,640,640*16,-40,40);
+	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 10000, -40, 40);
+	TH2D *realp = new TH2D("positions","positions",640*16,0,640,640*16,-40,40);
 	TRandom3 *tr = new TRandom3();
 	vector<vector<TrCluster>> v;
 	
+	/*GGSTRootReader reader;
+	const GGSTGeoParams *geoParams = reader.GetGeoParams();
 
-	int Nsquares = 8; //squares per side
-	int Nlad = Nsquares*2*10; //number of ladders
-	int Nstrips = 640; //strips per ladder
-	double squareSide = 10;
-	double lenght = squareSide/(double(Nstrips));
+	const int Nsquares = geoParams->GetRealGeoParam("Nsquares"); //squares per side
+	const int Nlad = Nsquares*5; //number of ladders
+	const int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
+	const double squareSide = geoParams->GetRealGeoParam("squareSide");
+	const double lenght = squareSide/(double(Nstrips));
+	double eDepSegm[Nlad][Nstrips];
+	double PrimeDepSegm[Nlad][Nstrips];
+	double posf[Nlad][Nstrips];*/
+
+	const int Nsquares = 8; //squares per side
+	const int Nlad = Nsquares*2*10; //number of ladders
+	const int Nstrips = 640; //strips per ladder
+	const double squareSide = 10;
+	const double lenght = squareSide/(double(Nstrips));
 	double eDepSegm[Nlad][Nstrips];
 	double PrimeDepSegm[Nlad][Nstrips];
 	double posf[Nlad][Nstrips];
 	
 
-	//Array initialisation
+	// eDepSegm array initialisation
 
 	for (int i = 0; i < Nlad; i++) {
 		for (int j = 0; j < Nstrips; j++) {
@@ -103,12 +117,16 @@ int main(int argc, char **argv) {
 
 			// Implement segmentation
 			
-			cout<<"ID = "<<cl->ID<<endl; //find the nearest strip to the left
+			// Find the nearest strip on the left
+
+			cout<<"ID = "<<cl->ID<<endl;
 			int stripHit = (cl->pos[cl->segm]+((Nsquares*squareSide)/2))/lenght;
 			int strip = stripHit % Nstrips;
 			cout<<"strip = "<<strip<<endl;
+			
+			// Find the ladder it belongs
 
-			int ladder, uladder;	//find the ladder
+			int ladder, uladder;	
 			if(!cl->segm) {
 				uladder = (cl->ID - Nsquares*Nsquares*cl->layer)/Nsquares;
 				if(cl->ID % Nsquares > Nsquares/2)
@@ -123,27 +141,33 @@ int main(int argc, char **argv) {
 
 			// Fill the eDepSegm array
 
-			double fraction = abs (remainder(cl->pos[cl->segm],lenght));
-			fraction = fraction / lenght;			
-
-			eDepSegm[ladder][strip] = eDepSegm[ladder][strip] + (cl->eDep * fraction);
-
-			if (strip == 639)
-				if (ladder % Nsquares != Nsquares - 1) 
-					eDepSegm[ladder+1][0] = eDepSegm[ladder+1][0]+(cl->eDep*(1-fraction));
-			else 
-				eDepSegm[ladder][strip+1] = eDepSegm[ladder][strip+1]+(cl->eDep*(1-fraction));
+			double fraction = remainder(cl->pos[cl->segm],lenght);
+			fraction = abs(fraction / lenght);
 			
-			PrimeDepSegm[ladder][strip] = PrimeDepSegm[ladder][strip]+(cl->eDep*fraction);	
+			// Fill the strip on the left
 
-			if (cl->parID == 0) {
-				if (ladder % Nsquares != Nsquares - 1) 
-					PrimeDepSegm[ladder+1][0] = PrimeDepSegm[ladder+1][0]+(cl->eDep*(1-fraction));
-				PrimeDepSegm[ladder][strip+1] = PrimeDepSegm[ladder][strip+1]+(cl->eDep*(1-fraction));
-				}
+			eDepSegm[ladder][strip] += (cl->eDep * fraction);
+			
+			//Fill the strip on the right
 
+			if (strip == Nstrips - 1)
+				if (ladder % Nsquares != Nsquares - 1)
+					eDepSegm[ladder+1][0] += (cl->eDep*(1-fraction));
+			else 
+				eDepSegm[ladder][strip+1] += (cl->eDep*(1-fraction));
+			
+			//Same with the PrimeDepSegm array
 
-			//Simulate position
+			if(cl->parID == 0) {
+				PrimeDepSegm[ladder][strip] += (cl->eDep*fraction);
+				if (strip == Nstrips - 1)
+					if (ladder % Nsquares != Nsquares - 1)
+						PrimeDepSegm[ladder+1][0] += (cl->eDep*(1-fraction));
+				else 
+					PrimeDepSegm[ladder][strip+1] += (cl->eDep*(1-fraction));
+			}	
+
+			//Simulate position as center of the strip
 
 			double fakep[2];
 			fakep[cl->segm] = strip*lenght + 10*(ladder%Nsquares)-(Nsquares*5);
@@ -169,17 +193,83 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < Nlad; i++) {
 		int index = 0;
 		for (int j = 0; j < Nstrips; j++) {
-			if(eDepSegm[i][j] > 9e-6) {
+			if(eDepSegm[i][j] > 9e-6)
 				hEdep0->Fill(eDepSegm[i][j]); //total
-				hPrimEdep0->Fill(eDepSegm[i][j]); //primary
-			}
+			if(PrimeDepSegm[i][j] > 9e-6)
+				hPrimEdep0->Fill(PrimeDepSegm[i][j]); //primary
 			
+			// Fill the realp histogram
+
 			realp->Fill(index,posf[i][j]);
-			insert[j+(i*Nlad)] = posf[i][j];
-			number[j+(i*Nlad)] = index;
-			index++;			
 		}
 	}
+
+	//Add noise
+	for (int i = 0; i < Nlad; i++) {
+		for (int j = 0; j < Nstrips; j++) {
+			double fluct = tr->Gaus(0,9e-6);
+			eDepSegm[i][j] += fluct; 
+		}
+	}
+
+	//Data Analysis
+	cout<<"Cluster identification\n";
+	for (int i = 0; i < Nlad; i++) {
+		for (int j = 0; j < Nstrips; j++) {
+				
+			//Find the boundaries of the clusters
+			if(eDepSegm[i][j] >= 27e-6) {
+				cout<<"Analysing cluster\n";
+
+				int j1 = j-1;
+				while(j1>=0 && eDepSegm[i][j1] > 9e-6)
+					j1--;
+
+				int j2 = j+1; 
+				while(j1<Nstrips && eDepSegm[i][j2] > 9e-6) 
+					j2++;
+			
+
+				//Find the boundaries of the peaks
+				for(int k = j1; k <= j2; k++) {
+					if(eDepSegm[i][k] >= 27e-6) {
+						
+						cout<<"Analysing peak\n";
+						int k1 = k-1;
+						int k2 = k+1;
+						while(k1!=j1 && eDepSegm[i][k1] >= 27e-6)
+							k1--;
+						while(k2!=j2 && eDepSegm[i][k2] >= 27e-6)
+							k2++;
+
+						//Find the peaks
+						int kmax = k1;
+						for(int khold = k1; khold < k2; khold++)
+							if(eDepSegm[i][khold]>=eDepSegm[i][kmax])
+								kmax = khold;
+
+						double kPos = j*lenght + 10*(i%Nsquares)-(Nsquares*5);
+						double kLeftPos = kPos - lenght;
+						double kRightPos = kPos + lenght;
+						if(eDepSegm[i][kmax-1]>eDepSegm[i][kmax+1]) {
+							double realpos = (kPos*eDepSegm[i][kmax] + kLeftPos*eDepSegm[i][kmax-1])/(eDepSegm[i][kmax] + eDepSegm[i][kmax-1]);
+							cout<<"Position = "<<realpos<<endl;
+							segmp->Fill(realpos); }
+						if(eDepSegm[i][kmax-1]<eDepSegm[i][kmax+1]) {
+							double realpos = (kPos*eDepSegm[i][kmax] + kRightPos*eDepSegm[i][kmax+1])/(eDepSegm[i][kmax] + eDepSegm[i][kmax+1]);
+							cout<<"Position ="<<realpos<<endl;
+							segmp->Fill(realpos); }
+						if(eDepSegm[i][kmax-1]==eDepSegm[i][kmax+1]) {
+							cout<<"Position = "<<kPos<<endl; 
+							segmp->Fill(kPos); }
+						k = k2;
+						}
+				j = j2;
+				}
+			}
+		}		
+	}
+				
 
 	// Find tStart and tMean
 	  
@@ -196,15 +286,10 @@ int main(int argc, char **argv) {
 		}
 	tMean /= _n;
 	
-	//Analysis
-	
+	//Particle identification
 	for (int il = 0; il<v.size(); il++) {
 		for (int hit = 0; hit<v[il].size(); hit++) {
-			//if(1) (
-			//v[9].size()>5&&v[il][hit].eDep>0.00001 
-			//10 keV 
-			//cout<<v[il][hit].parPdg <<endl;			
-			//eDep
+
 			if (v[il][hit].parPdg == 2212)
 				hprotons->Fill(log10(v[il][hit].time - tStart + 1));
 			if (v[il][hit].parPdg == -2212)
@@ -263,6 +348,7 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(realp);
+	outFile->WriteTObject(segmp);
 	outFile->Close();
 	}
 }
