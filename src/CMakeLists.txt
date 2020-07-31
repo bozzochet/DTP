@@ -103,62 +103,6 @@ set_target_properties(DataAnalysis PROPERTIES
 
 install(TARGETS DataAnalysis DESTINATION "${INSTALL_BIN_DIR}")
 
-#################
-
-set(DataAnalysisGhosts_SRC
-	DataAnalysisGhosts.cpp
-	G__TrCluster.cxx
-)
-
-add_executable(DataAnalysisGhosts ${DataAnalysisGhosts_SRC})
-target_link_libraries(DataAnalysisGhosts
-  ${ROOT_LIBRARIES}
-  ${GGS_ANALYSIS_LIBRARIES}
-)
-
-set_target_properties(DataAnalysisGhosts PROPERTIES
-				     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
-				     )
-
-install(TARGETS DataAnalysisGhosts DESTINATION "${INSTALL_BIN_DIR}")
-
-#################
-
-set(DataAnalysisHough_SRC
-	DataAnalysisHough.cpp
-	G__TrCluster.cxx
-)
-
-add_executable(DataAnalysisHough ${DataAnalysisHough_SRC})
-target_link_libraries(DataAnalysisHough
-  ${ROOT_LIBRARIES}
-  ${GGS_ANALYSIS_LIBRARIES}
-)
-
-set_target_properties(DataAnalysisHough PROPERTIES
-				     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
-				     )
-
-install(TARGETS DataAnalysisHough DESTINATION "${INSTALL_BIN_DIR}")
-
-#################
-
-set(DataAnalysisMulti_SRC
-	DataAnalysisMulti.cpp
-	G__TrCluster.cxx
-)
-
-add_executable(DataAnalysisMulti ${DataAnalysisMulti_SRC})
-target_link_libraries(DataAnalysisMulti
-  ${ROOT_LIBRARIES}
-  ${GGS_ANALYSIS_LIBRARIES}
-)
-
-set_target_properties(DataAnalysisMulti PROPERTIES
-				     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
-				     )
-
-install(TARGETS DataAnalysisMulti DESTINATION "${INSTALL_BIN_DIR}")
 
 #################
 

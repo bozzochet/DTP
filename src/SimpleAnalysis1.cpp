@@ -62,25 +62,29 @@ int main(int argc, char **argv) {
 
   COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
 
-	int Nsquares = 8; //squares per side
+	/*const GGSTGeoParams *geoParams = reader.GetGeoParams();
+
+	int Nsquares = geoParams->GetRealGeoParam("Nsquares"); //squares per side
 	int Nlad = Nsquares*5; //number of ladders
-	int Nstrips = 640; //strips per ladder
+	int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
+	double squareSide = geoParams->GetRealGeoParam("squareSide");*/
+	const int Nsquares = 8; //squares per side
+	const int Nlad = Nsquares*2*10; //number of ladders
+	const int Nstrips = 640; //strips per ladder
+	const double squareSide = 10;
+	const double lenght = squareSide/(double(Nstrips));
 
   TClonesArray a("TrCluster", 200);
   tree->Branch("Events", &a);
 
   for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
+
     reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
     GGSTPartHit *phit;
     GGSTIntHit *inthit;
     int nHits = hReader->GetNHits("siSensor"); // Number of hit siLayers for current event
     a.Clear();
 
-    // std::cout << " ---------- " << std::endl;
-    // std::cout << "  Event  " << iEv << std::endl;
-    // std::cout << " ---------- " << std::endl;
-
-    //    std::cout << nHits << " hits" << std::endl;
     GGSTHadrIntInfo *intInfo = hadrReader->GetInelastic();
     if (intInfo)
       std::cout << "  Inelastic interaction happened at z = " << intInfo->GetInteractionPoint()[2] << std::endl;
@@ -94,23 +98,24 @@ int main(int argc, char **argv) {
     // Hits loop
     int ncluster = 0;
 
-	for (int iHit = 0; iHit < nHits; iHit++) {
+	 for (int iHit = 0; iHit < nHits; iHit++) {
 		inthit = hReader->GetHit("siSensor", iHit);
 		int nPHit = inthit->GetNPartHits();
 		int llayer = inthit->GetVolumeID() / (Nsquares * Nsquares);
 		cout<<"layer : "<<llayer<<endl;
-		cout<<"square : "<<inthit->GetVolumeID()<<endl;	
-	
-	
+		cout<<"square : "<<inthit->GetVolumeID()<<endl;
+
+
 
 		for (int i = 0; i < nPHit; i++) {
 			TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
 			phit = inthit->GetPartHit(i);
+      cout<<"Entry #"<<(iHit+1)*(i+1)<<endl;
 			c->segm = llayer % 2 == 0;
 			c->pos[0] = 0.5 * (phit->entrancePoint[0] + phit->exitPoint[0]); // x coordinate
 			c->pos[1] = 0.5 * (phit->entrancePoint[1] + phit->exitPoint[1]); // y coordinate
  			c->pos[2] = 0.5 * (phit->entrancePoint[2] + phit->exitPoint[2]); // z coordinate
-			cout << c->pos[1] <<endl;
+			cout << c->pos[c->segm] <<endl;
 			c->time = phit->time;
 			c->eDep = phit->eDep;
 			c->spRes = 0.00007;
@@ -118,15 +123,50 @@ int main(int argc, char **argv) {
 			c->parID = phit->parentID;
 			c->parPdg = phit->particlePdg;
 			c->ID = inthit->GetVolumeID();
-			
-      }
-    }
-	
+
+			//Find the nearest strip to the left
+
+			int stripHit = (c->pos[c->segm]+((Nsquares*squareSide)/2))/lenght;
+			int strip = stripHit % Nstrips;
+
+			// Find the ladder it belongs
+
+			int ladder, uladder;
+			if(!c->segm) {
+				uladder = (c->ID - Nsquares*Nsquares*c->layer)/Nsquares;
+				if(c->ID % Nsquares > Nsquares/2)
+					ladder= uladder + Nsquares + Nsquares*2*c->layer;
+				else
+					ladder= uladder + Nsquares*2*c->layer;
+				}
+			else
+				ladder = (c->ID % (Nsquares*2)) + (c->layer*(Nsquares*2));
+			if(strip == 639 && ladder%c->ID != Nsquares-1)
+				ladder++;
+			c->ladder = ladder;
+
+			double fraction = remainder(c->pos[c->segm],lenght);
+			fraction = abs(fraction / lenght);
+
+			c->strip = strip;
+
+			//Deposit energy and create cluster
+
+			if(fraction > 0.5) {
+				c->clust[0] = c->eDep * fraction;
+				c->clust[1] = c->eDep * (1-fraction);
+				}
+			else {
+				c->clust[1] = c->eDep * fraction;
+				c->clust[0] = c->eDep * (1-fraction);
+				}
+		}
+  }
 
     tree->Fill();
   }
 
-  COUT(INFO) << "Event loop finished" << ENDL;
+  //COUT(INFO) << "Event loop finished" << ENDL;
 
   // Save histograms
   outFile->cd();
@@ -134,5 +174,5 @@ int main(int argc, char **argv) {
   outFile->Close();
   delete outFile;
 
-  COUT(INFO) << "Analysis finished" << ENDL;
+  //COUT(INFO) << "Analysis finished" << ENDL;
 }
