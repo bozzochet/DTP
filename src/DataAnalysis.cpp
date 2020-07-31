@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 	TH1F *helectronmu = new TH1F("muoni", "muoni", 1000, 0, 4);
 	TH1F *hpi = new TH1F("pi", "pi", 1000, 0, 4);
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
-	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -10, 10);
+	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.5, 0.5);
 	//TH2D *realp = new TH2D("positions","positions",640*16,0,640,640*16,-40,40);
 	TRandom3 *tr = new TRandom3();
 	vector<vector<TrCluster>> v;
@@ -179,6 +179,7 @@ int main(int argc, char **argv) {
 
 				}
 		}
+	}
 
 			//Empty the strips
 
@@ -189,6 +190,7 @@ int main(int argc, char **argv) {
 					PrimeDepSegm[i][j] = fluct;
 					}
 				}
+			}
 
 	// Fill the eDep histograms (w/ segmentation but not time resolution)
 
