@@ -87,12 +87,12 @@ int main(int argc, char **argv) {
 
     GGSTHadrIntInfo *intInfo = hadrReader->GetInelastic();
     if (intInfo)
-      std::cout << "  Inelastic interaction happened at z = " << intInfo->GetInteractionPoint()[2] << std::endl;
+      cout << "  Inelastic interaction happened at z = " << intInfo->GetInteractionPoint()[2] << endl;
     if (hadrReader->GetNQuasiElastic() > 0) {
       for (int iqe = 0; iqe < hadrReader->GetNQuasiElastic(); iqe++) {
         GGSTHadrIntInfo *qintInfo = hadrReader->GetQuasiElastic(iqe);
         if (qintInfo)
-          std::cout << "  QuasiElastic interaction happened at z = " << qintInfo->GetInteractionPoint()[2] << std::endl;
+          cout << "  QuasiElastic interaction happened at z = " << qintInfo->GetInteractionPoint()[2] << endl;
       }
     }
     // Hits loop
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
 
 			//Find the nearest strip to the left
 
-			int stripHit = (c->pos[c->segm]+((Nsquares*squareSide)/2))/lenght;
+		  int stripHit = (c->pos[c->segm]+((Nsquares*squareSide)/2))/lenght;
 			int strip = stripHit % Nstrips;
 
 			// Find the ladder it belongs
@@ -141,25 +141,24 @@ int main(int argc, char **argv) {
 				}
 			else
 				ladder = (c->ID % (Nsquares*2)) + (c->layer*(Nsquares*2));
-			if(strip == 639 && ladder%c->ID != Nsquares-1)
+			if(strip == 639)
 				ladder++;
 			c->ladder = ladder;
 
-			double fraction = remainder(c->pos[c->segm],lenght);
-			fraction = abs(fraction / lenght);
+			double fraction = remainder(c->pos[c->segm],lenght)/lenght;
 
 			c->strip = strip;
 
 			//Deposit energy and create cluster
 
-			if(fraction > 0.5) {
-				c->clust[0] = c->eDep * fraction;
-				c->clust[1] = c->eDep * (1-fraction);
+			if(fraction < 0) {
+				c->clust[0] = c->eDep * (1-abs(fraction));
+				c->clust[1] = c->eDep * abs(fraction);
 				}
 			else {
-				c->clust[1] = c->eDep * fraction;
-				c->clust[0] = c->eDep * (1-fraction);
-				}
+				c->clust[0] = c->eDep * fraction;
+				c->clust[1] = c->eDep * (1 - fraction);
+      }
 		}
   }
 
