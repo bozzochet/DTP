@@ -79,6 +79,27 @@ std::vector<double> RemoveNotRead(std::vector<double> vec, int readout_step){
   return vec_stripped;
 }
 
+std::vector<double> AddNoise(std::vector<double> ene_readout, double ene) {
+
+  std::vector<double> ene_readout_withnoise(ene_readout);
+  
+  double noise = ene/10.0;
+  //  printf("%f\n", noise);
+
+  for (int ii=0; ii<(int)(ene_readout.size()); ii++) {
+    double ene = gRandom->Gaus(ene_readout[ii], noise);
+    //    printf("ene = %f\n", ene);
+    if (ene<0) ene=0;
+    ene_readout_withnoise[ii] = ene;
+  }
+  
+  // for (int ii=0; ii<(int)(ene_readout.size()); ii++) {
+  //   printf("%d) %f -> %f\n", ii, ene_readout[ii], ene_readout_withnoise[ii]);
+  // }
+
+  return ene_readout_withnoise;
+}
+
 double Baricenter(std::vector<double> strip_pos, std::vector<double> ene_readout){
 
   int n = (int)(strip_pos.size())-1;
@@ -86,6 +107,7 @@ double Baricenter(std::vector<double> strip_pos, std::vector<double> ene_readout
   // printf("%f * %f\n", strip_pos[0], ene_readout[0]);
   // printf("%f * %f\n", strip_pos[n], ene_readout[n]);
   double reco_pos = strip_pos[0]*ene_readout[0] + strip_pos[n]*ene_readout[n];
+  reco_pos/=(ene_readout[0] + ene_readout[n]);
   
   //  printf("reco_pos = %f\n", reco_pos);
  
@@ -100,50 +122,62 @@ void ToySegmentation() {
   printf("pitch = %f, %f\n", implant_pitch, readout_step*implant_pitch);
   printf("*****************\n");
 
-  int entries = 10000;
+  printf("**** ene: *****\n");
+  double tot_ene=30.0;
+  printf("ene = %f\n", tot_ene);
+  printf("*****************\n");
+  
+  int nentries = 10000;
   TH1F* h = new TH1F("h", "h", 1000, -readout_step*implant_pitch, readout_step*implant_pitch);
 
-  for (int nn=0; nn<entries; nn++) {
+  for (int nn=0; nn<nentries; nn++) {
     
-    printf("**** pos: *****\n");
+    if (nentries==1) printf("**** pos: *****\n");
     double pos=15.0;
-    if (nn>0) pos=gRandom->Uniform(-readout_step*implant_pitch/2.0, readout_step*implant_pitch/2.0);
-    printf("pos = %f\n", pos);
-    printf("*****************\n");
+    if (nentries>1) pos=gRandom->Uniform(-readout_step*implant_pitch/2.0, readout_step*implant_pitch/2.0);
+    if (nentries==1) printf("pos = %f\n", pos);
+    if (nentries==1) printf("*****************\n");
     
-    printf("**** strip: *****\n");
+    if (nentries==1) printf("**** strip: *****\n");
     std::vector<double> implant_strip_pos = Segmentation(readout_step, implant_pitch); 
     for (int ii=0; ii<(int)(implant_strip_pos.size()); ii++) {
-      printf("%d) %f\n", ii, implant_strip_pos[ii]);
+      if (nentries==1) printf("%d) %f\n", ii, implant_strip_pos[ii]);
     }
-    printf("*****************\n");
+    if (nentries==1) printf("*****************\n");
     
-    printf("**** depo: *****\n");
-    std::vector<double> ene_dep = ChargeDeposit(pos, implant_strip_pos, 1.0);
+    if (nentries==1) printf("**** depo: *****\n");
+    std::vector<double> ene_dep = ChargeDeposit(pos, implant_strip_pos, tot_ene);
     for (int ii=0; ii<(int)(ene_dep.size()); ii++) {
-      printf("%d) %f\n", ii, ene_dep[ii]);
+      if (nentries==1) printf("%d) %f\n", ii, ene_dep[ii]);
     }
-    printf("*****************\n");
+    if (nentries==1) printf("*****************\n");
     
-    printf("**** collected: *****\n");
+    if (nentries==1) printf("**** collected: *****\n");
     std::vector<double> ene_collected = ChargeSharing(ene_dep);
     for (int ii=0; ii<(int)(ene_collected.size()); ii++) {
-      printf("%d) %f\n", ii, ene_collected[ii]);
+      if (nentries==1) printf("%d) %f\n", ii, ene_collected[ii]);
     }
-    printf("*****************\n");
+    if (nentries==1) printf("*****************\n");
     
-    printf("**** remove not-read: *****\n");
+    if (nentries==1) printf("**** remove not-read: *****\n");
     std::vector<double> strip_pos = RemoveNotRead(implant_strip_pos, readout_step);
     std::vector<double> ene_readout = RemoveNotRead(ene_collected, readout_step);
     for (int ii=0; ii<(int)(ene_readout.size()); ii++) {
-      printf("%d) %f %f\n", ii, strip_pos[ii], ene_readout[ii]);
+      if (nentries==1) printf("%d) %f %f\n", ii, strip_pos[ii], ene_readout[ii]);
     }
-    printf("*****************\n");
+    if (nentries==1) printf("*****************\n");
+
+    if (nentries==1) printf("**** add noise: *****\n");
+    std::vector<double> ene_readout_withnoise = AddNoise(ene_readout, tot_ene);
+    for (int ii=0; ii<(int)(ene_readout_withnoise.size()); ii++) {
+      if (nentries==1) printf("%d) %f\n", ii, ene_readout_withnoise[ii]);
+    }
+    if (nentries==1) printf("*****************\n");
     
-    printf("**** pos reco: *****\n");
-    double reco_pos=Baricenter(strip_pos, ene_readout);
-    printf("reco_pos = %f\n", reco_pos);
-    printf("*****************\n");
+    if (nentries==1) printf("**** pos reco: *****\n");
+    double reco_pos=Baricenter(strip_pos, ene_readout_withnoise);
+    if (nentries==1) printf("reco_pos = %f\n", reco_pos);
+    if (nentries==1) printf("*****************\n");
 
     h->Fill(reco_pos-pos);
   }
