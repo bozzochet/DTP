@@ -24,7 +24,10 @@ std::vector< std::pair<double, bool> > Segmentation(int readout_step=1, double i
   return strip_pos;
 }
 
-std::vector< std::pair<double, bool> > ChargeSharing(double pos, std::vector< std::pair<double, bool> > strip_pos, double Ene=1.0, bool kOnlyCloser=false){
+std::vector< std::pair<double, bool> > ChargeSharing(double pos, std::vector< std::pair<double, bool> > strip_pos, double Ene=1.0, int kSharingType=0){
+  // kSharingType = 0; linear
+  // kSharingType = 1; only closer
+  // kSharingType = 2; 50% - 50% between th two closest
 
   std::vector< std::pair<double, bool> > ene_dep(strip_pos.size());
 
@@ -35,13 +38,7 @@ std::vector< std::pair<double, bool> > ChargeSharing(double pos, std::vector< st
     double left = strip_pos[ii-1].first;
     double right = strip_pos[ii].first;
     if (pos>left && pos<=right) {
-      if (!kOnlyCloser) {
-	Eright = Ene*(pos-left)/(right-left);
-	Eleft = Ene*(right-pos)/(right-left);
-	ene_dep[ii-1].first = Eleft;
-	ene_dep[ii].first = Eright;	
-      }
-      else {
+      if (kSharingType==1) {
 	if (fabs(pos-left)<fabs(pos-right)) {
 	  Eleft = Ene;
 	  Eright = 0;
@@ -52,6 +49,19 @@ std::vector< std::pair<double, bool> > ChargeSharing(double pos, std::vector< st
 	}
 	ene_dep[ii-1].first = Eleft;
 	ene_dep[ii].first = Eright;
+      }
+      else if (kSharingType==2) {
+	Eright = 0.5*Ene;
+	Eleft = 0.5*Ene;
+	ene_dep[ii-1].first = Eleft;
+	ene_dep[ii].first = Eright;
+      }
+      else {
+	//      if (kSharingType==0) {
+	Eright = Ene*(pos-left)/(right-left);
+	Eleft = Ene*(right-pos)/(right-left);
+	ene_dep[ii-1].first = Eleft;
+	ene_dep[ii].first = Eright;	
       }
     }
     ene_dep[ii-1].second = strip_pos[ii-1].second;
