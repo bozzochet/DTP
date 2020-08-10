@@ -24,7 +24,7 @@ std::vector< std::pair<double, bool> > Segmentation(int readout_step=1, double i
   return strip_pos;
 }
 
-std::vector< std::pair<double, bool> > ChargeDeposit(double pos, std::vector< std::pair<double, bool> > strip_pos, double Ene=1.0){
+std::vector< std::pair<double, bool> > ChargeSharing(double pos, std::vector< std::pair<double, bool> > strip_pos, double Ene=1.0, bool kOnlyCloser=false){
 
   std::vector< std::pair<double, bool> > ene_dep(strip_pos.size());
 
@@ -35,11 +35,24 @@ std::vector< std::pair<double, bool> > ChargeDeposit(double pos, std::vector< st
     double left = strip_pos[ii-1].first;
     double right = strip_pos[ii].first;
     if (pos>left && pos<=right) {
-      Eright = Ene*(pos-left)/(right-left);
-      Eleft = Ene*(right-pos)/(right-left);
-      ene_dep[ii-1].first = Eleft;
-      ene_dep[ii].first = Eright;
-
+      if (!kOnlyCloser) {
+	Eright = Ene*(pos-left)/(right-left);
+	Eleft = Ene*(right-pos)/(right-left);
+	ene_dep[ii-1].first = Eleft;
+	ene_dep[ii].first = Eright;	
+      }
+      else {
+	if (fabs(pos-left)<fabs(pos-right)) {
+	  Eleft = Ene;
+	  Eright = 0;
+	}
+	else {
+	  Eleft = 0;
+	  Eright = Ene;
+	}
+	ene_dep[ii-1].first = Eleft;
+	ene_dep[ii].first = Eright;
+      }
     }
     ene_dep[ii-1].second = strip_pos[ii-1].second;
     ene_dep[ii].second = strip_pos[ii].second;
@@ -50,16 +63,45 @@ std::vector< std::pair<double, bool> > ChargeDeposit(double pos, std::vector< st
   return ene_dep;
 }
 
-std::vector< std::pair<double, bool> > ChargeSharing(std::vector< std::pair<double, bool> > ene_dep){
+std::vector< std::pair<double, bool> > ChargeCoupling(std::vector< std::pair<double, bool> > ene_dep){
 
   std::vector< std::pair<double, bool> > ene_readout(ene_dep);
 
+  // 4% sharing, up to the 3rd neighbour...
+  for (int ii=0; ii<(int)(ene_readout.size()); ii++) {
+    double ene = ene_readout[ii].first;
+    if (ii>0) {
+      ene_dep[ii-1].first += 0.04*ene;
+      ene_dep[ii].first   -= 0.04*ene;
+    }
+    if (ii<(int)(ene_readout.size())-1) {
+      ene_dep[ii+1].first += 0.04*ene;
+      ene_dep[ii].first   -= 0.04*ene;
+    }
+    if (ii>1) {
+      ene_dep[ii-2].first += 0.04*0.04*ene;
+      ene_dep[ii].first   -= 0.04*0.04*ene;
+    }
+    if (ii<(int)(ene_readout.size())-2) {
+      ene_dep[ii+2].first += 0.04*0.04*ene;
+      ene_dep[ii].first   -= 0.04*0.04*ene;
+    }
+    if (ii>2) {
+      ene_dep[ii-3].first += 0.04*0.04*0.04*ene;
+      ene_dep[ii].first   -= 0.04*0.04*0.04*ene;
+    }
+    if (ii<(int)(ene_readout.size())-3) {
+      ene_dep[ii+3].first += 0.04*0.04*0.04*ene;
+      ene_dep[ii].first   -= 0.04*0.04*0.04*ene;
+    }
+  }
+
+  // "fluence" up to the readout... 
   for (int ll=0; ll<30; ll++) {
     ene_readout = ene_dep;
-    
-    for (int ii=1; ii<(int)(ene_readout.size())-1; ii++) {
+    for (int ii=0; ii<(int)(ene_readout.size()); ii++) {
       double ene = ene_readout[ii].first;
-      if (!ene_readout[ii].second) {
+      if (!ene_readout[ii].second && ii!=0) {//non readout: it works if first and last are readout
 	ene_dep[ii-1].first += 0.5*ene;
 	ene_dep[ii+1].first += 0.5*ene;
 	ene_dep[ii].first   -= ene;
@@ -175,14 +217,14 @@ void ToySegmentation() {
     if (nentries==1) printf("*****************\n");
 
     if (nentries==1) printf("**** depo: *****\n");
-    std::vector< std::pair<double, bool> > ene_dep = ChargeDeposit(pos, implant_strip_pos, tot_ene);
+    std::vector< std::pair<double, bool> > ene_dep = ChargeSharing(pos, implant_strip_pos, tot_ene);
     for (int ii=0; ii<(int)(ene_dep.size()); ii++) {
       if (nentries==1) printf("%d) %f (%d)\n", ii, ene_dep[ii].first, ene_dep[ii].second);
     }
     if (nentries==1) printf("*****************\n");
 
     if (nentries==1) printf("**** collected: *****\n");
-    std::vector< std::pair<double, bool> > ene_collected = ChargeSharing(ene_dep);
+    std::vector< std::pair<double, bool> > ene_collected = ChargeCoupling(ene_dep);
     for (int ii=0; ii<(int)(ene_collected.size()); ii++) {
       if (nentries==1) printf("%d) %f (%d) \n", ii, ene_collected[ii].first, ene_collected[ii].second);
     }
