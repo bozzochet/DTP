@@ -73,41 +73,43 @@ std::vector< std::pair<double, bool> > ChargeSharing(double pos, std::vector< st
   return ene_dep;
 }
 
-std::vector< std::pair<double, bool> > ChargeCoupling(std::vector< std::pair<double, bool> > ene_dep){
+std::vector< std::pair<double, bool> > ChargeCoupling(std::vector< std::pair<double, bool> > ene_dep, bool kFourPercentCoupling=true){
 
   std::vector< std::pair<double, bool> > ene_readout(ene_dep);
 
-  // 4% sharing, up to the 3rd neighbour...
-  for (int ii=0; ii<(int)(ene_readout.size()); ii++) {
-    double ene = ene_readout[ii].first;
-    if (ii>0) {
-      ene_dep[ii-1].first += 0.04*ene;
-      ene_dep[ii].first   -= 0.04*ene;
-    }
-    if (ii<(int)(ene_readout.size())-1) {
-      ene_dep[ii+1].first += 0.04*ene;
-      ene_dep[ii].first   -= 0.04*ene;
-    }
-    if (ii>1) {
-      ene_dep[ii-2].first += 0.04*0.04*ene;
-      ene_dep[ii].first   -= 0.04*0.04*ene;
-    }
-    if (ii<(int)(ene_readout.size())-2) {
-      ene_dep[ii+2].first += 0.04*0.04*ene;
-      ene_dep[ii].first   -= 0.04*0.04*ene;
-    }
-    if (ii>2) {
-      ene_dep[ii-3].first += 0.04*0.04*0.04*ene;
-      ene_dep[ii].first   -= 0.04*0.04*0.04*ene;
-    }
-    if (ii<(int)(ene_readout.size())-3) {
-      ene_dep[ii+3].first += 0.04*0.04*0.04*ene;
-      ene_dep[ii].first   -= 0.04*0.04*0.04*ene;
+  if (kFourPercentCoupling) {
+    // 4% sharing, up to the 3rd neighbour...
+    for (int ii=0; ii<(int)(ene_readout.size()); ii++) {
+      double ene = ene_readout[ii].first;
+      if (ii>0) {
+	ene_dep[ii-1].first += 0.04*ene;
+	ene_dep[ii].first   -= 0.04*ene;
+      }
+      if (ii<(int)(ene_readout.size())-1) {
+	ene_dep[ii+1].first += 0.04*ene;
+	ene_dep[ii].first   -= 0.04*ene;
+      }
+      if (ii>1) {
+	ene_dep[ii-2].first += 0.04*0.04*ene;
+	ene_dep[ii].first   -= 0.04*0.04*ene;
+      }
+      if (ii<(int)(ene_readout.size())-2) {
+	ene_dep[ii+2].first += 0.04*0.04*ene;
+	ene_dep[ii].first   -= 0.04*0.04*ene;
+      }
+      if (ii>2) {
+	ene_dep[ii-3].first += 0.04*0.04*0.04*ene;
+	ene_dep[ii].first   -= 0.04*0.04*0.04*ene;
+      }
+      if (ii<(int)(ene_readout.size())-3) {
+	ene_dep[ii+3].first += 0.04*0.04*0.04*ene;
+	ene_dep[ii].first   -= 0.04*0.04*0.04*ene;
+      }
     }
   }
-
+    
   // "fluence" up to the readout... 
-  for (int ll=0; ll<30; ll++) {
+  for (int ll=0; ll<50; ll++) {
     ene_readout = ene_dep;
     for (int ii=0; ii<(int)(ene_readout.size()); ii++) {
       double ene = ene_readout[ii].first;
@@ -198,23 +200,30 @@ double Baricenter(std::vector<double> strip_pos, std::vector<double> ene_readout
 void ToySegmentation() {
   
   printf("**** pitch: *****\n");
-  double implant_pitch=50.0;
-  double readout_step=3;
+  // // POX
+  // double implant_pitch=50.0;
+  // double readout_step=3;
+  // AMS-S
+  double implant_pitch=27.5;
+  double readout_step=4;
+  //
   printf("pitch = %f, %f\n", implant_pitch, readout_step*implant_pitch);
   printf("*****************\n");
 
   printf("**** ene: *****\n");
-  double tot_ene=30.0;
+  double tot_ene=100.0;
   printf("ene = %f\n", tot_ene);
   printf("*****************\n");
   
   int nentries = 1000000;
+  //  int nentries = 1;
   TH1F* h = new TH1F("h", "h", 1000, -readout_step*implant_pitch, readout_step*implant_pitch);
 
   for (int nn=0; nn<nentries; nn++) {
     
     if (nentries==1) printf("**** pos: *****\n");
     double pos=15.0;
+    //    double pos=100.0;
     if (nentries>1) pos=gRandom->Uniform(-readout_step*implant_pitch/2.0, readout_step*implant_pitch/2.0);
     if (nentries==1) printf("pos = %f\n", pos);
     if (nentries==1) printf("*****************\n");
@@ -227,14 +236,16 @@ void ToySegmentation() {
     if (nentries==1) printf("*****************\n");
 
     if (nentries==1) printf("**** depo: *****\n");
-    std::vector< std::pair<double, bool> > ene_dep = ChargeSharing(pos, implant_strip_pos, tot_ene);
+    //    std::vector< std::pair<double, bool> > ene_dep = ChargeSharing(pos, implant_strip_pos, tot_ene);
+    std::vector< std::pair<double, bool> > ene_dep = ChargeSharing(pos, implant_strip_pos, tot_ene, 1);
     for (int ii=0; ii<(int)(ene_dep.size()); ii++) {
       if (nentries==1) printf("%d) %f (%d)\n", ii, ene_dep[ii].first, ene_dep[ii].second);
     }
     if (nentries==1) printf("*****************\n");
 
     if (nentries==1) printf("**** collected: *****\n");
-    std::vector< std::pair<double, bool> > ene_collected = ChargeCoupling(ene_dep);
+    //    std::vector< std::pair<double, bool> > ene_collected = ChargeCoupling(ene_dep);
+    std::vector< std::pair<double, bool> > ene_collected = ChargeCoupling(ene_dep, false);
     for (int ii=0; ii<(int)(ene_collected.size()); ii++) {
       if (nentries==1) printf("%d) %f (%d) \n", ii, ene_collected[ii].first, ene_collected[ii].second);
     }
