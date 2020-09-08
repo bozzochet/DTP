@@ -19,7 +19,35 @@
 #include "utils/GGSSmartLog.h"
 #include <iostream>
 #include <vector>
+#include <cmath>
 using namespace std;
+
+int findStrip(double position) {
+  const int Nsquares = 8; //squares per side
+	const int Nlad = Nsquares*2*10; //number of ladders
+	const int Nstrips = 640; //strips per ladder
+	const double squareSide = 10;
+	const double pitch = squareSide/(double(Nstrips));
+  
+  int stripHit = (position+(Nsquares*squareSide*0.5))/pitch;
+  return stripHit % Nstrips;
+}
+
+int findLadder(int ID, int layer, bool condition) {
+  const int Nsquares = 8; //squares per side
+	const int Nlad = Nsquares*2*10; //number of ladders
+	const int Nstrips = 640; //strips per ladder
+	const double squareSide = 10;
+	const double pitch = squareSide/(double(Nstrips));
+
+  if(!condition) {
+    int row = (ID - (Nsquares*Nsquares*layer))/Nsquares;
+    bool leftOrRight = (ID % Nsquares) > (Nsquares*0.5);
+    return row + (Nsquares*leftOrRight) + (Nsquares*2*layer);
+    }
+  else
+    return (ID % (Nsquares*2)) + (layer*Nsquares*2);
+}
 
 int main(int argc, char **argv) {
   TString inputFileName = argv[1];
@@ -68,11 +96,14 @@ int main(int argc, char **argv) {
 	int Nlad = Nsquares*5; //number of ladders
 	int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
 	double squareSide = geoParams->GetRealGeoParam("squareSide");*/
+
 	const int Nsquares = 8; //squares per side
 	const int Nlad = Nsquares*2*10; //number of ladders
 	const int Nstrips = 640; //strips per ladder
 	const double squareSide = 10;
-	const double lenght = squareSide/(double(Nstrips));
+	const double pitch = squareSide/(double(Nstrips));
+
+
 
   TClonesArray a("TrCluster", 200);
   tree->Branch("Events", &a);
@@ -110,12 +141,12 @@ int main(int argc, char **argv) {
 		for (int i = 0; i < nPHit; i++) {
 			TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
 			phit = inthit->GetPartHit(i);
-      cout<<"Entry #"<<(iHit+1)*(i+1)<<endl;
+      cout<<"Entry #"<<iHit+i+1<<endl;
+
 			c->segm = llayer % 2 == 0;
 			c->pos[0] = 0.5 * (phit->entrancePoint[0] + phit->exitPoint[0]); // x coordinate
 			c->pos[1] = 0.5 * (phit->entrancePoint[1] + phit->exitPoint[1]); // y coordinate
  			c->pos[2] = 0.5 * (phit->entrancePoint[2] + phit->exitPoint[2]); // z coordinate
-			cout << c->pos[c->segm] <<endl;
 			c->time = phit->time;
 			c->eDep = phit->eDep;
 			c->spRes = 0.00007;
@@ -125,47 +156,26 @@ int main(int argc, char **argv) {
 			c->ID = inthit->GetVolumeID();
 
 			//Find the nearest strip to the left
+			c->strip = findStrip(c->pos[c->segm]);
 
-		  int stripHit = (c->pos[c->segm]+((Nsquares*squareSide)/2))/lenght;
-			int strip = stripHit % Nstrips;
 
 			// Find the ladder it belongs
+      c->ladder = findLadder(c->ID, c->layer, c->segm);
 
-			int ladder, uladder;
-			if(!c->segm) {
-				uladder = (c->ID - Nsquares*Nsquares*c->layer)/Nsquares;
-				if(c->ID % Nsquares > Nsquares/2)
-					ladder= uladder + Nsquares + Nsquares*2*c->layer;
-				else
-					ladder= uladder + Nsquares*2*c->layer;
-				}
-			else
-				ladder = (c->ID % (Nsquares*2)) + (c->layer*(Nsquares*2));
-			if(strip == 639)
-				ladder++;
-			c->ladder = ladder;
+      //Deposit energy and create cluster
+      double thisPos = ((c->ladder%Nsquares)*squareSide) + (c->strip*pitch) - (Nsquares*squareSide*0.5);
+      double fraction = (c->pos[c->segm]-thisPos)/pitch;
+      cout<<"fraction = "<<fraction<<endl;
 
-			double fraction = remainder(c->pos[c->segm],lenght)/lenght;
+			c->clust[0] = c->eDep * (fraction);
+			c->clust[1] = c->eDep * (1-fraction);
 
-			c->strip = strip;
-
-			//Deposit energy and create cluster
-
-			if(fraction < 0) {
-				c->clust[0] = c->eDep * (1-abs(fraction));
-				c->clust[1] = c->eDep * abs(fraction);
-				}
-			else {
-				c->clust[0] = c->eDep * fraction;
-				c->clust[1] = c->eDep * (1 - fraction);
       }
-		}
-  }
+    }
 
     tree->Fill();
-  }
 
-  //COUT(INFO) << "Event loop finished" << ENDL;
+  }
 
   // Save histograms
   outFile->cd();
@@ -173,5 +183,4 @@ int main(int argc, char **argv) {
   outFile->Close();
   delete outFile;
 
-  //COUT(INFO) << "Analysis finished" << ENDL;
 }

@@ -31,8 +31,8 @@ ClassDef(TrCluster, 2)
 	std::cout << "parPdg = " << parPdg << std::endl;
 	std::cout << "layer = " << layer << std::endl;
 	std::cout << "ID = " << ID << std::endl;
-	std::cout << "strip = " << ID << std::endl;
-	std::cout << "ladder = " << ID << std::endl;
+	std::cout << "strip = " << strip << std::endl;
+	std::cout << "ladder = " << ladder << std::endl;
 	std::cout << "cluster = (" << clust[0] << " , " << clust[1] << std::endl;
 	}
 };

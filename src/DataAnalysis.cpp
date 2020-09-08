@@ -3,7 +3,6 @@
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
-#include "TH2D.h"
 #include <TGraph.h>
 #include "TRandom3.h"
 #include "TStyle.h"
@@ -12,12 +11,18 @@
 #include "TrCluster.hh"
 #include <iostream>
 #include <vector>
-#include "montecarlo/readers/GGSTHadrIntReader.h"
-#include "montecarlo/readers/GGSTHitsReader.h"
-#include "montecarlo/readers/GGSTMCTruthReader.h"
-#include "montecarlo/readers/GGSTRootReader.h"
 #include "utils/GGSSmartLog.h"
 using namespace std;
+
+void stripReset(double array[][640], int dim1, int dim2) {
+	TRandom3 *tr = new TRandom3();
+	for (int ii = 0; ii < dim1; ii++) {
+		for (int jj = 0; jj < dim2; jj++) {
+			double fluct = tr->Gaus(0,9e-6);
+			array[ii][jj] = fluct;
+			}
+		}
+}
 
 int main(int argc, char **argv) {
 
@@ -54,44 +59,36 @@ int main(int argc, char **argv) {
 	TH1F *helectronmu = new TH1F("muoni", "muoni", 1000, 0, 4);
 	TH1F *hpi = new TH1F("pi", "pi", 1000, 0, 4);
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
-	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
-	//TH2D *realp = new TH2D("positions","positions",640*16,0,640,640*16,-40,40);
+
+	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 10000, -0.05, 0.05);
+
 	TRandom3 *tr = new TRandom3();
 	vector<vector<TrCluster>> v;
 
-	/*GGSTRootReader reader;
+	/*
+
+	Passing the parameters from DetectorConstruction.cc, not working yet
+
+	GGSTRootReader reader;
 	const GGSTGeoParams *geoParams = reader.GetGeoParams();
 
 	const int Nsquares = geoParams->GetRealGeoParam("Nsquares"); //squares per side
 	const int Nlad = Nsquares*5; //number of ladders
 	const int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
 	const double squareSide = geoParams->GetRealGeoParam("squareSide");
-	const double lenght = squareSide/(double(Nstrips));
+	const double pitch = squareSide/(double(Nstrips));
 	double eDepSegm[Nlad][Nstrips];
 	double PrimeDepSegm[Nlad][Nstrips];
-	double posf[Nlad][Nstrips];*/
 
+	*/
+	const int Nlayers = 10;
 	const int Nsquares = 8; //squares per side
-	const int Nlad = Nsquares*2*10; //number of ladders
+	const int Nlad = Nsquares*2*Nlayers; //number of ladders
 	const int Nstrips = 640; //strips per ladder
 	const double squareSide = 10;
-	const double lenght = squareSide/(double(Nstrips));
+	const double pitch = squareSide/(double(Nstrips));
 	double eDepSegm[Nlad][Nstrips];
-	double PrimeDepSegm[Nlad][Nstrips];
-	double posf[Nlad][Nstrips];
-
-
-	// eDepSegm array initialisation
-
-	for (int i = 0; i < Nlad; i++) {
-		for (int j = 0; j < Nstrips; j++) {
-			double fluct = tr->Gaus(0,9e-6);
-			eDepSegm[i][j] = fluct;
-			PrimeDepSegm[i][j] = fluct;
-			}
-		}
-
-	// Fill the eDep histograms and identify clusters
+	const int jump = 1;
 
 	for (int i = 0; i < events->GetEntries(); i++) {
 
@@ -104,9 +101,14 @@ int main(int argc, char **argv) {
 				printf("%d) %d %f\n", j, cl->parID, cl->eDep);
 				}
 			}
+
+			// eDepSegm array initialisation
+			stripReset(eDepSegm,Nlad,Nstrips);
+
+
 		for (int j = 0; j < a->GetEntries(); j++) {
 
-			cout<<endl<<"Entry #"<<i+j<<endl;
+			cout<<endl<<"Entry #"<<j<<endl;
 			TrCluster *cl = (TrCluster *)a->At(j);
 			v[cl->layer].push_back(*cl);
 			if (cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
@@ -114,103 +116,136 @@ int main(int argc, char **argv) {
 
 			//Fill the strips with the current cluster
 
-			eDepSegm[cl->ladder][cl->strip] = cl->clust[0];
-			if(cl->strip==639) {
-				if(cl->ladder%Nsquares !=7)
-					eDepSegm[cl->ladder+1][0] = cl->clust[1];
-				}
+			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
+			if(cl->strip==Nstrips-1)
+				eDepSegm[cl->ladder+1][0] += cl->clust[1];
 			else
-				eDepSegm[cl->ladder][cl->strip+1] = cl->clust[1];
+				eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
 
-			for (int ix = cl->layer * Nsquares * 2; ix < (Nsquares*2*(cl->layer+1) - 1); ix++) {
-				for (int jx = 0; jx < Nstrips; jx++) {
+			// Sharing of the energy from non-active strips
+
+			/*for (int ix = cl->layer * Nsquares * 2; ix < (Nsquares*2*(cl->layer+1) - 1); ix++) {
+				for (int jx = 0; jx < Nstrips; jx+=jump) {
+
+					if(jx > 0 && jx < Nstrips-1) {
+						eDepSegm[ix][jx-1] += eDepSegm[ix][jx]*0.5;
+						eDepSegm[ix][jx+1] += eDepSegm[ix][jx]*0.5;
+					}
+					if(jx==0)
+						eDepSegm[ix][jx+1] += eDepSegm[ix][jx];
+					if(jx==Nstrips-1)
+						eDepSegm[ix][jx-1] += eDepSegm[ix][jx];
+
+					eDepSegm[ix][jx] = 0;
+
+					}
+				}*/
+
+
+			//Analysing the strip data
+
+				for (int ix = cl->layer * Nsquares * 2; ix < (Nsquares*2*(cl->layer+1) - 1); ix++) {
+					for (int jx = 0; jx < Nstrips; jx++) {
+
 
 				//Find the boundaries of the clusters
 
 				if(eDepSegm[ix][jx] >= 27e-6) {
 					cout<<"Analysing cluster\n";
 
+					vector< pair<double,double>> strip;
+
+					int i1 = ix;
 					int j1 = jx-1;
-					while(j1>=0 && eDepSegm[ix][j1] > 9e-6)
-						j1--;
 
-					int j2 = jx+1;
-					while(j1<Nstrips && eDepSegm[ix][j2] > 9e-6)
-						j2++;
-
-
-					//Find the boundaries of the peaks
-
-					for(int k = j1; k <= j2; k++) {
-						if(eDepSegm[ix][k] >= 27e-6) {
-
-						cout<<"Analysing peak with "<<eDepSegm[ix][k]<<" energy\n";
-						int k1 = k-1;
-						int k2 = k+1;
-						while(k1!=j1 && eDepSegm[ix][k1] >= 27e-6)
-							k1--;
-						while(k2!=j2 && eDepSegm[ix][k2] >= 27e-6)
-							k2++;
-
-						//Find the peaks
-
-						int kmax = k1;
-						for(int khold = k1; khold < k2; khold++)
-							if(eDepSegm[ix][khold]>=eDepSegm[ix][kmax])
-								kmax = khold;
-
-						double kPos = (kmax)*lenght + 10*(cl->ladder%Nsquares)-((Nsquares*squareSide)/2);
-						cout<<"Simulated position: "<<kPos<<endl;
-						cout<<"Real position: "<<cl->pos[cl->segm]<<endl;
-						double kLeftPos = kPos - lenght;
-						double kRightPos = kPos + lenght;
-						if(eDepSegm[ix][kmax-1]>eDepSegm[ix][kmax+1]) {
-							double realpos = ((kPos*eDepSegm[ix][kmax]) + (kLeftPos*eDepSegm[ix][kmax-1]))/(eDepSegm[ix][kmax] + eDepSegm[ix][kmax-1]);
-							segmp->Fill(realpos-cl->pos[cl->segm]); }
-						if(eDepSegm[ix][kmax+1]>eDepSegm[ix][kmax-1]) {
-							double realpos = ((kPos*eDepSegm[ix][kmax]) + (kRightPos*eDepSegm[ix][kmax+1]))/(eDepSegm[ix][kmax] + eDepSegm[ix][kmax+1]);
-							segmp->Fill(realpos-cl->pos[cl->segm]); }
-						if(eDepSegm[ix][kmax-1]==eDepSegm[ix][kmax+1]) {
-							segmp->Fill(kPos-cl->pos[cl->segm]); }
-						k = k2;
-								}
-				jx = j2;
+					while(eDepSegm[i1][j1] > 9e-6){
+						j1-=jump;
+						if (j1<0) {
+							i1--;
+							j1 = Nstrips-1-j1;
 							}
 						}
 
-				}
+					int i2 = ix;
+					int j2 = jx+1;
+
+					while(eDepSegm[i2][j2] > 9e-6) {
+						j2+=jump;
+						if (j1>=Nstrips) {
+							i2++;
+							j2 = j2-Nstrips+1;
+							}
+						}
+
+					int clustSize = ((i2-i1)*Nstrips)+(j2-j1)+1;
+
+					for(int ij = 0; ij<clustSize; ij+=jump) {
+
+							double thisPos = ((i1%Nsquares)*squareSide) + (j1*pitch) - (Nsquares*squareSide*0.5);
+							strip.push_back(make_pair(thisPos,eDepSegm[i1][j1]));
+
+							if(j1>=Nstrips-1) {
+								i1++;
+								j1 = 0;
+							}
+
+							j1+=jump;
+						}
+
+					//Find the boundaries of the peaks
+
+					for(int k = 0; k < strip.size(); k++) {
+						if(strip[k].second >= 27e-6) {
+
+						int k1 = k-1;
+						int k2 = k+1;
+
+						while(k1>0 && strip[k1].second >= 27e-6)
+							k1--;
+						while(k2<(strip.size()-1) && strip[k2].second >= 27e-6)
+							k2++;
+
+						//Find the peak
+
+						int kMax = k1;
+						for(int kHold = k1; kHold <= k2; kHold++)
+							if(strip[kHold].second>strip[kMax].second)
+								kMax = kHold;
+
+
+						cout<<"Analysing peak of "<< strip[kMax].second <<"keV\n";
+
+						//Find neighbour strip
+
+						double kNext;
+
+						if(strip[kMax+1].second > strip[kMax-1].second)
+							kNext = kMax+1;
+						else
+							kNext = kMax-1;
+					  if(kMax == 0)
+							kNext = 1;
+						if (kMax == strip.size())
+								kNext = strip.size()-1;
+
+
+
+						double simPos = ((strip[kMax].first*strip[kMax].second) + (strip[kNext].first*strip[kNext].second)) / (strip[kMax].second + strip[kNext].second);
+						segmp->Fill(cl->pos[cl->segm]-simPos);
+
+						cout<<"Simulated position: "<<simPos<<endl;
+						cout<<"Real position: "<<cl->pos[cl->segm]<<endl;
+
+						k = k2;
+								}
+							}
+				ix = i2;
+				jx = j2;
+					}
+			}
 		}
 	}
-
-			//Empty the strips
-
-			for (int i = 0; i < Nlad; i++) {
-				for (int j = 0; j < Nstrips; j++) {
-					double fluct = tr->Gaus(0,9e-6);
-					eDepSegm[i][j] = fluct;
-					PrimeDepSegm[i][j] = fluct;
-					}
-				}
-			}
-
-	// Fill the eDep histograms (w/ segmentation but not time resolution)
-
-	/*double insert[Nstrips*Nlad];
-	double number[Nlad*Nstrips];
-	long long int index=0;
-	for (int i = 0; i < Nlad; i++) {
-		int index = 0;
-		for (int j = 0; j < Nstrips; j++) {
-			if(eDepSegm[i][j] > 9e-6)
-				hEdep0->Fill(eDepSegm[i][j]); //total
-			if(PrimeDepSegm[i][j] > 9e-6)
-				hPrimEdep0->Fill(PrimeDepSegm[i][j]); //primary
-
-			// Fill the realp histogram
-
-			//realp->Fill(index,posf[i][j]);
-		}
-	}*/
+}
 
 	// Find tStart and tMean
 
@@ -289,7 +324,6 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(helectronmu);
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
-	//outFile->WriteTObject(realp);
 	outFile->WriteTObject(segmp);
 	outFile->Close();
 	}
