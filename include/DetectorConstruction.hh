@@ -24,9 +24,12 @@ public:
   DetectorConstruction();
   virtual ~DetectorConstruction();
 
+  //bool ExportParameters();
+  //const std::string GetVersion();
+
 public:
   virtual G4VPhysicalVolume* Construct();
-  // virtual void ConstructSDandField();
+  //virtual void ConstructSDandField();
 
 public:
   void updateGeometry();

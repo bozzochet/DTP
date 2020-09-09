@@ -83,10 +83,9 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
                                      false,                  // no boolean operation
                                      0,                      // copy number
                                      fCheckOverlaps);        // checking overlaps
-
-  G4int N = 5;
-  G4int dim = 10 * cm;
-
+  G4int N = 8;
+  G4double dim = 10 * cm;
+  G4int strips = 640;
   G4double pad_x = N * dim;
   G4double pad_y = N * dim;
   G4double pad_z = 0.3 * mm;
@@ -118,18 +117,17 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
   G4Box *siSensor = new G4Box("siSensor", 0.5 * dim, 0.5 * dim, 0.5 * pad_z);
   G4LogicalVolume *siSensorLogic = new G4LogicalVolume(siSensor, silicon, "siSensor");
 
-  new G4PVReplica("siSensorp", siSensorLogic, siLadderLogic, kYAxis, N, dim);
+	new G4PVReplica("siSensorp", siSensorLogic, siLadderLogic, kYAxis, N, dim);
 
-  G4double z = -0.5 * lp;
-  for (int i = 0; i < 5; i++) {
-    new G4PVPlacement(0, G4ThreeVector(0, 0, z), siLayerLogic, "siLayer", padLogic, false, 2 * i, fCheckOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(0, 0, z + 2 * mm), siLayerLogic, "siLayer", padLogic, false, 2 * i + 1,
-                      fCheckOverlaps); // va ruotato!!
-    z += (2 * cm + 2 * mm + 0.3 * mm);
-  }
+	G4double z = -0.5 * lp;
+	for (int i = 0; i < 5; i++) {
+		new G4PVPlacement(0, G4ThreeVector(0, 0, z), siLayerLogic, "siLayer", padLogic, false, 2 * i, fCheckOverlaps);
+		new G4PVPlacement(0, G4ThreeVector(0, 0, z + 2 * mm), siLayerLogic, "siLayer", padLogic, false, 2 * i + 1, fCheckOverlaps); // va ruotato!!
+		z += (2 * cm + 2 * mm + 0.3 * mm);
+  	}
 
   G4double TrkCaloGap = 2 * cm;
-  G4double caloSide = 60 * cm;
+  G4double caloSide = 90 * cm;
 
 #ifndef _NOCALO_
   G4Box *calorimeter = new G4Box("calorimetro", 30 * cm, 30 * cm, 30 * cm);
