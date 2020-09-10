@@ -28,7 +28,7 @@ int findStrip(double position) {
 	const int Nstrips = 640; //strips per ladder
 	const double squareSide = 10;
 	const double pitch = squareSide/(double(Nstrips));
-  
+
   int stripHit = (position+(Nsquares*squareSide*0.5))/pitch;
   return stripHit % Nstrips;
 }
@@ -165,7 +165,6 @@ int main(int argc, char **argv) {
       //Deposit energy and create cluster
       double thisPos = ((c->ladder%Nsquares)*squareSide) + (c->strip*pitch) - (Nsquares*squareSide*0.5);
       double fraction = (c->pos[c->segm]-thisPos)/pitch;
-      cout<<"fraction = "<<fraction<<endl;
 
 			c->clust[0] = c->eDep * (fraction);
 			c->clust[1] = c->eDep * (1-fraction);

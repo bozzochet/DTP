@@ -24,6 +24,13 @@ void stripReset(double array[][640], int dim1, int dim2) {
 		}
 }
 
+void hitReset(vector<double> array[]) {
+	const int Nlayers = 10;
+	for(int i = 0; i < Nlayers; i++) {
+		array[i].clear();
+	}
+}
+
 int main(int argc, char **argv) {
 
 	const int nLayer = 26;
@@ -87,8 +94,10 @@ int main(int argc, char **argv) {
 	const int Nstrips = 640; //strips per ladder
 	const double squareSide = 10;
 	const double pitch = squareSide/(double(Nstrips));
-	double eDepSegm[Nlad][Nstrips];
 	const int jump = 1;
+	double eDepSegm[Nlad][Nstrips];
+	vector<double> hitPos[Nlayers];
+
 
 	for (int i = 0; i < events->GetEntries(); i++) {
 
@@ -104,7 +113,7 @@ int main(int argc, char **argv) {
 
 			// eDepSegm array initialisation
 			stripReset(eDepSegm,Nlad,Nstrips);
-
+			hitReset(hitPos);
 
 		for (int j = 0; j < a->GetEntries(); j++) {
 
@@ -121,6 +130,10 @@ int main(int argc, char **argv) {
 				eDepSegm[cl->ladder+1][0] += cl->clust[1];
 			else
 				eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
+
+			//Fill the hit array
+
+			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
 
 			// Sharing of the energy from non-active strips
 
@@ -141,109 +154,109 @@ int main(int argc, char **argv) {
 					}
 				}*/
 
-
-			//Analysing the strip data
-
-				for (int ix = cl->layer * Nsquares * 2; ix < (Nsquares*2*(cl->layer+1) - 1); ix++) {
-					for (int jx = 0; jx < Nstrips; jx++) {
-
-
-				//Find the boundaries of the clusters
-
-				if(eDepSegm[ix][jx] >= 27e-6) {
-					cout<<"Analysing cluster\n";
-
-					vector< pair<double,double>> strip;
-
-					int i1 = ix;
-					int j1 = jx-1;
-
-					while(eDepSegm[i1][j1] > 9e-6){
-						j1-=jump;
-						if (j1<0) {
-							i1--;
-							j1 = Nstrips-1-j1;
-							}
-						}
-
-					int i2 = ix;
-					int j2 = jx+1;
-
-					while(eDepSegm[i2][j2] > 9e-6) {
-						j2+=jump;
-						if (j1>=Nstrips) {
-							i2++;
-							j2 = j2-Nstrips+1;
-							}
-						}
-
-					int clustSize = ((i2-i1)*Nstrips)+(j2-j1)+1;
-
-					for(int ij = 0; ij<clustSize; ij+=jump) {
-
-							double thisPos = ((i1%Nsquares)*squareSide) + (j1*pitch) - (Nsquares*squareSide*0.5);
-							strip.push_back(make_pair(thisPos,eDepSegm[i1][j1]));
-
-							if(j1>=Nstrips-1) {
-								i1++;
-								j1 = 0;
-							}
-
-							j1+=jump;
-						}
-
-					//Find the boundaries of the peaks
-
-					for(int k = 0; k < strip.size(); k++) {
-						if(strip[k].second >= 27e-6) {
-
-						int k1 = k-1;
-						int k2 = k+1;
-
-						while(k1>0 && strip[k1].second >= 27e-6)
-							k1--;
-						while(k2<(strip.size()-1) && strip[k2].second >= 27e-6)
-							k2++;
-
-						//Find the peak
-
-						int kMax = k1;
-						for(int kHold = k1; kHold <= k2; kHold++)
-							if(strip[kHold].second>strip[kMax].second)
-								kMax = kHold;
-
-
-						cout<<"Analysing peak of "<< strip[kMax].second <<"keV\n";
-
-						//Find neighbour strip
-
-						double kNext;
-
-						if(strip[kMax+1].second > strip[kMax-1].second)
-							kNext = kMax+1;
-						else
-							kNext = kMax-1;
-					  if(kMax == 0)
-							kNext = 1;
-						if (kMax == strip.size())
-								kNext = strip.size()-1;
-
-
-
-						double simPos = ((strip[kMax].first*strip[kMax].second) + (strip[kNext].first*strip[kNext].second)) / (strip[kMax].second + strip[kNext].second);
-						segmp->Fill(cl->pos[cl->segm]-simPos);
-
-						cout<<"Simulated position: "<<simPos<<endl;
-						cout<<"Real position: "<<cl->pos[cl->segm]<<endl;
-
-						k = k2;
-								}
-							}
-				ix = i2;
-				jx = j2;
-					}
 			}
-		}
+
+		for (int ix = 0; ix < Nlad; ix++) {
+			for (int jx = 0; jx < Nstrips; jx++) {
+
+
+			//Find the boundaries of the clusters
+
+			if(eDepSegm[ix][jx] >= 27e-6) {
+				cout<<"Analysing cluster\n";
+
+				vector< pair<double,double>> strip;
+
+				int i1 = ix;
+				int j1 = jx-1;
+
+				while(eDepSegm[i1][j1] > 9e-6){
+					j1-=jump;
+					if (j1<0) {
+						i1--;
+						j1 = Nstrips-1-j1;
+						}
+					}
+
+				int i2 = ix;
+				int j2 = jx+1;
+
+				while(eDepSegm[i2][j2] > 9e-6) {
+					j2+=jump;
+					if (j1>=Nstrips) {
+						i2++;
+						j2 = j2-Nstrips+1;
+						}
+					}
+
+				int clustSize = ((i2-i1)*Nstrips)+(j2-j1)+1;
+
+				for(int ij = 0; ij<clustSize; ij+=jump) {
+
+						double thisPos = ((i1%Nsquares)*squareSide) + (j1*pitch) - (Nsquares*squareSide*0.5);
+						strip.push_back(make_pair(thisPos,eDepSegm[i1][j1]));
+
+						if(j1>=Nstrips-1) {
+							i1++;
+							j1 = 0;
+						}
+
+						j1+=jump;
+					}
+
+				//Find the boundaries of the peaks
+
+				for(int k = 0; k < strip.size(); k++) {
+					if(strip[k].second >= 27e-6) {
+
+					int k1 = k-1;
+					int k2 = k+1;
+
+					while(k1>0 && strip[k1].second >= 27e-6)
+						k1--;
+					while(k2<(strip.size()-1) && strip[k2].second >= 27e-6)
+						k2++;
+
+					//Find the peak
+
+					int kMax = k1;
+					for(int kHold = k1; kHold <= k2; kHold++)
+						if(strip[kHold].second>strip[kMax].second)
+							kMax = kHold;
+
+
+					cout<<"Analysing peak of "<< strip[kMax].second <<"keV\n";
+
+					//Find neighbour strip
+
+					double kNext;
+
+					if(strip[kMax+1].second > strip[kMax-1].second)
+						kNext = kMax+1;
+					else
+						kNext = kMax-1;
+					if(kMax == 0)
+						kNext = 1;
+					if (kMax == strip.size())
+							kNext = strip.size()-1;
+
+
+
+					double simPos = ((strip[kMax].first*strip[kMax].second) + (strip[kNext].first*strip[kNext].second)) / (strip[kMax].second + strip[kNext].second);
+					int cLayer = ix/(Nsquares*2);
+
+					for(int m = 0 ; m < hitPos[cLayer].size(); m++)
+						segmp->Fill(simPos-hitPos[cLayer][m]);
+
+					cout<<"Simulated position: "<<simPos<<endl;
+
+					k = k2;
+						}
+					}
+		ix = i2;
+		jx = j2;
+				}
+			}
 	}
 }
 
