@@ -15,11 +15,17 @@
 using namespace std;
 
 void stripReset(double array[][640], int dim1, int dim2) {
+	for (int ii = 0; ii < dim1; ii++)
+		for (int jj = 0; jj < dim2; jj++)
+			array[ii][jj] = 0;
+}
+
+void addNoise(double array[][640], int dim1, int dim2) {
 	TRandom3 *tr = new TRandom3();
 	for (int ii = 0; ii < dim1; ii++) {
 		for (int jj = 0; jj < dim2; jj++) {
 			double fluct = tr->Gaus(0,9e-6);
-			array[ii][jj] = fluct;
+			array[ii][jj] += fluct;
 			}
 		}
 }
@@ -135,15 +141,19 @@ int main(int argc, char **argv) {
 
 			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
 
+			}
+
 			// Sharing of the energy from non-active strips
 
-			/*for (int ix = cl->layer * Nsquares * 2; ix < (Nsquares*2*(cl->layer+1) - 1); ix++) {
-				for (int jx = 0; jx < Nstrips; jx+=jump) {
+		/*for (int ix = 0; ix < Nlad; ix++) {
+			for (int jx = 0; jx < Nstrips; jx+=jump) {
+
+				if(eDepSegm[ix][jx]!=0) {
 
 					if(jx > 0 && jx < Nstrips-1) {
 						eDepSegm[ix][jx-1] += eDepSegm[ix][jx]*0.5;
 						eDepSegm[ix][jx+1] += eDepSegm[ix][jx]*0.5;
-					}
+						}
 					if(jx==0)
 						eDepSegm[ix][jx+1] += eDepSegm[ix][jx];
 					if(jx==Nstrips-1)
@@ -151,13 +161,14 @@ int main(int argc, char **argv) {
 
 					eDepSegm[ix][jx] = 0;
 
-					}
-				}*/
-
+				}
 			}
+		}*/
+
+		addNoise(eDepSegm,Nlad,Nstrips);
 
 		for (int ix = 0; ix < Nlad; ix++) {
-			for (int jx = 0; jx < Nstrips; jx++) {
+			for (int jx = 0; jx < Nstrips; jx+=jump) {
 
 
 			//Find the boundaries of the clusters
@@ -168,7 +179,7 @@ int main(int argc, char **argv) {
 				vector< pair<double,double>> strip;
 
 				int i1 = ix;
-				int j1 = jx-1;
+				int j1 = jx-jump;
 
 				while(eDepSegm[i1][j1] > 9e-6){
 					j1-=jump;
@@ -179,7 +190,7 @@ int main(int argc, char **argv) {
 					}
 
 				int i2 = ix;
-				int j2 = jx+1;
+				int j2 = jx+jump;
 
 				while(eDepSegm[i2][j2] > 9e-6) {
 					j2+=jump;
@@ -189,14 +200,17 @@ int main(int argc, char **argv) {
 						}
 					}
 
-				int clustSize = ((i2-i1)*Nstrips)+(j2-j1)+1;
+				cout<<"lad1 = "<<i1<<endl;
+				cout<<"strip1 = "<<j1<<endl;
+				cout<<"lad2 = "<<i2<<endl;
+				cout<<"strip2 = "<<j2<<endl;
 
-				for(int ij = 0; ij<clustSize; ij+=jump) {
+				while((i1*Nstrips)+j1 <= (i2*Nstrips)+j2) {
 
-						double thisPos = ((i1%Nsquares)*squareSide) + (j1*pitch) - (Nsquares*squareSide*0.5);
-						strip.push_back(make_pair(thisPos,eDepSegm[i1][j1]));
+					double thisPos = ((i1%Nsquares)*squareSide) + (j1*pitch) - (Nsquares*squareSide*0.5);
+					strip.push_back(make_pair(thisPos,eDepSegm[i1][j1]));
 
-						if(j1>=Nstrips-1) {
+						if(j1>Nstrips-1) {
 							i1++;
 							j1 = 0;
 						}
