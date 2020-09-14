@@ -145,25 +145,43 @@ int main(int argc, char **argv) {
 
 			// Sharing of the energy from non-active strips
 
-		/*for (int ix = 0; ix < Nlad; ix++) {
+		for (int ix = 0; ix < Nlad; ix++) {
 			for (int jx = 0; jx < Nstrips; jx+=jump) {
 
-				if(eDepSegm[ix][jx]!=0) {
+					vector<double> fill;
 
-					if(jx > 0 && jx < Nstrips-1) {
-						eDepSegm[ix][jx-1] += eDepSegm[ix][jx]*0.5;
-						eDepSegm[ix][jx+1] += eDepSegm[ix][jx]*0.5;
+					int i0 = ix;
+					int j0 = jx;
+
+					for(int jp = 1; jp<jump; jp++) {
+						if(j0!=Nstrips-1) {
+							j0++;
 						}
-					if(jx==0)
-						eDepSegm[ix][jx+1] += eDepSegm[ix][jx];
-					if(jx==Nstrips-1)
-						eDepSegm[ix][jx-1] += eDepSegm[ix][jx];
+						else {
+							i0++;
+							j0 = 0;
+						}
 
-					eDepSegm[ix][jx] = 0;
+						fill.push_back(eDepSegm[i0][j0]);
 
-				}
+						eDepSegm[i0][j0] = 0;
+					}
+
+					if(j0!=Nstrips-1) {
+						j0++;
+					}
+					else {
+						i0++;
+						j0 = 0;
+					}
+
+					for(int s = 0; s < fill.size(); s++) {
+						eDepSegm[ix][jx] += fill[s]/(2*(s+1));
+						eDepSegm[i0][j0] += fill[s]/(2*(fill.size()-s));
+					}
+
 			}
-		}*/
+		}
 
 		addNoise(eDepSegm,Nlad,Nstrips);
 
