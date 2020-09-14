@@ -14,27 +14,80 @@
 #include "utils/GGSSmartLog.h"
 using namespace std;
 
-void stripReset(double array[][640], int dim1, int dim2) {
-	for (int ii = 0; ii < dim1; ii++)
-		for (int jj = 0; jj < dim2; jj++)
+void stripReset(vector<vector<double>> &array) {
+	for (int ii = 0; ii < array.size(); ii++)
+		for (int jj = 0; jj < array[0].size(); jj++)
 			array[ii][jj] = 0;
 }
 
-void addNoise(double array[][640], int dim1, int dim2) {
-	TRandom3 *tr = new TRandom3();
-	for (int ii = 0; ii < dim1; ii++) {
-		for (int jj = 0; jj < dim2; jj++) {
-			double fluct = tr->Gaus(0,9e-6);
+void addNoise(vector<vector<double>> &array, TRandom3* tr1) {
+
+	for (int ii = 0; ii < array.size(); ii++) {
+		for (int jj = 0; jj < array[ii].size(); jj++) {
+			double fluct = tr1->Gaus(0,9e-6);
+
 			array[ii][jj] += fluct;
 			}
 		}
 }
 
-void hitReset(vector<double> array[]) {
-	const int Nlayers = 10;
-	for(int i = 0; i < Nlayers; i++) {
-		array[i].clear();
+void hitReset(vector<vector<double>> &array, int dim) {
+		for(int i=0; i<array.size();i++) {
+			array[i].clear();
+			array[i].shrink_to_fit();
+		}
+}
+
+void shareEnergy(vector<vector<double>> &array, int jump) {
+	vector<double> fill;
+	for (int ix = 0; ix < array.size(); ix++) {
+		for (int jx = 0; jx < array[0].size(); jx+=jump) {
+			fill.clear();
+			fill.shrink_to_fit();
+			int i0 = ix;
+			int j0 = jx;
+
+			//Saving the energy from non-active strips
+
+			for(int jp = 1; jp<jump; jp++) {
+
+				if(j0!=array[0].size()-1) {
+					j0++;
+				}
+
+				else {
+					i0++;
+					j0 = 0;
+				}
+
+				if(i0==array.size())
+					break;
+
+				if(array[i0][j0]!=0) {
+					fill.push_back(array[i0][j0]);
+					array[i0][j0] = 0;
+					}
+				}
+
+				//Moving to right-side strip
+
+				if(j0!=array.size()-1) {
+					j0++;
+				}
+				else {
+					i0++;
+					j0 = 0;
+				}
+				//Distributing the energy to left and right-side strips
+
+				for(int s = 0; s < fill.size(); s++) {
+					array[ix][jx] += fill[s]/(2*(s+1));
+					array[i0][j0] += fill[s]/(2*(fill.size()-s));
+				}
+
+		}
 	}
+	cout<<"final"<<endl;
 }
 
 int main(int argc, char **argv) {
@@ -73,9 +126,10 @@ int main(int argc, char **argv) {
 	TH1F *hpi = new TH1F("pi", "pi", 1000, 0, 4);
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
 
-	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 10000, -0.05, 0.05);
+	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
 
 	TRandom3 *tr = new TRandom3();
+	tr->SetSeed(time(NULL));
 	vector<vector<TrCluster>> v;
 
 	/*
@@ -101,9 +155,12 @@ int main(int argc, char **argv) {
 	const double squareSide = 10;
 	const double pitch = squareSide/(double(Nstrips));
 	const int jump = 1;
-	double eDepSegm[Nlad][Nstrips];
-	vector<double> hitPos[Nlayers];
+	vector<vector<double>> eDepSegm;
+	eDepSegm.resize(Nlad, vector<double>(Nstrips));
+	vector<vector<double>> hitPos;
+	hitPos.resize(Nlayers, vector<double>(0));
 
+	TRandom3 *tr1 = new TRandom3();
 
 	for (int i = 0; i < events->GetEntries(); i++) {
 
@@ -117,19 +174,19 @@ int main(int argc, char **argv) {
 				}
 			}
 
-			// eDepSegm array initialisation
-			stripReset(eDepSegm,Nlad,Nstrips);
-			hitReset(hitPos);
+		// eDepSegm array initialisation
+		stripReset(eDepSegm);
+		hitReset(hitPos,Nlayers);
 
 		for (int j = 0; j < a->GetEntries(); j++) {
 
-			cout<<endl<<"Entry #"<<j<<endl;
+			cout<<endl<<"Entry #"<<i+j<<endl;
 			TrCluster *cl = (TrCluster *)a->At(j);
 			v[cl->layer].push_back(*cl);
-			if (cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
+			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
 			if(cl->eDep > 9e-6) hEdep->Fill(cl->eDep); //total
 
-			//Fill the strips with the current cluster
+			//Filling the strips with the current energy
 
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
 			if(cl->strip==Nstrips-1)
@@ -137,53 +194,18 @@ int main(int argc, char **argv) {
 			else
 				eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
 
-			//Fill the hit array
+			//Filling the hits array
 
 			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
 
 			}
 
-			// Sharing of the energy from non-active strips
+		// Sharing of the energy from non-active strips
 
-		for (int ix = 0; ix < Nlad; ix++) {
-			for (int jx = 0; jx < Nstrips; jx+=jump) {
+		if(jump!=1)
+			shareEnergy(eDepSegm,jump);
 
-					vector<double> fill;
-
-					int i0 = ix;
-					int j0 = jx;
-
-					for(int jp = 1; jp<jump; jp++) {
-						if(j0!=Nstrips-1) {
-							j0++;
-						}
-						else {
-							i0++;
-							j0 = 0;
-						}
-
-						fill.push_back(eDepSegm[i0][j0]);
-
-						eDepSegm[i0][j0] = 0;
-					}
-
-					if(j0!=Nstrips-1) {
-						j0++;
-					}
-					else {
-						i0++;
-						j0 = 0;
-					}
-
-					for(int s = 0; s < fill.size(); s++) {
-						eDepSegm[ix][jx] += fill[s]/(2*(s+1));
-						eDepSegm[i0][j0] += fill[s]/(2*(fill.size()-s));
-					}
-
-			}
-		}
-
-		addNoise(eDepSegm,Nlad,Nstrips);
+		addNoise(eDepSegm,tr1);
 
 		for (int ix = 0; ix < Nlad; ix++) {
 			for (int jx = 0; jx < Nstrips; jx+=jump) {
@@ -193,8 +215,7 @@ int main(int argc, char **argv) {
 
 			if(eDepSegm[ix][jx] >= 27e-6) {
 				cout<<"Analysing cluster\n";
-
-				vector< pair<double,double>> strip;
+				vector<pair<double,double>> strip;
 
 				int i1 = ix;
 				int j1 = jx-jump;
@@ -206,6 +227,8 @@ int main(int argc, char **argv) {
 						j1 = Nstrips-1-j1;
 						}
 					}
+				if(i1<0)
+					break;
 
 				int i2 = ix;
 				int j2 = jx+jump;
@@ -217,11 +240,10 @@ int main(int argc, char **argv) {
 						j2 = j2-Nstrips+1;
 						}
 					}
+				if(i2==Nlad)
+					break;
 
-				cout<<"lad1 = "<<i1<<endl;
-				cout<<"strip1 = "<<j1<<endl;
-				cout<<"lad2 = "<<i2<<endl;
-				cout<<"strip2 = "<<j2<<endl;
+				//Filling vector with current cluster
 
 				while((i1*Nstrips)+j1 <= (i2*Nstrips)+j2) {
 
@@ -236,10 +258,10 @@ int main(int argc, char **argv) {
 						j1+=jump;
 					}
 
-				//Find the boundaries of the peaks
-
 				for(int k = 0; k < strip.size(); k++) {
 					if(strip[k].second >= 27e-6) {
+
+					//Finding the boundaries of the peak
 
 					int k1 = k-1;
 					int k2 = k+1;
@@ -249,7 +271,7 @@ int main(int argc, char **argv) {
 					while(k2<(strip.size()-1) && strip[k2].second >= 27e-6)
 						k2++;
 
-					//Find the peak
+					//Finding the peak
 
 					int kMax = k1;
 					for(int kHold = k1; kHold <= k2; kHold++)
@@ -259,7 +281,7 @@ int main(int argc, char **argv) {
 
 					cout<<"Analysing peak of "<< strip[kMax].second <<"keV\n";
 
-					//Find neighbour strip
+					//Finding neighbour strip
 
 					double kNext;
 
@@ -272,19 +294,26 @@ int main(int argc, char **argv) {
 					if (kMax == strip.size())
 							kNext = strip.size()-1;
 
-
+					//Finding simulated position
 
 					double simPos = ((strip[kMax].first*strip[kMax].second) + (strip[kNext].first*strip[kNext].second)) / (strip[kMax].second + strip[kNext].second);
 					int cLayer = ix/(Nsquares*2);
+
+					//Comparing the simulated hit positions with the real ones on the same layer
 
 					for(int m = 0 ; m < hitPos[cLayer].size(); m++)
 						segmp->Fill(simPos-hitPos[cLayer][m]);
 
 					cout<<"Simulated position: "<<simPos<<endl;
 
+
+
+					//Advancing within the current cluster
 					k = k2;
 						}
 					}
+
+		//Advancing to another
 		ix = i2;
 		jx = j2;
 				}
