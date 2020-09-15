@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
 	const int Nstrips = 640; //strips per ladder
 	const double squareSide = 10;
 	const double pitch = squareSide/(double(Nstrips));
-	const int jump = 1;
+	const int jump = 2;
 	vector<vector<double>> eDepSegm;
 	eDepSegm.resize(Nlad, vector<double>(Nstrips));
 	vector<vector<double>> hitPos;
@@ -217,46 +217,57 @@ int main(int argc, char **argv) {
 				cout<<"Analysing cluster\n";
 				vector<pair<double,double>> strip;
 
-				int i1 = ix;
-				int j1 = jx-jump;
+				cout<<"here1"<<endl;
 
-				while(eDepSegm[i1][j1] > 9e-6){
-					j1-=jump;
-					if (j1<0) {
-						i1--;
-						j1 = Nstrips-1-j1;
+				int i1, j1;
+				bool firstPoint = true;
+				for(i1 = ix; i1>=0; i1--) {
+					for(j1 = Nstrips-1; j1>=jump; j1-= jump) {
+						if(firstPoint) {
+							j1 = jx;
+							firstPoint = false;
 						}
+						if(eDepSegm[i1][j1] < 9e-6)
+							goto nextPart1;
 					}
-				if(i1<0)
-					break;
+				}
+				nextPart1:
 
-				int i2 = ix;
-				int j2 = jx+jump;
-
-				while(eDepSegm[i2][j2] > 9e-6) {
-					j2+=jump;
-					if (j1>=Nstrips) {
-						i2++;
-						j2 = j2-Nstrips+1;
+				firstPoint = true;
+				int i2, j2;
+				for(i2 = ix; i2<Nlad; i2++) {
+					for(j2 = 0; j2<Nstrips; j2+= jump) {
+						if(firstPoint) {
+							j2 = jx;
+							firstPoint = false;
 						}
+						if(eDepSegm[i2][j2] < 9e-6)
+							goto nextPart2;
 					}
-				if(i2==Nlad)
-					break;
+				}
+				nextPart2:
 
 				//Filling vector with current cluster
 
 				while((i1*Nstrips)+j1 <= (i2*Nstrips)+j2) {
 
+					//Weird bug's temporary solution, needs fixing
+				  if(i1==-1)
+						i1=0;
+
 					double thisPos = ((i1%Nsquares)*squareSide) + (j1*pitch) - (Nsquares*squareSide*0.5);
 					strip.push_back(make_pair(thisPos,eDepSegm[i1][j1]));
 
-						if(j1>Nstrips-1) {
-							i1++;
-							j1 = 0;
-						}
-
-						j1+=jump;
+					if(j1>Nstrips-1 && i1 == Nlad-1)
+						break;
+					if(j1>Nstrips-1) {
+						i1++;
+						j1 = 0;
 					}
+
+					j1+=jump;
+					cout<<"here6"<<endl;
+				}
 
 				for(int k = 0; k < strip.size(); k++) {
 					if(strip[k].second >= 27e-6) {
@@ -313,6 +324,8 @@ int main(int argc, char **argv) {
 						}
 					}
 
+		strip.clear();
+		strip.shrink_to_fit();
 		//Advancing to another
 		ix = i2;
 		jx = j2;
