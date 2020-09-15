@@ -217,8 +217,6 @@ int main(int argc, char **argv) {
 				cout<<"Analysing cluster\n";
 				vector<pair<double,double>> strip;
 
-				cout<<"here1"<<endl;
-
 				int i1, j1;
 				bool firstPoint = true;
 				for(i1 = ix; i1>=0; i1--) {
@@ -264,9 +262,7 @@ int main(int argc, char **argv) {
 						i1++;
 						j1 = 0;
 					}
-
 					j1+=jump;
-					cout<<"here6"<<endl;
 				}
 
 				for(int k = 0; k < strip.size(); k++) {
@@ -324,9 +320,7 @@ int main(int argc, char **argv) {
 						}
 					}
 
-		strip.clear();
-		strip.shrink_to_fit();
-		//Advancing to another
+		//Advancing and looking for other clusters
 		ix = i2;
 		jx = j2;
 				}

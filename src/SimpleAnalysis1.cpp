@@ -22,31 +22,19 @@
 #include <cmath>
 using namespace std;
 
-int findStrip(double position) {
-  const int Nsquares = 8; //squares per side
-	const int Nlad = Nsquares*2*10; //number of ladders
-	const int Nstrips = 640; //strips per ladder
-	const double squareSide = 10;
-	const double pitch = squareSide/(double(Nstrips));
-
-  int stripHit = (position+(Nsquares*squareSide*0.5))/pitch;
-  return stripHit % Nstrips;
+int findStrip(double position, double props[]) {
+  int stripHit = (position+(props[1]*props[3]*0.5))/props[4];
+  return stripHit % (int(props[2]));
 }
 
-int findLadder(int ID, int layer, bool condition) {
-  const int Nsquares = 8; //squares per side
-	const int Nlad = Nsquares*2*10; //number of ladders
-	const int Nstrips = 640; //strips per ladder
-	const double squareSide = 10;
-	const double pitch = squareSide/(double(Nstrips));
-
+int findLadder(int ID, int layer, bool condition, double props[]) {
   if(!condition) {
-    int row = (ID - (Nsquares*Nsquares*layer))/Nsquares;
-    bool leftOrRight = (ID % Nsquares) > (Nsquares*0.5);
-    return row + (Nsquares*leftOrRight) + (Nsquares*2*layer);
+    int row = (ID - (pow(props[1],2)*layer))/props[1];
+    bool leftOrRight = ID % (int(props[1])) > (props[1]*0.5);
+    return row + (props[1]*leftOrRight) + (props[1]*2*layer);
     }
   else
-    return (ID % (Nsquares*2)) + (layer*Nsquares*2);
+    return (ID % ((int(props[1]))*2)) + (layer*props[1]*2);
 }
 
 int main(int argc, char **argv) {
@@ -102,8 +90,7 @@ int main(int argc, char **argv) {
 	const int Nstrips = 640; //strips per ladder
 	const double squareSide = 10;
 	const double pitch = squareSide/(double(Nstrips));
-
-
+  double detectorProps[5] = {Nlad, Nsquares, Nstrips, squareSide, pitch};
 
   TClonesArray a("TrCluster", 200);
   tree->Branch("Events", &a);
@@ -156,11 +143,11 @@ int main(int argc, char **argv) {
 			c->ID = inthit->GetVolumeID();
 
 			//Find the nearest strip to the left
-			c->strip = findStrip(c->pos[c->segm]);
+			c->strip = findStrip(c->pos[c->segm], detectorProps);
 
 
 			// Find the ladder it belongs
-      c->ladder = findLadder(c->ID, c->layer, c->segm);
+      c->ladder = findLadder(c->ID, c->layer, c->segm, detectorProps);
 
       //Deposit energy and create cluster
       double thisPos = ((c->ladder%Nsquares)*squareSide) + (c->strip*pitch) - (Nsquares*squareSide*0.5);
