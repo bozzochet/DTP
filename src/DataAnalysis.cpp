@@ -268,7 +268,7 @@ int main(int argc, char **argv) {
 					//Finding the boundaries of the peak
 
 					int k1 = k-1;
-					int k2 = k+t;
+					int k2 = k+1;
 
 					while(k1>0 && strip[k1].second >= 27e-6)
 						k1--;

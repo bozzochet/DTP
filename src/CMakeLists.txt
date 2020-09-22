@@ -68,7 +68,7 @@ endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 #################
 
 set(SimpleAnalysis_SRC
-	SimpleAnalysis1.cpp
+	SimpleAnalysis.cpp
 	G__TrCluster.cxx
 )
 
