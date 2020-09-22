@@ -66,5 +66,5 @@ GGSWolowitz -g lib/libTestGeometry.so -t vgm -o lib/TestGeometry.vgm.root
 
 - conversion from GGS output to plain ROOT file:
 ```
-root [0] .L Analysis/Analysis.C
-root [1] SimpleAnalysis("GGSRootOutput.root", "anaOut.root")
+./exe/SimpleAnalysis GGSOutput.root anaOut.root
+./exe/DataAnalysis anaOut.root
