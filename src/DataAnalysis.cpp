@@ -20,11 +20,11 @@ void stripReset(vector<vector<double>> &array) {
 			array[ii][jj] = 0;
 }
 
-void addNoise(vector<vector<double>> &array, TRandom3* tr1) {
+void addNoise(vector<vector<double>> &array, TRandom3* tr) {
 
 	for (int ii = 0; ii < array.size(); ii++) {
 		for (int jj = 0; jj < array[ii].size(); jj++) {
-			double fluct = tr1->Gaus(0,9e-6);
+			double fluct = tr->Gaus(0,9e-6);
 
 			array[ii][jj] += fluct;
 			}
@@ -87,7 +87,6 @@ void shareEnergy(vector<vector<double>> &array, int jump) {
 
 		}
 	}
-	cout<<"final"<<endl;
 }
 
 int main(int argc, char **argv) {
@@ -151,16 +150,14 @@ int main(int argc, char **argv) {
 	const int Nlayers = 10;
 	const int Nsquares = 8; //squares per side
 	const int Nlad = Nsquares*2*Nlayers; //number of ladders
-	const int Nstrips = 640; //strips per ladder
 	const double squareSide = 10;
-	const double pitch = squareSide/(double(Nstrips));
+	const double pitch = 0.015625;
+	const int Nstrips = (int(squareSide/pitch)); //strips per ladder
 	const int jump = 2;
 	vector<vector<double>> eDepSegm;
 	eDepSegm.resize(Nlad, vector<double>(Nstrips));
 	vector<vector<double>> hitPos;
 	hitPos.resize(Nlayers, vector<double>(0));
-
-	TRandom3 *tr1 = new TRandom3();
 
 	for (int i = 0; i < events->GetEntries(); i++) {
 
@@ -205,7 +202,7 @@ int main(int argc, char **argv) {
 		if(jump!=1)
 			shareEnergy(eDepSegm,jump);
 
-		addNoise(eDepSegm,tr1);
+		addNoise(eDepSegm,tr);
 
 		for (int ix = 0; ix < Nlad; ix++) {
 			for (int jx = 0; jx < Nstrips; jx+=jump) {
@@ -271,7 +268,7 @@ int main(int argc, char **argv) {
 					//Finding the boundaries of the peak
 
 					int k1 = k-1;
-					int k2 = k+1;
+					int k2 = k+t;
 
 					while(k1>0 && strip[k1].second >= 27e-6)
 						k1--;

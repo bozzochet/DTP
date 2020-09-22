@@ -87,9 +87,9 @@ int main(int argc, char **argv) {
 
 	const int Nsquares = 8; //squares per side
 	const int Nlad = Nsquares*2*10; //number of ladders
-	const int Nstrips = 640; //strips per ladder
-	const double squareSide = 10;
-	const double pitch = squareSide/(double(Nstrips));
+  const double squareSide = 10;
+	const double pitch = 0.015625;
+	const int Nstrips = (int(squareSide/pitch)); //strips per ladder
   double detectorProps[5] = {Nlad, Nsquares, Nstrips, squareSide, pitch};
 
   TClonesArray a("TrCluster", 200);
