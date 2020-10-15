@@ -6,7 +6,7 @@ GGS Simulation of a simple detector with the silicon detectors with timing capab
 
 Ingredients:
 
-- macros/rin.mac: datacard, a la Geant, to set the simulation parameters
+- macros/run.mac: datacard, a la Geant, to set the simulation parameters
 <!-- - macros/geo.mac: datacard for the parametric geometry -->
 - {src,include}/DetectorConstruction.{cc,hh}: definition, a la Geant, of the geometry
 <!-- - Analysis/Analysis.C: ROOT macro to read the GGS output file -->
@@ -47,7 +47,7 @@ A working example can be found in `useful_commands/run.sh`
 GGSLeonard -g lib/TestGeometry.gdml
 ```
 ```
-GSLeonard -g lib/TestGeometry.gdml -i test.root
+GGSLeonard -g lib/TestGeometry.gdml -i test.root
 ```
 
 Working examples can be found in `useful_commands/show_geometry.sh` and  `useful_commands/show_events.sh`
