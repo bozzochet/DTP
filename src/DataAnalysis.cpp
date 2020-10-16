@@ -216,39 +216,44 @@ int main(int argc, char **argv) {
 
 				int i1, j1;
 				bool firstPoint = true;
-				for(i1 = ix; i1>=0; i1--) {
-					for(j1 = Nstrips-1; j1>=jump; j1-= jump) {
+				for(int ii = ix; ii>=0; ii--) {
+					for(int jj = Nstrips-1; jj>=jump; jj-= jump) {
 						if(firstPoint) {
-							j1 = jx;
+							jj = jx;
 							firstPoint = false;
 						}
-						if(eDepSegm[i1][j1] < 9e-6)
+						i1 = ii;
+						j1 = jj;
+
+						if(eDepSegm[ii][jj] < 9e-6)
 							goto nextPart1;
 					}
 				}
+
 				nextPart1:
 
 				firstPoint = true;
 				int i2, j2;
-				for(i2 = ix; i2<Nlad; i2++) {
-					for(j2 = 0; j2<Nstrips; j2+= jump) {
+				for(int ii = ix; ii<Nlad; ii++) {
+					for(int jj = 0; jj<Nstrips; jj+= jump) {
 						if(firstPoint) {
-							j2 = jx;
+							jj = jx;
 							firstPoint = false;
 						}
-						if(eDepSegm[i2][j2] < 9e-6)
+						i2 = ii;
+						j2 = jj;
+
+						if(eDepSegm[ii][jj] < 9e-6)
+
 							goto nextPart2;
 					}
 				}
+				
 				nextPart2:
 
 				//Filling vector with current cluster
-
+				
 				while((i1*Nstrips)+j1 <= (i2*Nstrips)+j2) {
-
-					//Weird bug's temporary solution, needs fixing
-				  if(i1==-1)
-						i1=0;
 
 					double thisPos = ((i1%Nsquares)*squareSide) + (j1*pitch) - (Nsquares*squareSide*0.5);
 					strip.push_back(make_pair(thisPos,eDepSegm[i1][j1]));
