@@ -9,4 +9,7 @@
 template <typename T>
 using vector2 = std::vector<std::vector<T>> ;
 
+template <typename T>
+using vector_pair = std::vector<std::pair<T,T>> ;
+
 #endif

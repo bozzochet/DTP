@@ -219,7 +219,7 @@ int main(int argc, char **argv) {
 
 			if(eDepSegm[ix][jx] >= 27e-6) {
 				cout<<"Analysing cluster\n";
-				vector<pair<double,double>> strip;
+				vector_pair<double> strip;
 
 				int i1, j1;
 				bool firstPoint = true;
