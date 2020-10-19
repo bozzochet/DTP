@@ -289,14 +289,15 @@ int main(int argc, char **argv) {
 
 					double kNext;
 
-					if(strip[kMax+1].second > strip[kMax-1].second)
+          if(kMax == 0)
+            kNext = 1;
+          else if(kMax == strip.size()-1)
+            kNext = strip.size()-2;
+					else if(strip[kMax+1].second > strip[kMax-1].second)
 						kNext = kMax+1;
 					else
 						kNext = kMax-1;
-					if(kMax == 0)
-						kNext = 1;
-					if (kMax == strip.size())
-							kNext = strip.size()-1;
+
 
 					//Finding simulated position
 
