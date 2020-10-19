@@ -4,5 +4,9 @@ set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES ${includ
 configure_file(TrCluster.hh TrCluster.hh COPYONLY)
 configure_file(TrCluster_linkdef.h TrCluster_linkdef.h COPYONLY)
 
-install(FILES TrCluster.hh DESTINATION "${INSTALL_INC_DIR}")
-install(FILES TrCluster_linkdef.h DESTINATION "${INSTALL_INC_DIR}")
+install(FILES
+        TrCluster.hh
+        TrCluster_linkdef.h
+        global.h
+        DESTINATION "${INSTALL_INC_DIR}"
+        )

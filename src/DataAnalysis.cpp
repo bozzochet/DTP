@@ -1,3 +1,5 @@
+
+#include "global.h"
 #include "TCanvas.h"
 #include "TClonesArray.h"
 #include "TF1.h"
@@ -147,13 +149,6 @@ int main(int argc, char **argv) {
 	double PrimeDepSegm[Nlad][Nstrips];
 
 	*/
-	const int Nlayers = 10;
-	const int Nsquares = 8; //squares per side
-	const int Nlad = Nsquares*2*Nlayers; //number of ladders
-	const double squareSide = 10;
-	const double pitch = 0.015625;
-	const int Nstrips = (int(squareSide/pitch)); //strips per ladder
-	const int jump = 2;
 	vector<vector<double>> eDepSegm;
 	eDepSegm.resize(Nlad, vector<double>(Nstrips));
 	vector<vector<double>> hitPos;
@@ -248,11 +243,11 @@ int main(int argc, char **argv) {
 							goto nextPart2;
 					}
 				}
-				
+
 				nextPart2:
 
 				//Filling vector with current cluster
-				
+
 				while((i1*Nstrips)+j1 <= (i2*Nstrips)+j2) {
 
 					double thisPos = ((i1%Nsquares)*squareSide) + (j1*pitch) - (Nsquares*squareSide*0.5);

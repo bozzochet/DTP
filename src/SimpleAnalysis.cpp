@@ -7,7 +7,7 @@
 
 /* Analysis ROOT script for the output file created by SimpleRun.mac. */
 
-// GGS headers
+#include "global.h"
 #include "TFile.h"
 #include "TString.h"
 #include "TTree.h"
@@ -85,11 +85,6 @@ int main(int argc, char **argv) {
 	int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
 	double squareSide = geoParams->GetRealGeoParam("squareSide");*/
 
-	const int Nsquares = 8; //squares per side
-	const int Nlad = Nsquares*2*10; //number of ladders
-  const double squareSide = 10;
-	const double pitch = 0.015625;
-	const int Nstrips = (int(squareSide/pitch)); //strips per ladder
   double detectorProps[5] = {Nlad, Nsquares, Nstrips, squareSide, pitch};
 
   TClonesArray a("TrCluster", 200);
