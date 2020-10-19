@@ -271,15 +271,16 @@ int main(int argc, char **argv) {
 
 				while((i1*Nstrips)+j1 <= (i2*Nstrips)+j2) {
 
+          if(j1>Nstrips-1 && i1 == Nlad-1)
+            break;
+          else if(j1>Nstrips-1) {
+            i1++;
+            j1 = 0;
+          }
+
 					double thisPos = ((i1%Nsquares)*squareSide) + (j1*pitch) - (Nsquares*squareSide*0.5);
 					strip.push_back(make_pair(thisPos,eDepSegm[i1][j1]));
 
-					if(j1>Nstrips-1 && i1 == Nlad-1)
-						break;
-					if(j1>Nstrips-1) {
-						i1++;
-						j1 = 0;
-					}
 					j1+=jump;
 				}
 
