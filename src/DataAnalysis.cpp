@@ -1,5 +1,6 @@
 
 #include "global.h"
+#include "vector2.h"
 #include "TCanvas.h"
 #include "TClonesArray.h"
 #include "TF1.h"
@@ -16,13 +17,13 @@
 #include "utils/GGSSmartLog.h"
 using namespace std;
 
-void stripReset(vector<vector<double>> &array) {
+void stripReset(vector2<double> &array) {
 	for (int ii = 0; ii < array.size(); ii++)
 		for (int jj = 0; jj < array[0].size(); jj++)
 			array[ii][jj] = 0;
 }
 
-void addNoise(vector<vector<double>> &array, TRandom3* tr) {
+void addNoise(vector2<double> &array, TRandom3* tr) {
 
 	for (int ii = 0; ii < array.size(); ii++) {
 		for (int jj = 0; jj < array[ii].size(); jj++) {
@@ -33,14 +34,14 @@ void addNoise(vector<vector<double>> &array, TRandom3* tr) {
 		}
 }
 
-void hitReset(vector<vector<double>> &array, int dim) {
+void hitReset(vector2<double> &array, int dim) {
 		for(int i=0; i<array.size();i++) {
 			array[i].clear();
 			array[i].shrink_to_fit();
 		}
 }
 
-void shareEnergy(vector<vector<double>> &array, int jump) {
+void shareEnergy(vector2<double> &array, int jump) {
 	vector<double> fill;
 	for (int ix = 0; ix < array.size(); ix++) {
 		for (int jx = 0; jx < array[0].size(); jx+=jump) {
@@ -131,7 +132,7 @@ int main(int argc, char **argv) {
 
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
-	vector<vector<TrCluster>> v;
+	vector2<TrCluster> v;
 
 	/*
 
@@ -149,10 +150,9 @@ int main(int argc, char **argv) {
 	double PrimeDepSegm[Nlad][Nstrips];
 
 	*/
-	vector<vector<double>> eDepSegm;
-	eDepSegm.resize(Nlad, vector<double>(Nstrips));
-	vector<vector<double>> hitPos;
-	hitPos.resize(Nlayers, vector<double>(0));
+
+	vector2<double> eDepSegm(Nlad, vector<double>(Nstrips));
+	vector2<double> hitPos(Nlayers);
 
 	for (int i = 0; i < events->GetEntries(); i++) {
 

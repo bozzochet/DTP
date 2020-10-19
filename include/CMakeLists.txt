@@ -8,5 +8,6 @@ install(FILES
         TrCluster.hh
         TrCluster_linkdef.h
         global.h
+        vector2.h
         DESTINATION "${INSTALL_INC_DIR}"
         )
