@@ -69,7 +69,7 @@ endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 
 set(global_SRC global.cpp)
 
-add_library(global STATIC ${global_SRC})
+add_library(global SHARED ${global_SRC})
 
 set_target_properties(global PROPERTIES
                       LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}")

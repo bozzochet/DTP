@@ -151,6 +151,7 @@ int main(int argc, char **argv) {
 
 	*/
 
+  const int jump = 2;
 	vector2<double> eDepSegm(Nlad, vector<double>(Nstrips));
 	vector2<double> hitPos(Nlayers);
 

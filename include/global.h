@@ -10,6 +10,5 @@ extern const int Nlad; //number of ladders
 extern const double squareSide;
 extern const double pitch;
 extern const int Nstrips; //strips per ladder
-extern const int jump;
 
 #endif
