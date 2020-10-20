@@ -27,7 +27,7 @@ void addNoise(vector2<double> &array, TRandom3* tr) {
 
 	for (int ii = 0; ii < array.size(); ii++) {
 		for (int jj = 0; jj < array[ii].size(); jj++) {
-			double fluct = tr->Gaus(0,9e-6);
+			double fluct = tr->Gaus(0, array[ii][jj]/10.0);
 
 			array[ii][jj] += fluct;
 			}
