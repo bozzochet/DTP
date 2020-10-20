@@ -146,8 +146,8 @@ int main(int argc, char **argv) {
       double thisPos = ((c->ladder%Nsquares)*squareSide) + (c->strip*pitch) - (Nsquares*squareSide*0.5);
       double fraction = (c->pos[c->segm]-thisPos)/pitch;
 
-			c->clust[0] = c->eDep * (fraction);
-			c->clust[1] = c->eDep * (1-fraction);
+			c->clust[0] = c->eDep * (1-fraction);
+			c->clust[1] = c->eDep * (fraction);
 
       }
     }
