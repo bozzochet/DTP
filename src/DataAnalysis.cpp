@@ -77,25 +77,25 @@ void shareEnergy(vector2<double> &array, int jump) {
 				if(j0!=array.size()-1) {
 					j0++;
 				}
-        else if( (i0+1) % Nsquares != 0) {
-					i0++;
-					j0 = 0;
-				}
-        else {
-          /* no active strips between (ix,jx) and layer
-           * row end: distribute the entire energy to
-           * (ix,jx) strip
-           */
-          i0 = ix;
-          j0 = jx;
-        }
+			else if( (i0+1) % Nsquares != 0) {
+						i0++;
+						j0 = 0;
+					}
+			else {
+			/* no active strips between (ix,jx) and layer
+			* row end: distribute the entire energy to
+			* (ix,jx) strip
+			*/
+			i0 = ix;
+			j0 = jx;
+			}
 
-        //Distributing the energy to left and right-side strips
+        	//Distributing the energy to left and right-side strips
 
-				for(int s = 0; s < fill.size(); s++) {
-					array[ix][jx] += fill[s]/(2*(s+1));
-					array[i0][j0] += fill[s]/(2*(fill.size()-s));
-				}
+			for(int s = 0; s < fill.size(); s++) {
+				array[ix][jx] += fill[s]/(2*(s+1));
+				array[i0][j0] += fill[s]/(2*(fill.size()-s));
+			}
 
 		}
 	}
@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
 				TrCluster *cl = (TrCluster *)a->At(j);
 				printf("%d) %d %f\n", j, cl->parID, cl->eDep);
 				}
-			}
+		}
 
 		// eDepSegm array initialisation
 		stripReset(eDepSegm);
@@ -188,20 +188,21 @@ int main(int argc, char **argv) {
 			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
 			if(cl->eDep > 9e-6) hEdep->Fill(cl->eDep); //total
 
-      //Filling the hits array
+		//Filling the hits array
 
-      hitPos[cl->layer].push_back(cl->pos[cl->segm]);
+			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
 
-    	//Filling the strips with the current energy
+				//Filling the strips with the current energy
 
-			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
-      if(cl->strip == Nstrips-1 && (cl->ladder+1) % Nsquares == 0)
-        //hit on the last strip of the last ladder of the layer row
-        continue; //cl->clust[1] energy is lost
-      else if(cl->strip==Nstrips-1)
-				eDepSegm[cl->ladder+1][0] += cl->clust[1];
-			else
-				eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
+					eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
+			if(cl->strip == Nstrips-1 && (cl->ladder+1) % Nsquares == 0)
+				//hit on the last strip of the last ladder of the layer row
+				continue; //cl->clust[1] energy is lost
+
+			else if(cl->strip==Nstrips-1)
+						eDepSegm[cl->ladder+1][0] += cl->clust[1];
+					else
+						eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
 		}
 
 		// Sharing of the energy from non-active strips
