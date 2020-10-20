@@ -22,19 +22,19 @@
 #include <cmath>
 using namespace std;
 
-int findStrip(double position, double props[]) {
-  int stripHit = (position+(props[1]*props[3]*0.5))/props[4];
-  return stripHit % (int(props[2]));
+int findStrip(double position) {
+  int stripHit = (position+(Nsquares*squareSide*0.5))/pitch;
+  return stripHit % (int(Nstrips));
 }
 
-int findLadder(int ID, int layer, bool condition, double props[]) {
+int findLadder(int ID, int layer, bool condition) {
   if(!condition) {
-    int row = (ID - (pow(props[1],2)*layer))/props[1];
-    bool leftOrRight = ID % (int(props[1])) > (props[1]*0.5);
-    return row + (props[1]*leftOrRight) + (props[1]*2*layer);
+    int row = (ID - (pow(Nsquares,2)*layer))/Nsquares;
+    bool leftOrRight = ID % (int(Nsquares)) > (Nsquares*0.5);
+    return row + (Nsquares*leftOrRight) + (Nsquares*2*layer);
     }
   else
-    return (ID % ((int(props[1]))*2)) + (layer*props[1]*2);
+    return (ID % ((int(Nsquares))*2)) + (layer*Nsquares*2);
 }
 
 int main(int argc, char **argv) {
@@ -84,8 +84,6 @@ int main(int argc, char **argv) {
 	int Nlad = Nsquares*5; //number of ladders
 	int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
 	double squareSide = geoParams->GetRealGeoParam("squareSide");*/
-
-  double detectorProps[5] = {Nlad, Nsquares, Nstrips, squareSide, pitch};
 
   TClonesArray a("TrCluster", 200);
   tree->Branch("Events", &a);
@@ -138,11 +136,11 @@ int main(int argc, char **argv) {
 			c->ID = inthit->GetVolumeID();
 
 			//Find the nearest strip to the left
-			c->strip = findStrip(c->pos[c->segm], detectorProps);
+			c->strip = findStrip(c->pos[c->segm]);
 
 
 			// Find the ladder it belongs
-      c->ladder = findLadder(c->ID, c->layer, c->segm, detectorProps);
+      c->ladder = findLadder(c->ID, c->layer, c->segm);
 
       //Deposit energy and create cluster
       double thisPos = ((c->ladder%Nsquares)*squareSide) + (c->strip*pitch) - (Nsquares*squareSide*0.5);
