@@ -72,11 +72,11 @@ void shareEnergy(vector2<double> &array, int jump) {
 					}
 			}
 
-				//Moving to right-side strip
+			//Moving to right-side strip
 
-				if(j0!=array.size()-1) {
-					j0++;
-				}
+			if(j0!=array.size()-1) {
+				j0++;
+			}
 			else if( (i0+1) % Nsquares != 0) {
 						i0++;
 						j0 = 0;
@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
 
 	*/
 
-  const int jump = 2;
+  const int jump = 3;
 	vector2<double> eDepSegm(Nlad, vector<double>(Nstrips));
 	vector2<double> hitPos(Nlayers);
 
@@ -188,15 +188,15 @@ int main(int argc, char **argv) {
 			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
 			if(cl->eDep > 9e-6) hEdep->Fill(cl->eDep); //total
 
-		//Filling the hits array
+			//Filling the hits array
 
 			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
 
-				//Filling the strips with the current energy
+			//Filling the strips with the current energy
+			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
 
-					eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
-			if(cl->strip == Nstrips-1 && (cl->ladder+1) % Nsquares == 0)
-				//hit on the last strip of the last ladder of the layer row
+			if(cl->strip == Nstrips-1 && (cl->ladder+1) % Nsquares == 0) //hit on the last strip of the last ladder of the layer row
+				
 				continue; //cl->clust[1] energy is lost
 
 			else if(cl->strip==Nstrips-1)
@@ -233,12 +233,12 @@ int main(int argc, char **argv) {
 						i1 = ii;
 						j1 = jj;
 
-            /* evaluate if the strip is the first of the first ladder
-             * on the layer row
-             */
-            bool first_ladder = ii % Nsquares == 0 && jj == 0;
+						/* evaluate if the strip is the first of the first ladder
+						* on the layer row
+						*/
+						bool first_ladder = ii % Nsquares == 0 && jj == 0;
 
-            if(eDepSegm[ii][jj] < 9e-6 || first_ladder)
+						if(eDepSegm[ii][jj] < 9e-6 || first_ladder)
 							goto nextPart1;
 					}
 				}
@@ -256,10 +256,10 @@ int main(int argc, char **argv) {
 						i2 = ii;
 						j2 = jj;
 
-            /* evaluate if the strip is the first of the first ladder
-             * on the layer row
-             */
-            bool first_ladder = ii % Nsquares == 0 && jj == 0;
+						/* evaluate if the strip is the first of the first ladder
+						* on the layer row
+						*/
+						bool first_ladder = ii % Nsquares == 0 && jj == 0;
 
 						if(eDepSegm[ii][jj] < 9e-6 || first_ladder)
 							goto nextPart2;
