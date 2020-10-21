@@ -1,6 +1,7 @@
 
 #include "global.h"
 #include "vector2.h"
+#include "progress.h"
 #include "TCanvas.h"
 #include "TClonesArray.h"
 #include "TF1.h"
@@ -164,17 +165,29 @@ int main(int argc, char **argv) {
 	vector2<double> eDepSegm(Nlad, vector<double>(Nstrips));
 	vector2<double> hitPos(Nlayers);
 
-	for (int i = 0; i < events->GetEntries(); i++) {
+  cout <<endl <<"Begin analysis of " <<events->GetEntries()
+    <<" events:\n";
+
+  for (int i = 0; i < events->GetEntries(); i++) {
+
+    //print and update progress bar
+    progress(i, events->GetEntries());
+
+    /* IMPORTANT: cout and printf MUST print strings beginning and
+     * ending with a new line (i.e. "\n" or endl) to not overwrite
+     * the bar */
 
 		v.resize(nLayer);
 		events->GetEntry(i);
+
 		if (a->GetEntries()>10) {
-			printf("Event %d: %d hits\n", i, a->GetEntries());
+			printf("\nEvent %d: %d hits\n", i, a->GetEntries());
 	   		for (int j = 0; j < a->GetEntries(); j++) {
 				TrCluster *cl = (TrCluster *)a->At(j);
 				printf("%d) %d %f\n", j, cl->parID, cl->eDep);
 				}
 		}
+
 
 		// eDepSegm array initialisation
 		stripReset(eDepSegm);
@@ -182,7 +195,7 @@ int main(int argc, char **argv) {
 
 		for (int j = 0; j < a->GetEntries(); j++) {
 
-			cout<<endl<<"Entry #"<<i+j<<endl;
+			//cout<<endl<<"Entry #"<<i+j<<endl;
 			TrCluster *cl = (TrCluster *)a->At(j);
 			v[cl->layer].push_back(*cl);
 			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
@@ -219,7 +232,7 @@ int main(int argc, char **argv) {
 			//Find the boundaries of the clusters
 
 			if(eDepSegm[ix][jx] >= 27e-6) {
-				cout<<"Analysing cluster\n";
+				//cout<<"Analysing cluster\n";
 				vector_pair<double> strip;
 
 				int i1, j1;
@@ -306,7 +319,7 @@ int main(int argc, char **argv) {
 							kMax = kHold;
 
 
-					cout<<"Analysing peak of "<< strip[kMax].second <<"keV\n";
+					//cout<<"Analysing peak of "<< strip[kMax].second <<"keV\n";
 
 					//Finding neighbour strip
 
@@ -332,7 +345,7 @@ int main(int argc, char **argv) {
 					for(int m = 0 ; m < hitPos[cLayer].size(); m++)
 						segmp->Fill(simPos-hitPos[cLayer][m]);
 
-					cout<<"Simulated position: "<<simPos<<endl;
+					//cout<<"Simulated position: "<<simPos<<endl;
 
 
 
@@ -348,6 +361,8 @@ int main(int argc, char **argv) {
 			}
 	}
 }
+
+  cout <<endl <<endl;
 
 	// Find tStart and tMean
 

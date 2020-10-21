@@ -8,6 +8,7 @@
 /* Analysis ROOT script for the output file created by SimpleRun.mac. */
 
 #include "global.h"
+#include "progress.h"
 #include "TFile.h"
 #include "TString.h"
 #include "TTree.h"
@@ -90,6 +91,13 @@ int main(int argc, char **argv) {
 
   for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
 
+    //print and update progress bar;
+    progress(iEv, reader.GetEntries());
+
+    /* IMPORTANT: cout and printf MUST print strings beginning and
+     * ending with a new line (i.e. "\n" or endl) to not overwrite
+     * the bar */
+
     reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
     GGSTPartHit *phit;
     GGSTIntHit *inthit;
@@ -98,12 +106,12 @@ int main(int argc, char **argv) {
 
     GGSTHadrIntInfo *intInfo = hadrReader->GetInelastic();
     if (intInfo)
-      cout << "  Inelastic interaction happened at z = " << intInfo->GetInteractionPoint()[2] << endl;
+      cout << "\n  Inelastic interaction happened at z = " << intInfo->GetInteractionPoint()[2] << endl;
     if (hadrReader->GetNQuasiElastic() > 0) {
       for (int iqe = 0; iqe < hadrReader->GetNQuasiElastic(); iqe++) {
         GGSTHadrIntInfo *qintInfo = hadrReader->GetQuasiElastic(iqe);
         if (qintInfo)
-          cout << "  QuasiElastic interaction happened at z = " << qintInfo->GetInteractionPoint()[2] << endl;
+          cout << "\n  QuasiElastic interaction happened at z = " << qintInfo->GetInteractionPoint()[2] << endl;
       }
     }
     // Hits loop
@@ -113,15 +121,15 @@ int main(int argc, char **argv) {
 		inthit = hReader->GetHit("siSensor", iHit);
 		int nPHit = inthit->GetNPartHits();
 		int llayer = inthit->GetVolumeID() / (Nsquares * Nsquares);
-		cout<<"layer : "<<llayer<<endl;
-		cout<<"square : "<<inthit->GetVolumeID()<<endl;
+		//cout<<"layer : "<<llayer<<endl;
+		//cout<<"square : "<<inthit->GetVolumeID()<<endl;
 
 
 
 		for (int i = 0; i < nPHit; i++) {
 			TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
 			phit = inthit->GetPartHit(i);
-      cout<<"Entry #"<<iHit+i+1<<endl;
+      //cout<<"Entry #"<<iHit+i+1<<endl;
 
 			c->segm = llayer % 2 == 0;
 			c->pos[0] = 0.5 * (phit->entrancePoint[0] + phit->exitPoint[0]); // x coordinate
@@ -155,6 +163,8 @@ int main(int argc, char **argv) {
     tree->Fill();
 
   }
+
+  cout <<endl <<endl;
 
   // Save histograms
   outFile->cd();

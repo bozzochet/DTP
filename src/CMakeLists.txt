@@ -80,6 +80,7 @@ install(TARGETS global DESTINATION "${INSTALL_LIB_DIR}")
 
 set(SimpleAnalysis_SRC
 	SimpleAnalysis.cpp
+  progress.cpp
 	G__TrCluster.cxx
 )
 
@@ -100,6 +101,7 @@ install(TARGETS SimpleAnalysis DESTINATION "${INSTALL_BIN_DIR}")
 
 set(DataAnalysis_SRC
 	DataAnalysis.cpp
+  progress.cpp
 	G__TrCluster.cxx
 )
 
