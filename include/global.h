@@ -4,11 +4,11 @@
 #ifndef GLOBAL_INCLUDE
 #define GLOBAL_INCLUDE
 
-extern const int Nlayers;
-extern const int Nsquares; //squares per side
-extern const int Nlad; //number of ladders
-extern const double squareSide;
-extern const double pitch;
-extern const int Nstrips; //strips per ladder
+const int Nlayers = 10;
+const int Nsquares = 8; //squares per side on a layer
+const int Nlad = Nsquares*2*Nlayers; //total number of ladders
+const int Nstrips = 640; //strips per ladder
+const double pitch = 0.015; //cm = 150 um
+const double squareSide = Nstrips*pitch;
 
 #endif

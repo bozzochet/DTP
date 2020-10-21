@@ -67,17 +67,6 @@ endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 
 #################
 
-set(global_SRC global.cpp)
-
-add_library(global SHARED ${global_SRC})
-
-set_target_properties(global PROPERTIES
-                      LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}")
-
-install(TARGETS global DESTINATION "${INSTALL_LIB_DIR}")
-
-#################
-
 set(SimpleAnalysis_SRC
 	SimpleAnalysis.cpp
   progress.cpp
@@ -88,7 +77,6 @@ add_executable(SimpleAnalysis ${SimpleAnalysis_SRC})
 target_link_libraries(SimpleAnalysis
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}
-  global
 )
 
 set_target_properties(SimpleAnalysis PROPERTIES
@@ -109,7 +97,6 @@ add_executable(DataAnalysis ${DataAnalysis_SRC})
 target_link_libraries(DataAnalysis
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}
-  global
 )
 
 set_target_properties(DataAnalysis PROPERTIES
