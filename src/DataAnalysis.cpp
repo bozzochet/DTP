@@ -180,6 +180,7 @@ int main(int argc, char **argv) {
 		v.resize(nLayer);
 		events->GetEntry(i);
 
+    /*
 		if (a->GetEntries()>10) {
 			printf("\nEvent %d: %d hits\n", i, a->GetEntries());
 	   		for (int j = 0; j < a->GetEntries(); j++) {
@@ -187,7 +188,7 @@ int main(int argc, char **argv) {
 				printf("%d) %d %f\n", j, cl->parID, cl->eDep);
 				}
 		}
-
+    */
 
 		// eDepSegm array initialisation
 		stripReset(eDepSegm);
@@ -209,7 +210,7 @@ int main(int argc, char **argv) {
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
 
 			if(cl->strip == Nstrips-1 && (cl->ladder+1) % Nsquares == 0) //hit on the last strip of the last ladder of the layer row
-				
+
 				continue; //cl->clust[1] energy is lost
 
 			else if(cl->strip==Nstrips-1)
