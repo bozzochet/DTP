@@ -65,6 +65,19 @@ if (${ROOT_VERSION} VERSION_GREATER "6.0")
       DESTINATION "${INSTALL_LIB_DIR}")
 endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 
+######################### EXTRA LIBS #########################
+
+set(STOPWATCH_SRC Stopwatch.cpp)
+add_library(Stopwatch SHARED ${STOPWATCH_SRC})
+set_target_properties(Stopwatch PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
+)
+install(TARGETS Stopwatch DESTINATION "${INSTALL_LIB_DIR}")
+
+#################
+
+set(EXTRA_LIBRARIES Stopwatch)
+
 #################
 
 set(SimpleAnalysis_SRC
@@ -97,6 +110,7 @@ add_executable(DataAnalysis ${DataAnalysis_SRC})
 target_link_libraries(DataAnalysis
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}
+  ${EXTRA_LIBRARIES}
 )
 
 set_target_properties(DataAnalysis PROPERTIES
