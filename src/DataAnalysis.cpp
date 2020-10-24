@@ -8,6 +8,7 @@
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
+#include "TH1D.h"
 #include <TGraph.h>
 #include "TRandom3.h"
 #include "TStyle.h"
@@ -140,6 +141,7 @@ int main(int argc, char **argv) {
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
 
 	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
+  TH1D *htime;
 
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
@@ -211,6 +213,9 @@ int main(int argc, char **argv) {
 
       // taking hit times
       chrono.split(cl->ladder, cl->strip, cl->time);
+
+      if(j==0) htime = chrono.get_signal(cl->ladder, cl->strip);
+
 			//Filling the strips with the current energy
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
 
@@ -450,5 +455,6 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(segmp);
+  outFile->WriteTObject(htime);
 	outFile->Close();
 	}
