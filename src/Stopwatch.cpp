@@ -2,6 +2,21 @@
 #include "Stopwatch.h"
 
 
+Stopwatch::Stopwatch(const int &jump)
+{
+  jump_ = jump;
+
+  //set TF1 functions to describe simulated signal
+
+  signal_up_ = new TF1("up", "[0]*x", 0, T_RESP_);
+  signal_up_->SetParameter(0, 1.0/T_RESP_);
+
+  signal_down_ = new TF1("down", "[0]*x+[1]", 0, T_RESET_ - T_RESP_);
+  signal_down_->SetParameter(0, -1.0 / (T_RESET_ - T_RESP_) );
+  signal_down_->SetParameter(1, 1);
+}
+
+
 void Stopwatch::stop()
 {
 
@@ -22,4 +37,45 @@ void Stopwatch::stop()
     }
   }
 
+}
+
+
+void Stopwatch::add_signal(TH1D *hist, const double &hitTime)
+{
+  for(double t = 0; t < T_RESET_; t += BIN_LENGTH_)
+
+    if(t < T_RESP_)
+      hist->Fill(t+hitTime, signal_up_->Eval(t));
+    else
+      hist->Fill(t+hitTime, signal_down_->Eval(t-T_RESP_) );
+}
+
+
+TH1D* Stopwatch::get_signal(const int &lad, const int &s)
+{
+  //hist title
+  std::string title = "ladder:  strip: ";
+  title.insert(8, std::to_string(lad) );
+  title.insert(title.length(), std::to_string(s) );
+
+  TH1D *hist = new TH1D(
+    "current", title.c_str(), N_BINS_, T_MIN_, T_MAX_
+  );
+
+  hist->GetXaxis()->SetTitle("time [?]");
+  hist->GetYaxis()->SetTitle("current / max_current");
+
+  hist->SetMarkerColor(kBlue);
+  hist->SetLineColor(kWhite);
+
+  //ADD NOISE SIGNAL HERE
+
+  abs_strip_t strip = abs_strip(lad,s);
+
+  if(original_.find(strip) == original_.end())
+    //if no signal at strip passed ...
+    return hist; // ... return hist with noise only
+
+  add_signal(hist, original_[strip]);
+  return hist;
 }

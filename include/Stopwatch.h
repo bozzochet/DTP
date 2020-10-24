@@ -14,6 +14,8 @@
 
 #include "TMath.h"
 #include "TF1.h"
+#include "TH1D.h"
+#include "TAxis.h"
 
 #include <map>
 #include <vector>
@@ -21,7 +23,9 @@
 #include <string>
 
 typedef int abs_strip_t;
+
 typedef double mytime_t;
+
 typedef std::map <abs_strip_t, mytime_t> times_map_t;
 
 class Stopwatch
@@ -36,6 +40,22 @@ class Stopwatch
   //active_ register times of active strips
   times_map_t active_;
 
+  //signal histogram parameters
+  const int N_BINS_ = 1000;
+  const double T_MIN_ = 0;
+  const double T_MAX_ = 4;
+  const double BIN_LENGTH_ = (T_MAX_ - T_MIN_) / (double) N_BINS_;
+
+  //response time of the signal to reach the peak
+  const double T_RESP_ = 0.5;
+
+  //reset time between hit time and when signal returns to 0
+  const double T_RESET_ = 2;
+
+  //ideal signal
+  TF1 *signal_up_ = NULL; //from 0 to peak
+  TF1 *signal_down_ = NULL; //from peak to 0
+
 /*********************************************************************/
 
   //absolute strip ID
@@ -48,12 +68,15 @@ class Stopwatch
     return false;
   }
 
+  //fill hist with simulated signal
+  void add_signal(TH1D *hist, const double &hitTime);
+
 /*********************************************************************/
 
 public:
 
-  Stopwatch(const int &jump)
-  { jump_ = jump; }
+  //get jump and set TF1 private variables
+  Stopwatch(const int &jump);
 
   //take time on strip
   inline void split
@@ -73,6 +96,8 @@ public:
 
   inline void reset()
   { original_.clear(); active_.clear(); }
+
+  TH1D* get_signal(const int &ladder, const int &strip);
 
 };
 
