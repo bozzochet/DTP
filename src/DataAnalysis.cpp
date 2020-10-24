@@ -2,6 +2,7 @@
 #include "global.h"
 #include "vector2.h"
 #include "progress.h"
+#include "Stopwatch.h"
 #include "TCanvas.h"
 #include "TClonesArray.h"
 #include "TF1.h"
@@ -164,6 +165,7 @@ int main(int argc, char **argv) {
   const int jump = 3;
 	vector2<double> eDepSegm(Nlad, vector<double>(Nstrips));
 	vector2<double> hitPos(Nlayers);
+  Stopwatch chrono(jump);
 
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
     <<" events:\n";
@@ -194,6 +196,7 @@ int main(int argc, char **argv) {
 		stripReset(eDepSegm);
 		hitReset(hitPos,Nlayers);
 
+    chrono.reset();
 		for (int j = 0; j < a->GetEntries(); j++) {
 
 			//cout<<endl<<"Entry #"<<i+j<<endl;
@@ -206,6 +209,8 @@ int main(int argc, char **argv) {
 
 			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
 
+      // taking hit times
+      chrono.split(cl->ladder, cl->strip, cl->time);
 			//Filling the strips with the current energy
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
 
@@ -219,6 +224,8 @@ int main(int argc, char **argv) {
 						eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
 		}
 
+    //tell stopwatch all times are taken
+    chrono.stop();
 		// Sharing of the energy from non-active strips
 
 		if(jump!=1)
