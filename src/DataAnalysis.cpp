@@ -214,6 +214,7 @@ int main(int argc, char **argv) {
       // taking hit times
       chrono.split(cl->ladder, cl->strip, cl->time);
 
+      //get signal example
       if(j==0) htime = chrono.get_signal(cl->ladder, cl->strip);
 
 			//Filling the strips with the current energy

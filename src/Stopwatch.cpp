@@ -71,8 +71,8 @@ TH1D* Stopwatch::get_signal(const int &lad, const int &s)
     "current", title.c_str(), N_BINS_, T_MIN_, T_MAX_
   );
 
-  hist->GetXaxis()->SetTitle("time [?]");
-  hist->GetYaxis()->SetTitle("current / max_current");
+  hist->GetXaxis()->SetTitle("time [ns]");
+  hist->GetYaxis()->SetTitle("current / peak_current");
 
   hist->SetMarkerColor(kBlue);
   hist->SetLineColor(kWhite);
