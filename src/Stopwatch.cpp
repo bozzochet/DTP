@@ -8,11 +8,11 @@ Stopwatch::Stopwatch(const int &jump)
 
   //set TF1 functions to describe simulated signal
 
-  signal_up_ = new TF1("up", "[0]*x", 0, T_RESP_);
-  signal_up_->SetParameter(0, 1.0/T_RESP_);
+  signal_up_ = new TF1("up", "[0]*x", 0, T_PEAK_);
+  signal_up_->SetParameter(0, 1.0/T_PEAK_);
 
-  signal_down_ = new TF1("down", "[0]*x+[1]", 0, T_RESET_ - T_RESP_);
-  signal_down_->SetParameter(0, -1.0 / (T_RESET_ - T_RESP_) );
+  signal_down_ = new TF1("down", "[0]*x+[1]", 0, T_RELAX_ - T_PEAK_);
+  signal_down_->SetParameter(0, -1.0 / (T_RELAX_ - T_PEAK_) );
   signal_down_->SetParameter(1, 1);
 }
 
@@ -42,12 +42,12 @@ void Stopwatch::stop()
 
 void Stopwatch::add_signal(TH1D *hist, const mytime_t &hitTime)
 {
-  for(mytime_t t = 0; t < T_RESET_; t += BIN_LENGTH_)
+  for(mytime_t t = 0; t < T_RELAX_; t += BIN_LENGTH_)
 
-    if(t < T_RESP_)
+    if(t < T_PEAK_)
       hist->Fill(t+hitTime, signal_up_->Eval(t));
     else
-      hist->Fill(t+hitTime, signal_down_->Eval(t-T_RESP_) );
+      hist->Fill(t+hitTime, signal_down_->Eval(t-T_PEAK_) );
 }
 
 

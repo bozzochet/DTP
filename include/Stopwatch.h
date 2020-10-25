@@ -46,11 +46,11 @@ class Stopwatch
   const mytime_t T_MAX_ = 4;
   const double BIN_LENGTH_ = (T_MAX_ - T_MIN_) / (double) N_BINS_;
 
-  //response time of the signal to reach the peak
-  const mytime_t T_RESP_ = 0.5;
+  //time to reach the peak after a hit
+  const mytime_t T_PEAK_ = 0.5;
 
-  //reset time between hit time and when signal returns to 0
-  const mytime_t T_RESET_ = 2;
+  //relaxing time between hit and when current returns to 0
+  const mytime_t T_RELAX_ = 2;
 
   //ideal signal
   TF1 *signal_up_ = NULL; //from 0 to peak
