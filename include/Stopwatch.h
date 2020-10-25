@@ -42,15 +42,15 @@ class Stopwatch
 
   //signal histogram parameters
   const int N_BINS_ = 1000;
-  const double T_MIN_ = 0;
-  const double T_MAX_ = 4;
+  const mytime_t T_MIN_ = 0;
+  const mytime_t T_MAX_ = 4;
   const double BIN_LENGTH_ = (T_MAX_ - T_MIN_) / (double) N_BINS_;
 
   //response time of the signal to reach the peak
-  const double T_RESP_ = 0.5;
+  const mytime_t T_RESP_ = 0.5;
 
   //reset time between hit time and when signal returns to 0
-  const double T_RESET_ = 2;
+  const mytime_t T_RESET_ = 2;
 
   //ideal signal
   TF1 *signal_up_ = NULL; //from 0 to peak
@@ -69,7 +69,7 @@ class Stopwatch
   }
 
   //fill hist with simulated signal
-  void add_signal(TH1D *hist, const double &hitTime);
+  void add_signal(TH1D *hist, const mytime_t &hitTime);
 
 /*********************************************************************/
 

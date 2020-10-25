@@ -40,9 +40,9 @@ void Stopwatch::stop()
 }
 
 
-void Stopwatch::add_signal(TH1D *hist, const double &hitTime)
+void Stopwatch::add_signal(TH1D *hist, const mytime_t &hitTime)
 {
-  for(double t = 0; t < T_RESET_; t += BIN_LENGTH_)
+  for(mytime_t t = 0; t < T_RESET_; t += BIN_LENGTH_)
 
     if(t < T_RESP_)
       hist->Fill(t+hitTime, signal_up_->Eval(t));
