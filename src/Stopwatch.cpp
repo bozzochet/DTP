@@ -46,6 +46,13 @@ void Stopwatch::stop()
 
 }
 
+/*
+void Stopwatch::add_noise(TH1D *hist)
+{
+    for(mytime_t t = T_MIN_; t < T_MAX_; t += BIN_LENGTH_)
+      hist->Fill( NOISE );
+}
+*/
 
 void Stopwatch::add_signal
   (TH1D *hist, const std::vector<mytime_t> &times)
@@ -77,7 +84,7 @@ TH1D* Stopwatch::get_signal(const int &lad, const int &s)
   hist->SetMarkerColor(kBlue);
   hist->SetLineColor(kWhite);
 
-  //ADD NOISE SIGNAL HERE
+  //add_noise(hist);
 
   abs_strip_t strip = abs_strip(lad,s);
 

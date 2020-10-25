@@ -75,6 +75,11 @@ class Stopwatch
     return false;
   }
 
+/*
+  //fill hist with noise
+  void add_noise(TH1D *hist);
+*/
+
   //fill hist with simulated signal
   void add_signal(TH1D *hist, const std::vector<mytime_t> &times);
 
