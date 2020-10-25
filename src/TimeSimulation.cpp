@@ -1,13 +1,9 @@
 
-#include "Stopwatch.h"
+#include "TimeSimulation.h"
 
 
-Stopwatch::Stopwatch(const int &jump)
+TimeSimulation::TimeSimulation()
 {
-  jump_ = jump;
-
-  //set TF1 functions to describe simulated signal
-
   signal_up_ = new TF1("up", "[0]*x", 0, T_PEAK_);
   signal_up_->SetParameter(0, SLEW_RATE_UP_ );
 
@@ -20,34 +16,12 @@ Stopwatch::Stopwatch(const int &jump)
 }
 
 
-Stopwatch::~Stopwatch()
+TimeSimulation::~TimeSimulation()
 {
   delete signal_up_;
   delete signal_down_;
 }
 
-
-void Stopwatch::stop()
-{
-
-  for(auto it = original_.begin(); it != original_.end(); ++it)
-  {
-    if(is_active(it->first))
-      active_[it->first] = original_[it->first];
-    else
-    {
-      //get index of active strips before and after strip it->first
-      abs_strip_t active_before =
-        it->first - it->first % (Nsquares*Nstrips) % jump_ ;
-
-      abs_strip_t active_after = active_before + jump_ ;
-
-      active_[active_before] = original_[it->first];
-      active_[active_after] = original_[it->first];
-    }
-  }
-
-}
 
 /*
 void Stopwatch::add_noise(TH1D *hist)
@@ -57,7 +31,8 @@ void Stopwatch::add_noise(TH1D *hist)
 }
 */
 
-void Stopwatch::add_signal
+
+void TimeSimulation::add_signal
   (TH1D *hist, const std::vector<mytime_t> &times)
 {
   for(int i = 0; i < (int) times.size(); ++i)
@@ -74,7 +49,8 @@ void Stopwatch::add_signal
 }
 
 
-TH1D* Stopwatch::get_signal(const int &lad, const int &s)
+TH1D* TimeSimulation::get_signal
+  (const int &lad, const int &s, Stopwatch *watch)
 {
   //hist title
   std::string title = "ladder:  strip: ";
@@ -95,12 +71,13 @@ TH1D* Stopwatch::get_signal(const int &lad, const int &s)
 
   //add_noise(hist);
 
-  abs_strip_t strip = abs_strip(lad,s);
-
-  if(original_.find(strip) == original_.end())
-    //if no signal at strip passed ...
+  if(watch->time(lad,s).size() == 0)
+  {
+    //if no hit on strip ...
+    std::cout <<"\nVECTOR VOID\n";
     return hist; // ... return hist with noise only
+  }
 
-  add_signal(hist, original_[strip]);
+  add_signal(hist, watch->time(lad,s));
   return hist;
 }

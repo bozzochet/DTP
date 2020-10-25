@@ -67,16 +67,16 @@ endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 
 ######################### EXTRA LIBS #########################
 
-set(STOPWATCH_SRC Stopwatch.cpp)
-add_library(Stopwatch SHARED ${STOPWATCH_SRC})
-set_target_properties(Stopwatch PROPERTIES
+set(TIME_SIMULATION_SRC TimeSimulation.cpp)
+add_library(TimeSimulation SHARED ${TIME_SIMULATION_SRC})
+set_target_properties(TimeSimulation PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
 )
-install(TARGETS Stopwatch DESTINATION "${INSTALL_LIB_DIR}")
+install(TARGETS TimeSimulation DESTINATION "${INSTALL_LIB_DIR}")
 
 #################
 
-set(EXTRA_LIBRARIES Stopwatch)
+set(EXTRA_LIBRARIES TimeSimulation)
 
 #################
 

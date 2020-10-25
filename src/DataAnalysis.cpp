@@ -3,6 +3,7 @@
 #include "vector2.h"
 #include "progress.h"
 #include "Stopwatch.h"
+#include "TimeSimulation.h"
 #include "TCanvas.h"
 #include "TClonesArray.h"
 #include "TF1.h"
@@ -167,7 +168,10 @@ int main(int argc, char **argv) {
   const int jump = 3;
 	vector2<double> eDepSegm(Nlad, vector<double>(Nstrips));
 	vector2<double> hitPos(Nlayers);
-  Stopwatch chrono(jump);
+
+  //objects for time
+  Stopwatch *chrono = new Stopwatch();
+  TimeSimulation *time_sim = new TimeSimulation();
 
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
     <<" events:\n";
@@ -198,7 +202,8 @@ int main(int argc, char **argv) {
 		stripReset(eDepSegm);
 		hitReset(hitPos,Nlayers);
 
-    chrono.reset();
+    chrono->reset();
+
 		for (int j = 0; j < a->GetEntries(); j++) {
 
 			//cout<<endl<<"Entry #"<<i+j<<endl;
@@ -212,10 +217,11 @@ int main(int argc, char **argv) {
 			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
 
       // taking hit times
-      chrono.split(cl->ladder, cl->strip, cl->time);
+      chrono->split(cl->ladder, cl->strip, cl->time);
 
       //get signal example
-      if(j==0) htime = chrono.get_signal(cl->ladder, cl->strip);
+      if(j==0)
+        htime = time_sim->get_signal(cl->ladder, cl->strip, chrono);
 
 			//Filling the strips with the current energy
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
@@ -230,8 +236,6 @@ int main(int argc, char **argv) {
 						eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
 		}
 
-    //tell stopwatch all times are taken
-    chrono.stop();
 		// Sharing of the energy from non-active strips
 
 		if(jump!=1)
@@ -375,6 +379,10 @@ int main(int argc, char **argv) {
 			}
 	}
 }
+
+  //time simulation ended
+  delete chrono;
+  delete time_sim;
 
   cout <<endl <<endl;
 
