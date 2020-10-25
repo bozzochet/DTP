@@ -1,4 +1,7 @@
 
+
+#include "DEBUG.h"
+
 #include "global.h"
 #include "vector2.h"
 #include "progress.h"
@@ -9,6 +12,7 @@
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
+#include "TH1D.h"
 #include <TGraph.h>
 #include "TRandom3.h"
 #include "TStyle.h"
@@ -106,6 +110,8 @@ void shareEnergy(vector2<double> &array, int jump) {
 
 int main(int argc, char **argv) {
 
+  debug::start_debug();
+
 	const int nLayer = 26;
 	auto inFile = TFile::Open(argv[1]);
 
@@ -141,6 +147,7 @@ int main(int argc, char **argv) {
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
 
 	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
+  TH1D *htime;
 
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
@@ -176,6 +183,9 @@ int main(int argc, char **argv) {
 
   for (int i = 0; i < events->GetEntries(); i++) {
 
+    if(i!=0) break;
+    debug::out <<"\n event: " <<i <<std::endl;
+
     //print and update progress bar
     progress(i, events->GetEntries());
 
@@ -201,12 +211,19 @@ int main(int argc, char **argv) {
 		hitReset(hitPos,Nlayers);
 
     chrono->reset();
+    debug::out <<"\nreset chrono\n";
 
 		for (int j = 0; j < a->GetEntries(); j++) {
 
+      debug::out <<"\nentry: " <<j <<std::endl;
+
 			//cout<<endl<<"Entry #"<<i+j<<endl;
 			TrCluster *cl = (TrCluster *)a->At(j);
-			v[cl->layer].push_back(*cl);
+
+      debug::out <<std::endl;
+      debug::print_cl(cl);
+
+      v[cl->layer].push_back(*cl);
 			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
 			if(cl->eDep > 9e-6) hEdep->Fill(cl->eDep); //total
 
@@ -215,7 +232,13 @@ int main(int argc, char **argv) {
 			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
 
       // taking hit times
+      debug::out <<"\nsplit: ";
       chrono->split(cl->ladder, cl->strip, cl->time);
+      debug::out <<cl->time <<std::endl;
+
+      //get signal example
+      if(j==0 && i==0)
+        htime = time_sim->get_signal(cl->ladder, cl->strip, chrono);
 
 			//Filling the strips with the current energy
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
@@ -233,7 +256,7 @@ int main(int argc, char **argv) {
 		// Sharing of the energy from non-active strips
 
 		if(jump!=1)
-			shareEnergy(eDepSegm,jump);
+      shareEnergy(eDepSegm,jump);
 
 		addNoise(eDepSegm,tr);
 
@@ -458,5 +481,9 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(segmp);
+  outFile->WriteTObject(htime);
 	outFile->Close();
+
+  debug::end_debug();
+
 	}

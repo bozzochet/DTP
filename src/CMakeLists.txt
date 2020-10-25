@@ -119,6 +119,26 @@ set_target_properties(DataAnalysis PROPERTIES
 
 install(TARGETS DataAnalysis DESTINATION "${INSTALL_BIN_DIR}")
 
+#################
+
+set(DataAnalysis_debug_SRC
+	DataAnalysis_debug.cpp
+  progress.cpp
+	G__TrCluster.cxx
+)
+
+add_executable(DataAnalysis_debug ${DataAnalysis_debug_SRC})
+target_link_libraries(DataAnalysis_debug
+  ${ROOT_LIBRARIES}
+  ${GGS_ANALYSIS_LIBRARIES}
+  ${EXTRA_LIBRARIES}
+)
+
+set_target_properties(DataAnalysis_debug PROPERTIES
+				     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
+				     )
+
+install(TARGETS DataAnalysis_debug DESTINATION "${INSTALL_BIN_DIR}")
 
 #################
 
