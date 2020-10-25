@@ -24,15 +24,6 @@ class Stopwatch
    * is stored in original_ with key s and value t */
   times_map_t original_;
 
-  //active_ register times of active strips
-  times_map_t active_;
-
-  inline bool is_active(const abs_strip_t &strip)
-  {
-    if(strip % Nrows*Nstrips % jump_ == 0) return true;
-    return false;
-  }
-
 
 public:
 
@@ -44,13 +35,13 @@ public:
   //get hit times on (ladder,strip); if not a hit return void vector
   inline std::vector<mytime_t> time(const int &ladder, const int &strip)
   {
-    if(active_.find(abs_strip(ladder,strip)) != active_.end())
-      return active_[abs_strip(ladder,strip)];
+    if(original_.find(abs_strip(ladder,strip)) != original_.end())
+      return original_[abs_strip(ladder,strip)];
     return {}; //void vector
   }
 
   inline void reset()
-  { original_.clear(); active_.clear(); }
+  { original_.clear(); }
 
 };
 
