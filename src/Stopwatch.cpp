@@ -9,11 +9,11 @@ Stopwatch::Stopwatch(const int &jump)
   //set TF1 functions to describe simulated signal
 
   signal_up_ = new TF1("up", "[0]*x", 0, T_PEAK_);
-  signal_up_->SetParameter(0, 1.0/T_PEAK_);
+  signal_up_->SetParameter(0, SLEW_RATE_UP_ );
 
   signal_down_ = new TF1("down", "[0]*x+[1]", 0, T_RELAX_ - T_PEAK_);
-  signal_down_->SetParameter(0, -1.0 / (T_RELAX_ - T_PEAK_) );
-  signal_down_->SetParameter(1, 1);
+  signal_down_->SetParameter(0, -SLEW_RATE_DOWN_ );
+  signal_down_->SetParameter(1, PEAK_VALUE_ );
 }
 
 
