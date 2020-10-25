@@ -43,19 +43,12 @@ class Stopwatch
   const mytime_t T_MAX_ = 4;
   const double BIN_LENGTH_ = (T_MAX_ - T_MIN_) / (double) N_BINS_;
 
-  //signal parameters
+  //signal generation parameters
   const double PEAK_VALUE_ = 1; //signal normalize to peak current
-
-  // time to reach the peak after a hit
-  const mytime_t T_PEAK_ = 0.1; // = 100 ps
-
-  // total time from hit time to current value = 0
-  const mytime_t T_RELAX_ = 2*T_PEAK_ ; //symmetric signal
-
-  //slew rates ; down must be defined positive
+  const mytime_t T_PEAK_ = 0.1; // = 100 ps ; time to reach peak
   const double SLEW_RATE_UP_ = PEAK_VALUE_ / T_PEAK_ ;
-  const double SLEW_RATE_DOWN_ = PEAK_VALUE_ / (T_RELAX_ - T_PEAK_);
-
+  const double K_EXP_ = 1; // k in formula exp(-kx) for signal descent
+  const double ZERO_THRESH_ = 0.05; //under wich value consider exp=0
 
 
   //active strips are one every jump, beginning from a row

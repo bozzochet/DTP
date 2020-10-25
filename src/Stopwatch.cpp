@@ -11,9 +11,12 @@ Stopwatch::Stopwatch(const int &jump)
   signal_up_ = new TF1("up", "[0]*x", 0, T_PEAK_);
   signal_up_->SetParameter(0, SLEW_RATE_UP_ );
 
-  signal_down_ = new TF1("down", "[0]*x+[1]", 0, T_RELAX_ - T_PEAK_);
-  signal_down_->SetParameter(0, -SLEW_RATE_DOWN_ );
-  signal_down_->SetParameter(1, PEAK_VALUE_ );
+  //formula for signal_down_
+  std::string formula = "TMath::Exp(-*x)";
+  formula.insert(12, std::to_string(K_EXP_));
+
+  double x_max = -1.0 / K_EXP_ * TMath::Log(ZERO_THRESH_);
+  signal_down_ = new TF1("down", formula.c_str(), 0, x_max);
 }
 
 
@@ -58,7 +61,11 @@ void Stopwatch::add_signal
   (TH1D *hist, const std::vector<mytime_t> &times)
 {
   for(int i = 0; i < (int) times.size(); ++i)
-    for(mytime_t t = 0; t < T_RELAX_; t += BIN_LENGTH_)
+    for(
+      mytime_t t = 0;
+      t < times[i] + signal_down_->GetXmax();
+      t += BIN_LENGTH_
+    )
 
       if(t < T_PEAK_)
         hist->Fill(t+times[i], signal_up_->Eval(t));
@@ -81,8 +88,10 @@ TH1D* Stopwatch::get_signal(const int &lad, const int &s)
   hist->GetXaxis()->SetTitle("time [ns]");
   hist->GetYaxis()->SetTitle("current / peak_current");
 
-  hist->SetMarkerColor(kBlue);
+  //draw hist as a function instead of using bars
   hist->SetLineColor(kWhite);
+  hist->SetMarkerColor(kBlue);
+  hist->SetMarkerStyle(kFullDotMedium);
 
   //add_noise(hist);
 
