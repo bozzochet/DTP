@@ -77,6 +77,8 @@ public:
 
   //get jump and set TF1 private variables
   Stopwatch(const int &jump);
+  
+  ~Stopwatch();
 
   //take time on strip
   inline void split

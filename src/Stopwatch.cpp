@@ -17,6 +17,13 @@ Stopwatch::Stopwatch(const int &jump)
 }
 
 
+Stopwatch::~Stopwatch()
+{
+  delete signal_up_;
+  delete signal_down_;
+}
+
+
 void Stopwatch::stop()
 {
 
