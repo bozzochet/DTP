@@ -31,7 +31,7 @@
 
 typedef int abs_strip_t;
 
-typedef double mytime_t;
+typedef double mytime_t; //times are expressed in ns
 
 typedef std::map <abs_strip_t, std::vector <mytime_t> > times_map_t;
 
