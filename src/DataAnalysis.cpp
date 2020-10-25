@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
       chrono->split(cl->ladder, cl->strip, cl->time);
 
       //get signal example
-      if(j==0)
+      if(j==0 && i==0)
         htime = time_sim->get_signal(cl->ladder, cl->strip, chrono);
 
 			//Filling the strips with the current energy
