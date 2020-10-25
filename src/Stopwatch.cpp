@@ -47,14 +47,16 @@ void Stopwatch::stop()
 }
 
 
-void Stopwatch::add_signal(TH1D *hist, const mytime_t &hitTime)
+void Stopwatch::add_signal
+  (TH1D *hist, const std::vector<mytime_t> &times)
 {
-  for(mytime_t t = 0; t < T_RELAX_; t += BIN_LENGTH_)
+  for(int i = 0; i < (int) times.size(); ++i)
+    for(mytime_t t = 0; t < T_RELAX_; t += BIN_LENGTH_)
 
-    if(t < T_PEAK_)
-      hist->Fill(t+hitTime, signal_up_->Eval(t));
-    else
-      hist->Fill(t+hitTime, signal_down_->Eval(t-T_PEAK_) );
+      if(t < T_PEAK_)
+        hist->Fill(t+times[i], signal_up_->Eval(t));
+      else
+        hist->Fill(t+times[i], signal_down_->Eval(t-T_PEAK_) );
 }
 
 
