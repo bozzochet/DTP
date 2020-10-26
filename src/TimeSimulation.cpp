@@ -5,7 +5,7 @@
 TimeSimulation::TimeSimulation()
 {
   signal_up_ = new TF1("up", "[0]*x", 0, T_PEAK_);
-  signal_up_->SetParameter(0, SLEW_RATE_UP_ );
+  signal_up_->SetParameter(0, SLEW_RATE_ );
 
   //formula for signal_down_
   std::string formula = "TMath::Exp(-*x)";

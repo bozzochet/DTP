@@ -41,9 +41,9 @@ class TimeSimulation
   //signal generation parameters
   const double PEAK_VALUE_ = 1; //signal normalize to peak current
   const mytime_t T_PEAK_ = 0.1; // = 100 ps ; time to reach peak
-  const double SLEW_RATE_UP_ = PEAK_VALUE_ / T_PEAK_ ;
+  const double SLEW_RATE_ = PEAK_VALUE_ / T_PEAK_ ;
   const double K_EXP_ = 1; // k in formula exp(-kx) for signal descent
-  const double ZERO_THRESH_ = 0.05; //under wich value consider exp=0
+  const double ZERO_THRESH_ = 0.05; //value under wich exp is considered = 0
 
 
   //ideal signal
