@@ -3,7 +3,7 @@
 #include "DEBUG.h"
 
 #include "global.h"
-#include "vector2.h"
+#include "types.h"
 #include "progress.h"
 #include "Stopwatch.h"
 #include "TimeSimulation.h"

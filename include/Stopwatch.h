@@ -6,8 +6,7 @@
 
 
 #include "global.h"
-#include "abs_strip.h"
-#include "mytime.h"
+#include "types.h"
 
 #include <map>
 #include <vector>
