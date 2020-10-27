@@ -7,17 +7,20 @@
 
 #include "global.h"
 #include "types.h"
+#include "abs_strip.h"
 
 #include <map>
 #include <vector>
 
 
-typedef std::map <abs_strip_t, std::vector <mytime_t> > times_map_t;
-
 class Stopwatch
 {
-  //active strips are one every jump, beginning from a row
-  int jump_ = 1;
+  
+protected:
+
+  //associate time to strip
+  typedef std::map <abs_strip_t, std::vector<mytime_t> > times_map_t;
+
 
   /* a hit happened between strip s and strip s+1 (s = absolute ID)
    * is stored in original_ with key s and value t */

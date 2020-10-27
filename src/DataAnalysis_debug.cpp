@@ -5,6 +5,7 @@
 #include "global.h"
 #include "types.h"
 #include "progress.h"
+#include "vector2.h"
 #include "Stopwatch.h"
 #include "TimeSimulation.h"
 #include "TCanvas.h"

@@ -1,6 +1,7 @@
 
 #include "global.h"
 #include "types.h"
+#include "vector2.h"
 #include "progress.h"
 #include "Stopwatch.h"
 #include "TimeSimulation.h"

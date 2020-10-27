@@ -1,17 +1,13 @@
 
-// handling absolute strip IDs
-
 #ifndef ABS_STRIP_INCLUDE
 #define ABS_STRIP_INCLUDE
 
 
-#include "global.h"
+extern const int Nstrips; //defined in global.h
 
-
-//absolute strip ID
+//absolute strip ID; look to abs_strip function for definition
 typedef int abs_strip_t;
 
-//convert relative strip ID to absolute
 inline abs_strip_t abs_strip(const int &ladder, const int &strip)
 { return ladder*Nstrips + strip; }
 
