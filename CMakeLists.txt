@@ -34,6 +34,7 @@ set(BIN_DIR "${CMAKE_BINARY_DIR}/exe")
 set(INSTALL_INC_DIR "include")
 set(INSTALL_LIB_DIR "lib")
 set(INSTALL_BIN_DIR "exe")
+set(INSTALL_DATA_DIR "data")
 
 ##################################################
 
@@ -42,3 +43,4 @@ add_subdirectory(include)
 #add_subdirectory(ManualMakefile)
 add_subdirectory(macros)
 add_subdirectory(useful_commands)
+add_subdirectory(data)
