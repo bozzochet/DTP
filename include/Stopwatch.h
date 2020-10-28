@@ -7,7 +7,7 @@
 
 #include "global.h"
 #include "types.h"
-#include "abs_strip.h"
+#include "absStrip.h"
 
 #include <map>
 #include <vector>
@@ -15,7 +15,7 @@
 
 class Stopwatch
 {
-  
+
 protected:
 
   //associate time to strip
@@ -23,27 +23,28 @@ protected:
 
 
   /* a hit happened between strip s and strip s+1 (s = absolute ID)
-   * is stored in original_ with key s and value t */
-  times_map_t original_;
+   * is stored in times_ with key s and value t */
+  times_map_t times_;
 
 
 public:
 
   //take time on strip
-  inline void split
+  inline void Split
     (const int &ladder, const int &strip, const mytime_t &t)
-  { original_[abs_strip(ladder,strip)].push_back(t); }
+  { times_[absStrip(ladder,strip)].push_back(t); }
 
   //get hit times on (ladder,strip); if not a hit return void vector
-  inline std::vector<mytime_t> time(const int &ladder, const int &strip)
+  inline std::vector<mytime_t> GetTimes
+    (const int &ladder, const int &strip)
   {
-    if(original_.find(abs_strip(ladder,strip)) != original_.end())
-      return original_[abs_strip(ladder,strip)];
+    if(times_.find(absStrip(ladder,strip)) != times_.end())
+      return times_[absStrip(ladder,strip)];
     return {}; //void vector
   }
 
-  inline void reset()
-  { original_.clear(); }
+  inline void Reset()
+  { times_.clear(); }
 
 };
 
