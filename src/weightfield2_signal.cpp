@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
     std::cerr <<"\nfatal error: ROOT filename must be passed as argument\n";
     return 1;
   }
+
   TFile *f = new TFile(argv[1]);
 
   if(f->IsZombie())
