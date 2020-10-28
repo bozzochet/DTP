@@ -4,80 +4,71 @@
 
 TimeSimulation::TimeSimulation()
 {
-  signal_up_ = new TF1("up", "[0]*x", 0, T_PEAK_);
-  signal_up_->SetParameter(0, SLEW_RATE_ );
+  /* open weightfield2 output ROOT file:
+   * originally in <weightfield2_folder>/sensors/graph/parameters.root
+   * moved in <DTP_source>/data/weightfield2.root
+   */
 
-  //formula for signal_down_
-  std::string formula = "TMath::Exp(-*x)";
-  formula.insert(12, std::to_string(K_EXP_));
+  //user must execute executables files in build or installation folder
+  TFile *f = new TFile("data/weightfield2.root");
 
-  double x_max = -1.0 / K_EXP_ * TMath::Log(ZERO_THRESH_);
-  signal_down_ = new TF1("down", formula.c_str(), 0, x_max);
+  //check if file is correctly open
+  if(f->IsZombie())
+  {
+    std::cerr
+      <<"\n[TIME SIMULATION] fatal error: unable to open ROOT file\n";
+    return;
+  }
+
+  //current signals are contained in a TCanvas object called "currents"
+  TList *list =
+    ( (TCanvas*) f->Get("currents") )->GetListOfPrimitives();
+
+
+  //get total current TGraph
+  TGraph *current;
+
+  for(int i=0; i < (int) list->GetEntries(); ++i)
+  {
+    TGraph *obj = (TGraph*) list->At(i);
+
+    if(
+      std::strcmp(obj->ClassName(), "TGraph") == 0 //obj is a TGraph
+      && obj->GetLineColor() == 3 //TGraph line color is green (total current is green)
+    )
+    {
+      current = obj;
+      break;
+    }
+  }
+
+  x_ = new TVectorD();
+  y_ = new TVectorD();
+
+  //copy current TGraph points in TVectors x_ , y_
+  x_->Use(current->GetN(), current->GetX());
+  y_->Use(current->GetN(), current->GetY());
+
+  f->Close();
+  delete f;
 }
 
 
 TimeSimulation::~TimeSimulation()
 {
-  delete signal_up_;
-  delete signal_down_;
+  delete x_;
+  delete y_;
 }
 
 
 /*
-void Stopwatch::add_noise(TH1D *hist)
+TGraph* TimeSimulation::GetSignal(const int &lad, const int &s)
 {
-    for(mytime_t t = T_MIN_; t < T_MAX_; t += BIN_LENGTH_)
-      hist->Fill( NOISE );
+  TGraph *gr = new TGraph();
+
+  //hit times for strip passed
+  std::vector<mytime_t> vec = Stopwatch::GetTimes(lad,s);
+
+  //WORK IN PROGRESS
 }
 */
-
-
-void TimeSimulation::add_signal
-  (TH1D *hist, const std::vector<mytime_t> &times)
-{
-  for(int i = 0; i < (int) times.size(); ++i)
-    for(
-      mytime_t t = 0;
-      t < times[i] + signal_down_->GetXmax();
-      t += BIN_LENGTH_
-    )
-
-      if(t < T_PEAK_)
-        hist->Fill(t+times[i], signal_up_->Eval(t));
-      else
-        hist->Fill(t+times[i], signal_down_->Eval(t-T_PEAK_) );
-}
-
-
-TH1D* TimeSimulation::get_signal
-  (const int &lad, const int &s, Stopwatch *watch)
-{
-  //hist title
-  std::string title = "ladder:  strip: ";
-  title.insert(8, std::to_string(lad) );
-  title.insert(title.length(), std::to_string(s) );
-
-  TH1D *hist = new TH1D(
-    "current", title.c_str(), N_BINS_, T_MIN_, T_MAX_
-  );
-
-  hist->GetXaxis()->SetTitle("time [ns]");
-  hist->GetYaxis()->SetTitle("current / peak_current");
-
-  //draw hist as a function instead of using bars
-  hist->SetLineColor(kWhite);
-  hist->SetMarkerColor(kBlue);
-  hist->SetMarkerStyle(kFullDotMedium);
-
-  //add_noise(hist);
-
-  if(watch->time(lad,s).size() == 0)
-  {
-    //if no hit on strip ...
-    std::cout <<"\nVECTOR VOID\n";
-    return hist; // ... return hist with noise only
-  }
-
-  add_signal(hist, watch->time(lad,s));
-  return hist;
-}

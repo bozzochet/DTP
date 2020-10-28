@@ -18,57 +18,48 @@
 
 #include "global.h"
 #include "types.h"
+#include "absStrip.h"
 #include "Stopwatch.h"
+#include "TrCluster.hh"
 
-#include "TMath.h"
-#include "TF1.h"
-#include "TH1D.h"
-#include "TAxis.h"
+#include "TFile.h"
+#include "TCanvas.h"
+#include "TList.h"
+#include "TObject.h"
+#include "TGraph.h"
+#include "TVectorD.h"
 
 #include <vector>
 #include <string>
+#include <cstring>
 #include <iostream>
 
 
-class TimeSimulation
+class TimeSimulation : protected Stopwatch
 {
-  //signal histogram parameters
-  const int N_BINS_ = 1000;
-  const mytime_t T_MIN_ = 0;
-  const mytime_t T_MAX_ = 4;
-  const double BIN_LENGTH_ = (T_MAX_ - T_MIN_) / (double) N_BINS_;
-
-  //signal generation parameters
-  const double PEAK_VALUE_ = 1; //signal normalize to peak current
-  const mytime_t T_PEAK_ = 0.1; // = 100 ps ; time to reach peak
-  const double SLEW_RATE_ = PEAK_VALUE_ / T_PEAK_ ;
-  const double K_EXP_ = 1; // k in formula exp(-kx) for signal descent
-  const double ZERO_THRESH_ = 0.05; //value under wich exp is considered = 0
-
-
-  //ideal signal
-  TF1 *signal_up_ = NULL; //from 0 to peak
-  TF1 *signal_down_ = NULL; //from peak to 0
-
-
-/*
-  //fill hist with noise
-  void add_noise(TH1D *hist);
-*/
-
-  //fill hist with simulated signal
-  void add_signal(TH1D *hist, const std::vector<mytime_t> &times);
+  //current signal
+  TVectorD *x_ = NULL;
+  TVectorD *y_ = NULL;
 
 
 public:
 
-  //create TF1 functions
+  //read weightfield2 current signal from its output root file
   TimeSimulation();
 
   ~TimeSimulation();
 
-  //return hist with simulated signal of strip passed
-  TH1D* get_signal(const int &ladder, const int &strip, Stopwatch*);
+  //store hit times
+  inline void SetHit(const TrCluster *cl)
+  { Stopwatch::Split(cl->ladder, cl->strip, cl->time); }
+
+  //Stopwatch::Reset is protected in this class
+  virtual inline void Reset()
+  { Stopwatch::Reset(); }
+
+  //return graph with current signal on strip ( #ladder, #strip)
+  //TGraph* GetSignal(const int &ladder, const int &strip);
+
 };
 
 

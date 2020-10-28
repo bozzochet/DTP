@@ -168,8 +168,6 @@ int main(int argc, char **argv) {
 	vector2<double> eDepSegm(Nlad, vector<double>(Nstrips));
 	vector2<double> hitPos(Nlayers);
 
-  //objects for time
-  Stopwatch *chrono = new Stopwatch();
   TimeSimulation *time_sim = new TimeSimulation();
 
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
@@ -201,7 +199,7 @@ int main(int argc, char **argv) {
 		stripReset(eDepSegm);
 		hitReset(hitPos,Nlayers);
 
-    chrono->reset();
+    time_sim->Reset();
 
 		for (int j = 0; j < a->GetEntries(); j++) {
 
@@ -216,7 +214,7 @@ int main(int argc, char **argv) {
 			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
 
       // taking hit times
-      chrono->split(cl->ladder, cl->strip, cl->time);
+      time_sim->SetHit(cl);
 
 			//Filling the strips with the current energy
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
@@ -376,7 +374,6 @@ int main(int argc, char **argv) {
 }
 
   //time simulation ended
-  delete chrono;
   delete time_sim;
 
   cout <<endl <<endl;
