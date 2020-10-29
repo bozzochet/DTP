@@ -16,9 +16,5 @@ const int Nstrips = 640; //strips per ladder
 const double pitch = 0.015; //cm = 150 um
 const double squareSide = Nstrips*pitch;
 
-//energy released to generate a couple electron-hole in Si
-const energy_t E_COUPLING = 8.145794455; //eV/couple
-const charge_t FOND_CHARGE = 1.602e-19; //C
-
 
 #endif
