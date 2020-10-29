@@ -74,7 +74,11 @@ int main(int argc, char *argv[])
     }
   }
 
-  TCanvas *c = new TCanvas("c","weightfield2 simulation",600,600);
+  TCanvas *c = new TCanvas(
+    "c", "weightfield2 simulation",
+    data->GetWw(), data->GetWh()
+  );
+
   c->cd();
 
   current->Draw();
