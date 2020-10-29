@@ -42,12 +42,12 @@ TimeSimulation::TimeSimulation()
     }
   }
 
-  x_ = new TVectorD();
-  y_ = new TVectorD();
+  X_ = new TVectorD();
+  Y_ = new TVectorD();
 
-  //copy current TGraph points in TVectors x_ , y_
-  x_->Use(current->GetN(), current->GetX());
-  y_->Use(current->GetN(), current->GetY());
+  //copy current TGraph points in TVectors X_ , Y_
+  X_->Use(current->GetN(), current->GetX());
+  Y_->Use(current->GetN(), current->GetY());
 
   f->Close();
   delete f;
@@ -56,19 +56,6 @@ TimeSimulation::TimeSimulation()
 
 TimeSimulation::~TimeSimulation()
 {
-  delete x_;
-  delete y_;
+  delete X_;
+  delete Y_;
 }
-
-
-/*
-TGraph* TimeSimulation::GetSignal(const int &lad, const int &s)
-{
-  TGraph *gr = new TGraph();
-
-  //hit times for strip passed
-  std::vector<mytime_t> vec = Stopwatch::GetTimes(lad,s);
-
-  //WORK IN PROGRESS
-}
-*/

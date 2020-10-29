@@ -38,8 +38,8 @@
 class TimeSimulation : protected Stopwatch
 {
   //current signal
-  TVectorD *x_ = NULL;
-  TVectorD *y_ = NULL;
+  TVectorD *X_ = NULL;
+  TVectorD *Y_ = NULL;
 
 
 public:
