@@ -13,8 +13,7 @@
 #define TIME_SIMULATION_INCLUDE
 
 
-#include "global.h"
-#include "types.h"
+#include "globals_and_types.h"
 #include "absStrip.h"
 #include "Stopwatch.h"
 #include "TrCluster.hh"

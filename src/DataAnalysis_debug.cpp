@@ -2,26 +2,29 @@
 
 #include "DEBUG.h"
 
-#include "global.h"
-#include "types.h"
-#include "progress.h"
+#include "globals_and_types.h"
 #include "vector2.h"
+#include "progress.h"
 #include "Stopwatch.h"
 #include "TimeSimulation.h"
+#include "TrCluster.hh"
+
 #include "TCanvas.h"
 #include "TClonesArray.h"
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
-#include <TGraph.h>
+#include "TGraph.h"
 #include "TRandom3.h"
 #include "TStyle.h"
 #include "TTree.h"
 #include "TTreeReader.h"
-#include "TrCluster.hh"
+
+#include "utils/GGSSmartLog.h"
+
 #include <iostream>
 #include <vector>
-#include "utils/GGSSmartLog.h"
+
 using namespace std;
 
 void stripReset(vector2<double> &array) {

@@ -5,8 +5,7 @@
 #define STOPWATCH_INCLUDE
 
 
-#include "global.h"
-#include "types.h"
+#include "globals_and_types.h"
 #include "absStrip.h"
 
 #include <map>

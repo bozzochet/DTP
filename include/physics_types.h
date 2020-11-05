@@ -1,8 +1,8 @@
 
 //physics quantities typedefs
 
-#ifndef TYPES_INCLUDE
-#define TYPES_INCLUDE
+#ifndef PHYSICS_TYPES_INCLUDE
+#define PHYSICS_TYPES_INCLUDE
 
 
 typedef double mytime_t; //time expressed in s

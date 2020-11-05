@@ -83,6 +83,7 @@ set(EXTRA_LIBRARIES TimeSimulation)
 set(SimpleAnalysis_SRC
 	SimpleAnalysis.cpp
   progress.cpp
+  segm.cpp
 	G__TrCluster.cxx
 )
 
@@ -90,6 +91,7 @@ add_executable(SimpleAnalysis ${SimpleAnalysis_SRC})
 target_link_libraries(SimpleAnalysis
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}
+  ${EXTRA_LIBRARIES}
 )
 
 set_target_properties(SimpleAnalysis PROPERTIES
@@ -103,6 +105,7 @@ install(TARGETS SimpleAnalysis DESTINATION "${INSTALL_BIN_DIR}")
 set(DataAnalysis_SRC
 	DataAnalysis.cpp
   progress.cpp
+  segm.cpp
 	G__TrCluster.cxx
 )
 

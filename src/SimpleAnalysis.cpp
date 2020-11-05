@@ -7,7 +7,7 @@
 
 /* Analysis ROOT script for the output file created by SimpleRun.mac. */
 
-#include "global.h"
+#include "globals_and_types.h"
 #include "progress.h"
 #include "TFile.h"
 #include "TString.h"

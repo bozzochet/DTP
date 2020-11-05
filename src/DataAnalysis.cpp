@@ -1,25 +1,29 @@
 
-#include "global.h"
-#include "types.h"
+#include "globals_and_types.h"
 #include "vector2.h"
 #include "progress.h"
 #include "Stopwatch.h"
 #include "TimeSimulation.h"
+#include "TrCluster.hh"
+
 #include "TCanvas.h"
 #include "TClonesArray.h"
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
-#include <TGraph.h>
+#include "TGraph.h"
 #include "TRandom3.h"
 #include "TStyle.h"
 #include "TTree.h"
 #include "TTreeReader.h"
-#include "TrCluster.hh"
+
+#include "utils/GGSSmartLog.h"
+
 #include <iostream>
 #include <vector>
-#include "utils/GGSSmartLog.h"
+
 using namespace std;
+
 
 void stripReset(vector2<double> &array) {
 	for (int ii = 0; ii < array.size(); ii++)
@@ -43,66 +47,6 @@ void hitReset(vector2<double> &array, int dim) {
 			array[i].clear();
 			array[i].shrink_to_fit();
 		}
-}
-
-void shareEnergy(vector2<double> &array, int jump) {
-	vector<double> fill;
-	for (int ix = 0; ix < array.size(); ix++) {
-		for (int jx = 0; jx < array[0].size(); jx+=jump) {
-			fill.clear();
-			fill.shrink_to_fit();
-			int i0 = ix;
-			int j0 = jx;
-
-			//Saving the energy from non-active strips
-
-			for(int jp = 1; jp<jump; jp++) {
-
-				if(j0!=array[0].size()-1) {
-					j0++;
-				}
-
-				else {
-					i0++;
-					j0 = 0;
-				}
-
-				if(i0==array.size())
-					break;
-
-				if(array[i0][j0]!=0) {
-					fill.push_back(array[i0][j0]);
-					array[i0][j0] = 0;
-					}
-			}
-
-			//Moving to right-side strip
-
-			if(j0!=array.size()-1) {
-				j0++;
-			}
-			else if( (i0+1) % Nsquares != 0) {
-						i0++;
-						j0 = 0;
-					}
-			else {
-			/* no active strips between (ix,jx) and layer
-			* row end: distribute the entire energy to
-			* (ix,jx) strip
-			*/
-			i0 = ix;
-			j0 = jx;
-			}
-
-        	//Distributing the energy to left and right-side strips
-
-			for(int s = 0; s < fill.size(); s++) {
-				array[ix][jx] += fill[s]/(2*(s+1));
-				array[i0][j0] += fill[s]/(2*(fill.size()-s));
-			}
-
-		}
-	}
 }
 
 int main(int argc, char **argv) {
@@ -164,7 +108,6 @@ int main(int argc, char **argv) {
 
 	*/
 
-  const int jump = 3;
 	vector2<double> eDepSegm(Nladders, vector<double>(Nstrips));
 	vector2<double> hitPos(Nlayers);
 
@@ -233,13 +176,13 @@ int main(int argc, char **argv) {
 
 		// Sharing of the energy from non-active strips
 
-		if(jump!=1)
-			shareEnergy(eDepSegm,jump);
+		if(pos_segm::jump!=1)
+			pos_segm::shareEnergy(eDepSegm);
 
 		addNoise(eDepSegm,tr);
 
 		for (int ix = 0; ix < Nladders; ix++) {
-			for (int jx = 0; jx < Nstrips; jx+=jump) {
+			for (int jx = 0; jx < Nstrips; jx+=pos_segm::jump) {
 
 
 			//Find the boundaries of the clusters
@@ -251,7 +194,7 @@ int main(int argc, char **argv) {
 				int i1, j1;
 				bool firstPoint = true;
 				for(int ii = ix; ii>=0; ii--) {
-					for(int jj = Nstrips-1; jj>=jump; jj-= jump) {
+					for(int jj = Nstrips-1; jj>=pos_segm::jump; jj-= pos_segm::jump) {
 						if(firstPoint) {
 							jj = jx;
 							firstPoint = false;
@@ -274,7 +217,7 @@ int main(int argc, char **argv) {
 				firstPoint = true;
 				int i2, j2;
 				for(int ii = ix; ii<Nladders; ii++) {
-					for(int jj = 0; jj<Nstrips; jj+= jump) {
+					for(int jj = 0; jj<Nstrips; jj+= pos_segm::jump) {
 						if(firstPoint) {
 							jj = jx;
 							firstPoint = false;
@@ -308,7 +251,7 @@ int main(int argc, char **argv) {
 					double thisPos = ((i1%Nsquares)*squareSide) + (j1*pitch) - (Nsquares*squareSide*0.5);
 					strip.push_back(make_pair(thisPos,eDepSegm[i1][j1]));
 
-					j1+=jump;
+					j1+=pos_segm::jump;
 				}
 
 				for(int k = 0; k < strip.size(); k++) {

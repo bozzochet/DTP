@@ -7,8 +7,13 @@ configure_file(TrCluster_linkdef.h TrCluster_linkdef.h COPYONLY)
 install(FILES
         TrCluster.hh
         TrCluster_linkdef.h
-        global.h
-        types.h
+        globals_and_types.h
+        geometry.h
+        physics_var.h
+        physics_types.h
+        pos_segm.h
+        time_segm.h
+        segm.h
         absStrip.h
         vector2.h
         DESTINATION "${INSTALL_INC_DIR}"
