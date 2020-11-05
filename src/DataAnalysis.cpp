@@ -229,6 +229,8 @@ int main(int argc, char **argv) {
 						eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
 		}
 
+    time_sim->SetEnergy(eDepSegm);
+
 		// Sharing of the energy from non-active strips
 
 		if(jump!=1)

@@ -21,13 +21,16 @@
 #include "absStrip.h"
 #include "Stopwatch.h"
 #include "TrCluster.hh"
+#include "vector2.h"
 
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TList.h"
 #include "TObject.h"
 #include "TGraph.h"
-#include "TVectorD.h"
+#include "TF1.h"
+#include "TH1F.h"
+#include "TAxis.h"
 
 #include <vector>
 #include <string>
@@ -37,28 +40,61 @@
 
 class TimeSimulation : protected Stopwatch
 {
-  //current signal
-  TVectorD *X_ = NULL;
-  TVectorD *Y_ = NULL;
+
+// typedefs
+
+  typedef std::map <abs_strip_t, energy_t> energies_map_t;
+
+
+// const variables
+
+  const mytime_t T_START_ = 0;
+  const mytime_t T_END_ = 5e-9;
+  const int N_BINS_ = 1000; //signal hist bins
+  const mytime_t T_SAMPLING_ = T_END_ / (double) N_BINS_; //hist sampling time
+
+
+// variables
+
+  //current signal components
+  TF1 *line_ = NULL;
+  TF1 *exp_ = NULL;
+
+  double k_exp_ = 0;
+
+  //energy deposit
+  energies_map_t energy_;
+
+
+// methods
+
+  //fit exponential to weightfield2 output signal
+  TF1* SetExp(const char*);
+
+  //add signal simulated with line_ and exp_ , based on on energy_
+  void AddSignal(TH1F*, const energy_t&, const std::vector<mytime_t>&);
 
 
 public:
 
-  //read weightfield2 current signal from its output root file
+  //set line_ and exp_
   TimeSimulation();
 
   ~TimeSimulation();
 
-  //store hit times
+  //store hit times; TrCluster store times in ns
   inline void SetHit(const TrCluster *cl)
-  { Stopwatch::Split(cl->ladder, cl->strip, cl->time); }
+  { Stopwatch::Split(cl->ladder, cl->strip, cl->time * 1e-9); }
+
+  //store all energies
+  void SetEnergy(const vector2<double> &energy);
 
   //Stopwatch::Reset is protected in this class
   virtual inline void Reset()
   { Stopwatch::Reset(); }
 
   //return graph with current signal on strip ( #ladder, #strip)
-  //TGraph* GetSignal(const int &ladder, const int &strip);
+  TH1F* GetSignal(const int &ladder, const int &strip);
 
 };
 

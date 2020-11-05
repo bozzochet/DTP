@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
 
 	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
-  //TH1F *htime;
+  TH1F *current;
 
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
@@ -211,6 +211,8 @@ int main(int argc, char **argv) {
     time_sim->Reset();
     debug::out <<"\nreset\n";
 
+    int EXAMPLE_LAD, EXAMPLE_STRIP;
+
 		for (int j = 0; j < a->GetEntries(); j++) {
 
       debug::out <<"\nentry: " <<j <<std::endl;
@@ -235,8 +237,12 @@ int main(int argc, char **argv) {
       debug::out <<cl->time <<std::endl;
 
       //get signal example
-      //if(j==0 && i==0)
-        //htime = time_sim->GetSignal(cl->ladder, cl->strip);
+      if(j==0 && i==0)
+      {
+        //current = time_sim->GetSignal(cl->ladder, cl->strip);
+        EXAMPLE_LAD = cl->ladder;
+        EXAMPLE_STRIP = cl->strip;
+      }
 
 			//Filling the strips with the current energy
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
@@ -250,6 +256,9 @@ int main(int argc, char **argv) {
 					else
 						eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
 		}
+
+    time_sim->SetEnergy(eDepSegm);
+    current = time_sim->GetSignal(EXAMPLE_LAD, EXAMPLE_STRIP);
 
 		// Sharing of the energy from non-active strips
 
@@ -478,7 +487,7 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(segmp);
-  //outFile->WriteTObject(htime);
+  outFile->WriteTObject(current);
 	outFile->Close();
 
   debug::end_debug();
