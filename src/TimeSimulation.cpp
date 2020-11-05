@@ -4,18 +4,23 @@
 
 TimeSimulation::TimeSimulation()
 {
-  /* open weightfield2 output ROOT file:
-   * originally in <weightfield2_folder>/sensors/graph/parameters.root
-   * moved in <DTP_source>/data/weightfield2.root
-   */
+  charge_ = new TF1(
+    "charge",
+    "[0] * (1 - TMath::Exp(-[1]*x) )",
+    T_START_, T_END_
+  );
 
-  exp_ = SetExp("data/weightfield2.root");
+  charge_->SetParName(0, "Q");
+  charge_->SetParName(1, "k");
+  charge_->SetParameter("k", 1.0 / T_CAPACITOR_);
 
-  line_ = new TF1("line", "[0]*x", 0, T_END_);
-  line_->SetParName(0, "Slope");
+  up_ = new TF1("up", "[0]*x", T_START_, T_END_);
+
+  up_->SetParName(0, "Slew rate");
+  up_->SetParameter("Slew rate",SLEW_RATE_);
 }
 
-
+/*
 TF1* TimeSimulation::SetExp(const char* filename)
 {
   TFile *file = new TFile(filename);
@@ -64,67 +69,53 @@ TF1* TimeSimulation::SetExp(const char* filename)
 
   return exp;
 }
+*/
 
-
-TimeSimulation::~TimeSimulation()
-{
-  delete line_;
-  delete exp_;
-}
-
-
+/*
 void TimeSimulation::SetEnergy(const vector2<double> &vec)
 {
   for(int lad = 0; lad < Nladders; ++lad)
     for(int strip = 0; strip < Nstrips; ++strip)
     {
-      energy_t energy = vec[lad][strip];
+      energy_t energy = vec[lad][strip] * 1e-9; //convert GeV to eV
+      //GGS energies are expressed in GeV
 
       if(energy != 0)
-        energy_ [absStrip(lad,strip)] = energy;
+        energies_ [absStrip(lad,strip)] = energy;
     }
 }
-
+*/
 
 void TimeSimulation::AddSignal
-  (
-    TH1F *hist,
-    const energy_t &energy,
-    const std::vector<mytime_t> &times
-  )
+  (TH1F *hist, const energy_t &hitEnergy, const mytime_t &hitTime)
 {
-
-  //CHECK TRCLUSTER ENERGY UNITS
-
-  charge_t Q = energy / ENERGY_COUPLE_
+  charge_t Q = hitEnergy / ENERGY_COUPLE_
     * FOND_CHARGE_;
 
-  // set integral equal to Q collected by strip
+  charge_->SetParameter("Q", Q);
 
-  double peak = 2.0 * TMath::Abs(exp_->GetParameter("Slope")) * Q
-    / (T_PEAK_ * TMath::Abs(exp_->GetParameter("Slope")) + 2);
+  down_ = new TGraph(charge_, "d"); //derivative of charge_
 
-    std::cout <<"\npeak: " <<peak <<"\n";
+  // fill hist with up_
 
-  line_->SetParameter("Slope", peak / T_PEAK_);
+  for(
+    mytime_t t = hitTime;
+    t < down_->Eval(0) / up_->GetParameter("Slew rate");
+    t += T_SAMPLING_
+  )
+    hist->Fill(t, up_->Eval(t - hitTime));
 
-  exp_->SetParameter
-    ( "Constant", TMath::Log(peak) - exp_->GetParameter(1) * T_PEAK_ );
+  // fill with down_
 
-  std::cout <<"\nconstant: " << exp_->GetParameter(0) <<"\n"
-    <<"k_exp: " <<exp_->GetParameter(1) <<"\n";
+  for(int i = 0; i < (int) down_->GetN(); ++i)
+  {
+    mytime_t t;
+    current_t I;
 
-  line_->SetRange(T_START_, T_END_);
-  exp_->SetRange(T_START_, T_END_);
+    down_->GetPoint(i, t, I);
+    hist->Fill(t, I);
+  }
 
-  //sample signal and fill hist
-
-  for(int i = 0; i < (int) times.size(); ++i)
-    for(mytime_t t = times[i]; t < T_END_; t += T_SAMPLING_)
-      if(t - times[i] < T_PEAK_)
-        hist->Fill(t, line_->Eval(t - times[i]));
-      else
-        hist->Fill(t, exp_->Eval(t - times[i]));
 }
 
 
@@ -143,7 +134,7 @@ TH1F* TimeSimulation::GetSignal(const int &lad, const int &strip)
     N_BINS_, T_START_, T_END_);
 
   hist->GetXaxis()->SetTitle("time [s]");
-  hist->GetYaxis()->SetTitle("current [???]");
+  hist->GetYaxis()->SetTitle("current [A]");
 
   //draw hist as a function instead of using bars
   hist->SetLineColor(kWhite);
@@ -152,11 +143,24 @@ TH1F* TimeSimulation::GetSignal(const int &lad, const int &strip)
 
   //GENERATE NOISE HERE
 
-  if(energy_.find(absStrip(lad,strip)) == energy_.end())
+  if(energies_.find(absStrip(lad,strip)) == energies_.end())
     return hist; //return hist with noise only
 
-  AddSignal
-    (hist, energy_[absStrip(lad,strip)], times_[absStrip(lad,strip)]);
+  for(int i = 0; i < (int) energies_[absStrip(lad,strip)].size(); ++i)
+    AddSignal
+      (
+        hist,
+        energies_[absStrip(lad,strip)][i],
+        times_[absStrip(lad,strip)][i]
+      );
 
   return hist;
+}
+
+
+TimeSimulation::~TimeSimulation()
+{
+  delete up_;
+  delete down_;
+  delete charge_;
 }

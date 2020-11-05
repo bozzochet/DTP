@@ -39,12 +39,14 @@ class TimeSimulation : protected Stopwatch
 
 // typedefs
 
-  typedef std::map <abs_strip_t, energy_t> energies_map_t;
+  typedef std::map <abs_strip_t, std::vector<energy_t> >
+    energies_map_t;
 
 
 // const variables
 
-  const mytime_t T_PEAK_ = 5e-11; // 50 ps
+  const double SLEW_RATE_ = 1e+9; //slew rate of line_
+  const mytime_t T_CAPACITOR_ = 1e-9; //tau of strip as a capacitor
   const mytime_t T_START_ = 0;
   const mytime_t T_END_ = 5e-9;
   const int N_BINS_ = 1000; //signal hist bins
@@ -54,11 +56,12 @@ class TimeSimulation : protected Stopwatch
 // variables
 
   //current signal components
-  TF1 *line_ = NULL;
-  TF1 *exp_ = NULL;
+  TF1 *up_ = NULL;
+  TGraph *down_ = NULL;
+  TF1 *charge_ = NULL; //charge collected in time
 
   //energy deposit
-  energies_map_t energy_;
+  energies_map_t energies_;
 
 
 // methods
@@ -67,7 +70,7 @@ class TimeSimulation : protected Stopwatch
   TF1* SetExp(const char*);
 
   //add signal simulated with line_ and exp_ , based on on energy_
-  void AddSignal(TH1F*, const energy_t&, const std::vector<mytime_t>&);
+  void AddSignal(TH1F*, const energy_t&, const mytime_t&);
 
 
 public:
@@ -79,10 +82,10 @@ public:
 
   //store hit times; TrCluster store times in ns
   inline void SetHit(const TrCluster *cl)
-  { Stopwatch::Split(cl->ladder, cl->strip, cl->time * 1e-9); }
-
-  //store all energies
-  void SetEnergy(const vector2<double> &energy);
+  {
+    Stopwatch::Split(cl->ladder, cl->strip, cl->time * 1e-9);
+    energies_[absStrip(cl->ladder, cl->strip)].push_back(cl->eDep);
+  }
 
   //Stopwatch::Reset is protected in this class
   virtual inline void Reset()

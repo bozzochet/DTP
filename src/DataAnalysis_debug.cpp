@@ -214,8 +214,6 @@ int main(int argc, char **argv) {
     time_sim->Reset();
     debug::out <<"\nreset\n";
 
-    int EXAMPLE_LAD, EXAMPLE_STRIP;
-
 		for (int j = 0; j < a->GetEntries(); j++) {
 
       debug::out <<"\nentry: " <<j <<std::endl;
@@ -241,11 +239,7 @@ int main(int argc, char **argv) {
 
       //get signal example
       if(j==0 && i==0)
-      {
-        //current = time_sim->GetSignal(cl->ladder, cl->strip);
-        EXAMPLE_LAD = cl->ladder;
-        EXAMPLE_STRIP = cl->strip;
-      }
+        current = time_sim->GetSignal(cl->ladder, cl->strip);
 
 			//Filling the strips with the current energy
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
@@ -259,9 +253,6 @@ int main(int argc, char **argv) {
 					else
 						eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
 		}
-
-    time_sim->SetEnergy(eDepSegm);
-    current = time_sim->GetSignal(EXAMPLE_LAD, EXAMPLE_STRIP);
 
 		// Sharing of the energy from non-active strips
 

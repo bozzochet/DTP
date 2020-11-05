@@ -8,6 +8,7 @@
 typedef double mytime_t; //time expressed in s
 typedef double charge_t; //electric charge expressed in Coulomb
 typedef double energy_t; //eV
+typedef double current_t; //A
 
 
 #endif //include guard
