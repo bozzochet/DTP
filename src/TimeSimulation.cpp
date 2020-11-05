@@ -11,7 +11,7 @@ TimeSimulation::TimeSimulation()
 
   exp_ = SetExp("data/weightfield2.root");
 
-  line_ = new TF1("line", "[0]*x", 0, T_PEAK_);
+  line_ = new TF1("line", "[0]*x", 0, T_END_);
   line_->SetParName(0, "Slope");
 }
 
@@ -54,11 +54,9 @@ TF1* TimeSimulation::SetExp(const char* filename)
 
   //get exp parameters
 
-  TF1 *exp = new TF1("exp", "expo(0)", 0, 3e-5);
+  TF1 *exp = new TF1("exp", "expo(0)", 0, 3e-8);  //weightfield2 simulate a signal from 0 to 30 ns = 3e-8 s
 
   current->Fit(exp);
-
-  k_exp_ = exp->GetParameter(1);
 
 
   file->Close();

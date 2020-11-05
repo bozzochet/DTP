@@ -5,10 +5,7 @@
   signal generated in the strip by the passage of a particle.
 
   The signal simulated, line from 0 to peak and an exponential
-  descent, based on T_PEAK_ and T_RELAX_ variables. The current is
-  normalized to the maximum current, so the peak of a single signal
-  has a value of 1; anyway, the sum of more than one signal could
-  give a value > 1.
+  descent, based on collected charge.
 
  *********************************************************************/
 
@@ -59,8 +56,6 @@ class TimeSimulation : protected Stopwatch
   //current signal components
   TF1 *line_ = NULL;
   TF1 *exp_ = NULL;
-
-  double k_exp_ = 0;
 
   //energy deposit
   energies_map_t energy_;
