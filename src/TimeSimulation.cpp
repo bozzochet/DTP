@@ -85,7 +85,7 @@ void TimeSimulation::SetEnergy(const vector2<double> &vec)
     }
 }
 
-/*
+
 void TimeSimulation::AddSignal
   (
     TH1F *hist,
@@ -93,6 +93,8 @@ void TimeSimulation::AddSignal
     const std::vector<mytime_t> &times
   )
 {
+
+  //CHECK TRCLUSTER ENERGY UNITS
 
   charge_t Q = energy / ENERGY_COUPLE_
     * FOND_CHARGE_;
@@ -124,7 +126,7 @@ void TimeSimulation::AddSignal
       else
         hist->Fill(t, exp_->Eval(t - times[i]));
 }
-*/
+
 
 
 TH1F* TimeSimulation::GetSignal(const int &lad, const int &strip)
@@ -153,10 +155,8 @@ TH1F* TimeSimulation::GetSignal(const int &lad, const int &strip)
   if(energy_.find(absStrip(lad,strip)) == energy_.end())
     return hist; //return hist with noise only
 
-/*
   AddSignal
     (hist, energy_[absStrip(lad,strip)], times_[absStrip(lad,strip)]);
-*/
 
   return hist;
 }

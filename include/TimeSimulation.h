@@ -44,6 +44,7 @@ class TimeSimulation : protected Stopwatch
 
 // const variables
 
+  const mytime_t T_PEAK_ = 5e-11; // 50 ps
   const mytime_t T_START_ = 0;
   const mytime_t T_END_ = 5e-9;
   const int N_BINS_ = 1000; //signal hist bins
