@@ -35,4 +35,4 @@
 /GGS/userActions/hadrIntAction/outProducts true		# ... and also informations about the produced particles
 
 ##### Events to produce
-/run/beamOn 1000
+/run/beamOn 5000
