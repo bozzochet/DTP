@@ -224,9 +224,9 @@ int main(int argc, char **argv) {
 				continue; //cl->clust[1] energy is lost
 
 			else if(cl->strip==Nstrips-1)
-						eDepSegm[cl->ladder+1][0] += cl->clust[1];
-					else
-						eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
+				eDepSegm[cl->ladder+1][0] += cl->clust[1];
+			else
+				eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
 		}
 
     time_sim->SetEnergy(eDepSegm);
