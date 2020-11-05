@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
 	/*const GGSTGeoParams *geoParams = reader.GetGeoParams();
 
 	int Nsquares = geoParams->GetRealGeoParam("Nsquares"); //squares per side
-	int Nlad = Nsquares*5; //number of ladders
+	int Nladders = Nsquares*5; //number of ladders
 	int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
 	double squareSide = geoParams->GetRealGeoParam("squareSide");*/
 

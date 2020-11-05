@@ -161,17 +161,17 @@ int main(int argc, char **argv) {
 	const GGSTGeoParams *geoParams = reader.GetGeoParams();
 
 	const int Nsquares = geoParams->GetRealGeoParam("Nsquares"); //squares per side
-	const int Nlad = Nsquares*5; //number of ladders
+	const int Nladders = Nsquares*5; //number of ladders
 	const int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
 	const double squareSide = geoParams->GetRealGeoParam("squareSide");
 	const double pitch = squareSide/(double(Nstrips));
-	double eDepSegm[Nlad][Nstrips];
-	double PrimeDepSegm[Nlad][Nstrips];
+	double eDepSegm[Nladders][Nstrips];
+	double PrimeDepSegm[Nladders][Nstrips];
 
 	*/
 
   const int jump = 3;
-	vector2<double> eDepSegm(Nlad, vector<double>(Nstrips));
+	vector2<double> eDepSegm(Nladders, vector<double>(Nstrips));
 	vector2<double> hitPos(Nlayers);
 
   TimeSimulation *time_sim = new TimeSimulation();
@@ -258,7 +258,7 @@ int main(int argc, char **argv) {
 
 		addNoise(eDepSegm,tr);
 
-		for (int ix = 0; ix < Nlad; ix++) {
+		for (int ix = 0; ix < Nladders; ix++) {
 			for (int jx = 0; jx < Nstrips; jx+=jump) {
 
 
@@ -293,7 +293,7 @@ int main(int argc, char **argv) {
 
 				firstPoint = true;
 				int i2, j2;
-				for(int ii = ix; ii<Nlad; ii++) {
+				for(int ii = ix; ii<Nladders; ii++) {
 					for(int jj = 0; jj<Nstrips; jj+= jump) {
 						if(firstPoint) {
 							jj = jx;
@@ -318,7 +318,7 @@ int main(int argc, char **argv) {
 
 				while((i1*Nstrips)+j1 <= (i2*Nstrips)+j2) {
 
-          if(j1>Nstrips-1 && i1 == Nlad-1)
+          if(j1>Nstrips-1 && i1 == Nladders-1)
             break;
           else if(j1>Nstrips-1) {
             i1++;
