@@ -45,19 +45,25 @@ class TimeSimulation : protected Stopwatch
 
 // const variables
 
-  const double SLEW_RATE_ = 1e+9; //slew rate of line_
-  const mytime_t T_CAPACITOR_ = 1e-9; //tau of strip as a capacitor
+  //slew rate of line_
+  const double SLEW_RATE_ = 1e+4;
+
+  //tau of strip as a capacitor
+  const mytime_t T_CAPACITOR_ = 1e-9;
+
+  //signal hist parameters
   const mytime_t T_START_ = 0;
   const mytime_t T_END_ = 5e-9;
-  const int N_BINS_ = 1000; //signal hist bins
-  const mytime_t T_SAMPLING_ = T_END_ / (double) N_BINS_; //hist sampling time
+  const int N_BINS_ = 1000;
+
+  //hist sampling time
+  const mytime_t T_SAMPLING_ = (T_END_ - T_START_) / (double) N_BINS_;
 
 
 // variables
 
   //current signal components
   TF1 *up_ = NULL;
-  TGraph *down_ = NULL;
   TF1 *charge_ = NULL; //charge collected in time
 
   //energy deposit
@@ -66,10 +72,7 @@ class TimeSimulation : protected Stopwatch
 
 // methods
 
-  //fit exponential to weightfield2 output signal
-  TF1* SetExp(const char*);
-
-  //add signal simulated with line_ and exp_ , based on on energy_
+  // add signal simulated with line_ and exp_ , based on energy_
   void AddSignal(TH1F*, const energy_t&, const mytime_t&);
 
 
