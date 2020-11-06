@@ -91,8 +91,9 @@ public:
   virtual inline void Reset()
   { Stopwatch::Reset(); }
 
-  //return graph with current signal on strip ( #ladder, #strip)
-  TH1F* GetSignal(const int &ladder, const int &strip);
+  /* return current signal on strip ( #ladder, #strip) at vec begin
+   * and collected charge graphs for every hit */
+  std::vector<TH1F*>* GetSignal(const int &ladder, const int &strip);
 
 };
 

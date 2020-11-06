@@ -120,8 +120,11 @@ void TimeSimulation::AddSignal
 
 
 
-TH1F* TimeSimulation::GetSignal(const int &lad, const int &strip)
+std::vector<TH1F*>* TimeSimulation::GetSignal
+  (const int &lad, const int &strip)
 {
+  std::vector<TH1F*> *vec = new std::vector<TH1F*>;
+
   std::string name = "current(:)";
   name.insert(8, std::to_string(lad));
   name.insert(name.length()-1, std::to_string(strip));
@@ -129,11 +132,17 @@ TH1F* TimeSimulation::GetSignal(const int &lad, const int &strip)
   std::string title = "ladder:  strip: ";
   title.insert(8, std::to_string(lad));
   title += std::to_string(strip);
+  /* name and title variables are used again near the end of
+   * this method for another hist; they will be replaced for the needs
+   */
 
   TH1F *hist = new TH1F(name.c_str(), title.c_str(),
     N_BINS_, T_START_, T_END_);
 
   hist->GetXaxis()->SetTitle("time [s]");
+  //hist is stored in vec[0]
+  vec->push_back(hist);
+
   hist->GetYaxis()->SetTitle("current [A]");
 
   //draw hist as a function instead of using bars
@@ -145,16 +154,49 @@ TH1F* TimeSimulation::GetSignal(const int &lad, const int &strip)
 
   if(energies_.find(absStrip(lad,strip)) == energies_.end())
     return hist; //return hist with noise only
+    return vec; //return hist with noise only
+
+  // fill hist with signal and push_back charge collection graphs
 
   for(int i = 0; i < (int) energies_[absStrip(lad,strip)].size(); ++i)
+  {
     AddSignal
-      (
-        hist,
-        energies_[absStrip(lad,strip)][i],
-        times_[absStrip(lad,strip)][i]
-      );
+    (
+      hist,
+      energies_[absStrip(lad,strip)][i],
+      times_[absStrip(lad,strip)][i]
+    );
 
-  return hist;
+    //hist for charge collected
+
+    name = "charge(:)";
+    name.insert(name.length()-3, std::to_string(i));
+    name.insert(name.length()-2, std::to_string(lad));
+    name.insert(name.length()-1, std::to_string(strip));
+
+    title = "charge collected [hit:  ladder:  strip: ]";
+    title.insert(title.length()-18, std::to_string(i));
+    title.insert(title.length()-9, std::to_string(lad));
+    title.insert(title.length()-1, std::to_string(strip));
+
+    TH1F *charge = new TH1F
+      (name.c_str(), title.c_str(), N_BINS_, T_START_, T_END_);
+
+    charge->GetXaxis()->SetTitle("time from hit [s]");
+    charge->GetYaxis()->SetTitle("charge collected [C]");
+
+    //draw charge with points instead of using bars
+    charge->SetLineColor(kWhite);
+    charge->SetMarkerColor(kBlue);
+    charge->SetMarkerStyle(kFullDotMedium);
+
+    for( mytime_t t = 0; t < T_END_; t += T_SAMPLING_ )
+      charge->Fill(t, charge_->Eval(t));
+
+    vec->push_back(charge);
+  }
+
+  return vec;
 }
 
 

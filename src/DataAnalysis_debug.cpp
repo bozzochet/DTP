@@ -150,7 +150,8 @@ int main(int argc, char **argv) {
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
 
 	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
-  TH1F *current;
+
+  std::vector<TH1F*> *vec_current;
 
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
@@ -239,7 +240,9 @@ int main(int argc, char **argv) {
 
       //get signal example
       if(j==0 && i==0)
-        current = time_sim->GetSignal(cl->ladder, cl->strip);
+      {
+        vec_current = time_sim->GetSignal(cl->ladder, cl->strip);
+      }
 
 			//Filling the strips with the current energy
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
@@ -481,8 +484,11 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(segmp);
-  outFile->WriteTObject(current);
-	outFile->Close();
+
+  for(int i = 0; i < (int) vec_current->size(); ++i)
+    outFile->WriteTObject(vec_current->at(i));
+
+  outFile->Close();
 
   debug::end_debug();
 
