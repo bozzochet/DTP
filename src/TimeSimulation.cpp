@@ -21,6 +21,13 @@ TimeSimulation::TimeSimulation()
 }
 
 
+TimeSimulation::~TimeSimulation()
+{
+  delete up_;
+  delete charge_;
+}
+
+
 void TimeSimulation::AddSignal
   (TH1F *hist, const energy_t &hitEnergy, const mytime_t &hitTime)
 {
@@ -133,11 +140,4 @@ std::vector<TH1F*>* TimeSimulation::GetSignal
   }
 
   return vec;
-}
-
-
-TimeSimulation::~TimeSimulation()
-{
-  delete up_;
-  delete charge_;
 }

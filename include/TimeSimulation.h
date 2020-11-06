@@ -81,7 +81,7 @@ public:
   //set line_ and exp_
   TimeSimulation();
 
-  ~TimeSimulation();
+  virtual ~TimeSimulation();
 
   //store hit times; TrCluster store times in ns
   inline void SetHit(const TrCluster *cl)
