@@ -98,11 +98,11 @@ void TimeSimulation::AddSignal
 
   // fill hist with up_
 
-    hist->Fill(t, up_->Eval(t - hitTime));
   //t_peak is delta_t between hit and peak of current
   mytime_t t_peak = down->Eval(0) / up_->GetParameter("Slew rate");
 
   for( mytime_t t = 0; t < t_peak; t += T_SAMPLING_ )
+    hist->Fill(t + hitTime, up_->Eval(t));
 
   // fill with down_
 
@@ -111,8 +111,8 @@ void TimeSimulation::AddSignal
     mytime_t t;
     current_t I;
 
-    hist->Fill(t, I);
     down->GetPoint(i, t, I);
+    hist->Fill(t + hitTime + t_peak, I);
   }
 
 }
