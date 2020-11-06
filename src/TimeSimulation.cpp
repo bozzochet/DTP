@@ -153,7 +153,6 @@ std::vector<TH1F*>* TimeSimulation::GetSignal
   //GENERATE NOISE HERE
 
   if(energies_.find(absStrip(lad,strip)) == energies_.end())
-    return hist; //return hist with noise only
     return vec; //return hist with noise only
 
   // fill hist with signal and push_back charge collection graphs
