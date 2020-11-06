@@ -94,6 +94,9 @@ void TimeSimulation::AddSignal
 
   charge_->SetParameter("Q", Q);
 
+  std::cout <<"\nhit time = " << hitTime <<" s\n";
+  std::cout <<"Q = " << Q <<" C\n";
+
   TGraph *down = new TGraph(charge_, "d"); //derivative of charge_
 
   // fill hist with up_
