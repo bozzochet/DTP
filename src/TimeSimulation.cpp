@@ -103,17 +103,12 @@ void TimeSimulation::AddSignal
       (q2 - q1) / (t2 - t1)
     );
 
-    /* SetPoint could be replaced by AddPoint but it's beeing used
-     * 6.18 ROOT version, where AddPoint was not defined yet */
   }
 
 //fill signal with up_
 
   for( mytime_t t = 0; t < t_peak; t += T_SAMPLING_ )
     signal->SetPoint(signal->GetN(), t + hitTime, up_->Eval(t));
-
-    /* SetPoint could be replaced by AddPoint but it's beeing used
-     * 6.18 ROOT version, where AddPoint was not defined yet */
 
   signal->Sort();
 }
