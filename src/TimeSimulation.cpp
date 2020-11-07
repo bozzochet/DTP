@@ -54,7 +54,6 @@ charge_t TimeSimulation::GetChargeSignal
     charge_t q0 = charge_->Eval(t); //ideal
     charge_t q = q0 + (q0/10.0) * random_->Uniform(); //add noise
 
-    charge_dev_.push_back( (q - q0) / q0);
 
     if(fill_graph)
       real_charge->SetPoint(real_charge->GetN(), t, q);
@@ -119,22 +118,11 @@ void TimeSimulation::GetSignal
 
 //set graph
 
-  signal->SetNameTitle("current", "current_signal");
+  signal->SetNameTitle("current", "current signal");
   signal->GetXaxis()->SetTitle("run time [s]");
   signal->GetYaxis()->SetTitle("current [A]");
 
 //fill signal
 
   AddSignal(signal, charge, hitTime);
-}
-
-
-void TimeSimulation::GetChargeDeviation(TH1F *hist)
-{
-  hist->SetNameTitle("charge_dev", "charge deviation");
-  hist->GetXaxis()->SetTitle("relative deviation");
-  hist->GetYaxis()->SetTitle("entries");
-
- for(int i=0; i < (int) charge_dev_.size(); ++i)
-   hist->Fill(charge_dev_[i]);
 }

@@ -152,8 +152,6 @@ int main(int argc, char **argv) {
 
   TGraph *current_example = new TGraph();
   TGraph *charge_example = new TGraph();
-  TH1F *charge_dev = new TH1F
-    ("charge_dev", "charge deviation", 1000, 0, 1);
 
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
@@ -187,6 +185,7 @@ int main(int argc, char **argv) {
 
   for (int i = 0; i < events->GetEntries(); i++) {
 
+    if(i!=0) break;
     debug::out <<"\n event: " <<i <<std::endl;
 
     //print and update progress bar
@@ -406,7 +405,6 @@ int main(int argc, char **argv) {
 }
 
   //time simulation ended
-  time_sim->GetChargeDeviation(charge_dev);
   delete time_sim;
 
   cout <<endl <<endl;
@@ -491,7 +489,6 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(segmp);
   outFile->WriteTObject(current_example);
   outFile->WriteTObject(charge_example);
-  outFile->WriteTObject(charge_dev);
   outFile->Close();
 
   debug::end_debug();

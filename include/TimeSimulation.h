@@ -64,9 +64,6 @@ class TimeSimulation
   //random generator
   TRandom3 *random_ = NULL;
 
-  //charge deviations from ideal curve
-  std::vector<double> charge_dev_;
-
 
 // methods
 
@@ -103,9 +100,6 @@ public:
    * same graph
    *
    */
-
-   //must pass a pointer to no object to get a copy of deviation_
-   void GetChargeDeviation(TH1F *hist);
 };
 
 
