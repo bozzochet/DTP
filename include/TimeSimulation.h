@@ -78,14 +78,10 @@ public:
   TimeSimulation();
   virtual ~TimeSimulation();
 
-  //simulate charge collection but without filling a graph
-  inline charge_t SimulateCharge(const energy_t &energy)
-  { return GetChargeSignal(NULL, energy, false); }
-
   /* generate charge signal in time with noise;
    * return charge created by hit */
   charge_t GetChargeSignal
-    (TGraph *charge, const energy_t&, const bool = true);
+    (TGraph *charge, const energy_t&, const bool noise = true);
 
   /* get current signal on strip ( #ladder, #strip) based on charge
    * collected */

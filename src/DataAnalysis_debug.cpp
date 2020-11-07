@@ -243,9 +243,6 @@ int main(int argc, char **argv) {
         time_sim->GetSignal
           (current_example, charge_example, cl->time*1e-9);
       }
-      else
-        time_sim->SimulateCharge(cl->eDep);
-        //just to compute charge deviations
 
 			//Filling the strips with the current energy
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];

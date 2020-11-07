@@ -32,17 +32,14 @@ TimeSimulation::~TimeSimulation()
 
 
 charge_t TimeSimulation::GetChargeSignal
-  (TGraph *real_charge, const energy_t &energy, const bool fill_graph)
+  (TGraph *real_charge, const energy_t &energy, const bool noise)
 {
 
 //set graph
 
-  if(fill_graph)
-  {
     real_charge->SetNameTitle("charge", "charge collected");
     real_charge->GetXaxis()->SetTitle("time from hit [s]");
     real_charge->GetYaxis()->SetTitle("charge collected [C]");
-  }
 
 //compute signal and deviations
 
@@ -57,17 +54,16 @@ charge_t TimeSimulation::GetChargeSignal
     //ideal charge collected
     charge_t dq = charge_->Eval(t) - charge_->Eval(t - T_SAMPLING_);
 
-    charge_t q_noise = dq / 10.0 * random_->Uniform();
+    charge_t q_noise = 0;
+    if(noise) q_noise = dq / 10.0 * random_->Uniform();
 
     //charge collected at step t
     q += dq + q_noise;
 
-    if(fill_graph)
-      real_charge->SetPoint(real_charge->GetN(), t, q);
+    real_charge->SetPoint(real_charge->GetN(), t, q);
   }
 
-  if(fill_graph)
-    real_charge->Sort();
+  real_charge->Sort();
 
   return Q;
 }
