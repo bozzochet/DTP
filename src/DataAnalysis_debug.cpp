@@ -236,8 +236,13 @@ int main(int argc, char **argv) {
       //get signal example
       if(j==0 && i==0)
       {
-        time_sim->GetChargeSignal(charge_example, cl->eDep);
-        time_sim->GetSignal(current_example, charge_example, cl->time);
+        //eDep is in GeV; TimeSimulation works with eV
+        time_sim->GetChargeSignal
+          (charge_example, cl->eDep*1e-9);
+
+        //time is in ns; TimeSimulation works with s
+        time_sim->GetSignal
+          (current_example, charge_example, cl->time*1e-9);
       }
       else
         time_sim->SimulateCharge(cl->eDep);
