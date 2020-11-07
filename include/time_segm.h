@@ -1,4 +1,11 @@
 
+
+// !!!!
+//
+// MERGE IN TIME SIMULATION CLASS
+//
+// !!!!
+
 /*********************************************************************
 
   time segmentation functions and variables;
@@ -28,9 +35,6 @@ enum time_segm : const int {A, B, C};
 namespace A_time_segm
 {
   const int jump = 10;
-
-  inline void shareEnergy(vector2<double> &energy)
-  { one_every_N::shareEnergy(energy, jump); }
 }
 
 namespace B_time_segm

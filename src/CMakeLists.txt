@@ -76,14 +76,22 @@ install(TARGETS TimeSimulation DESTINATION "${INSTALL_LIB_DIR}")
 
 #################
 
-set(EXTRA_LIBRARIES TimeSimulation)
+set(POS_SIMULATION_SRC PosSimulation.cpp)
+add_library(PosSimulation SHARED ${POS_SIMULATION_SRC})
+set_target_properties(PosSimulation PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
+)
+install(TARGETS PosSimulation DESTINATION "${INSTALL_LIB_DIR}")
+
+#################
+
+set(EXTRA_LIBRARIES TimeSimulation PosSimulation)
 
 #################
 
 set(SimpleAnalysis_SRC
 	SimpleAnalysis.cpp
   progress.cpp
-  segm.cpp
 	G__TrCluster.cxx
 )
 
@@ -105,7 +113,6 @@ install(TARGETS SimpleAnalysis DESTINATION "${INSTALL_BIN_DIR}")
 set(DataAnalysis_SRC
 	DataAnalysis.cpp
   progress.cpp
-  segm.cpp
 	G__TrCluster.cxx
 )
 

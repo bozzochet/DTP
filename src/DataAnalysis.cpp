@@ -2,6 +2,7 @@
 #include "globals_and_types.h"
 #include "vector2.h"
 #include "progress.h"
+#include "PosSimulation.h"
 #include "TimeSimulation.h"
 #include "TrCluster.hh"
 
@@ -22,31 +23,6 @@
 #include <vector>
 
 using namespace std;
-
-
-void stripReset(vector2<double> &array) {
-	for (int ii = 0; ii < array.size(); ii++)
-		for (int jj = 0; jj < array[ii].size(); jj++)
-			array[ii][jj] = 0;
-}
-
-void addNoise(vector2<double> &array, TRandom3* tr) {
-
-	for (int ii = 0; ii < array.size(); ii++) {
-		for (int jj = 0; jj < array[ii].size(); jj++) {
-			double fluct = tr->Gaus(0, 9e-6);
-
-			array[ii][jj] += fluct;
-			}
-		}
-}
-
-void hitReset(vector2<double> &array, int dim) {
-		for(int i=0; i<array.size();i++) {
-			array[i].clear();
-			array[i].shrink_to_fit();
-		}
-}
 
 int main(int argc, char **argv) {
 
@@ -107,9 +83,7 @@ int main(int argc, char **argv) {
 
 	*/
 
-	vector2<double> eDepSegm(Nladders, vector<double>(Nstrips));
-	vector2<double> hitPos(Nlayers);
-
+  PosSimulation *pos_sim = new PosSimulation(3, tr);
   TimeSimulation *time_sim = new TimeSimulation();
 
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
@@ -137,9 +111,7 @@ int main(int argc, char **argv) {
 		}
     */
 
-		// eDepSegm array initialisation
-		stripReset(eDepSegm);
-		hitReset(hitPos,Nlayers);
+		pos_sim->Reset();
 
 		for (int j = 0; j < a->GetEntries(); j++) {
 
@@ -149,168 +121,28 @@ int main(int argc, char **argv) {
 			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
 			if(cl->eDep > 9e-6) hEdep->Fill(cl->eDep); //total
 
-			//Filling the hits array
-
-			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
-
-			//Filling the strips with the current energy
-			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
+      pos_sim->SetHitPos(cl->layer, cl->pos[cl->segm]);
+      pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[0]);
 
 			if(cl->strip == Nstrips-1 && (cl->ladder+1) % Nsquares == 0) //hit on the last strip of the last ladder of the layer row
 
 				continue; //cl->clust[1] energy is lost
 
 			else if(cl->strip==Nstrips-1)
-				eDepSegm[cl->ladder+1][0] += cl->clust[1];
+        pos_sim->DepositEnergy(cl->ladder+1, 0, cl->clust[1]);
 			else
-				eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
+				pos_sim->DepositEnergy(cl->ladder, cl->strip+1, cl->clust[1]);
 		}
 
 		// Sharing of the energy from non-active strips
 
-		if(pos_segm::jump!=1)
-			pos_segm::shareEnergy(eDepSegm);
-
-		addNoise(eDepSegm,tr);
-
-		for (int ix = 0; ix < Nladders; ix++) {
-			for (int jx = 0; jx < Nstrips; jx+=pos_segm::jump) {
-
-
-			//Find the boundaries of the clusters
-
-			if(eDepSegm[ix][jx] >= 27e-6) {
-				//cout<<"Analysing cluster\n";
-				vector_pair<double> strip;
-
-				int i1, j1;
-				bool firstPoint = true;
-				for(int ii = ix; ii>=0; ii--) {
-					for(int jj = Nstrips-1; jj>=pos_segm::jump; jj-= pos_segm::jump) {
-						if(firstPoint) {
-							jj = jx;
-							firstPoint = false;
-						}
-						i1 = ii;
-						j1 = jj;
-
-						/* evaluate if the strip is the first of the first ladder
-						* on the layer row
-						*/
-						bool first_ladder = ii % Nsquares == 0 && jj == 0;
-
-						if(eDepSegm[ii][jj] < 9e-6 || first_ladder)
-							goto nextPart1;
-					}
-				}
-
-				nextPart1:
-
-				firstPoint = true;
-				int i2, j2;
-				for(int ii = ix; ii<Nladders; ii++) {
-					for(int jj = 0; jj<Nstrips; jj+= pos_segm::jump) {
-						if(firstPoint) {
-							jj = jx;
-							firstPoint = false;
-						}
-						i2 = ii;
-						j2 = jj;
-
-						/* evaluate if the strip is the first of the first ladder
-						* on the layer row
-						*/
-						bool first_ladder = ii % Nsquares == 0 && jj == 0;
-
-						if(eDepSegm[ii][jj] < 9e-6 || first_ladder)
-							goto nextPart2;
-					}
-				}
-
-				nextPart2:
-
-				//Filling vector with current cluster
-
-				while((i1*Nstrips)+j1 <= (i2*Nstrips)+j2) {
-
-          if(j1>Nstrips-1 && i1 == Nladders-1)
-            break;
-          else if(j1>Nstrips-1) {
-            i1++;
-            j1 = 0;
-          }
-
-					double thisPos = ((i1%Nsquares)*squareSide) + (j1*pitch) - (Nsquares*squareSide*0.5);
-					strip.push_back(make_pair(thisPos,eDepSegm[i1][j1]));
-
-					j1+=pos_segm::jump;
-				}
-
-				for(int k = 0; k < strip.size(); k++) {
-					if(strip[k].second >= 27e-6) {
-
-					//Finding the boundaries of the peak
-
-					int k1 = k-1;
-					int k2 = k+1;
-
-					while(k1>0 && strip[k1].second >= 27e-6)
-						k1--;
-					while(k2<(strip.size()-1) && strip[k2].second >= 27e-6)
-						k2++;
-
-					//Finding the peak
-
-					int kMax = k1;
-					for(int kHold = k1; kHold <= k2; kHold++)
-						if(strip[kHold].second>strip[kMax].second)
-							kMax = kHold;
-
-
-					//cout<<"Analysing peak of "<< strip[kMax].second <<"keV\n";
-
-					//Finding neighbour strip
-
-					double kNext;
-
-          if(kMax == 0)
-            kNext = 1;
-          else if(kMax == strip.size()-1)
-            kNext = strip.size()-2;
-					else if(strip[kMax+1].second > strip[kMax-1].second)
-						kNext = kMax+1;
-					else
-						kNext = kMax-1;
-
-
-					//Finding simulated position
-
-					double simPos = ((strip[kMax].first*strip[kMax].second) + (strip[kNext].first*strip[kNext].second)) / (strip[kMax].second + strip[kNext].second);
-					int cLayer = ix/(Nsquares*Nrows);
-
-					//Comparing the simulated hit positions with the real ones on the same layer
-
-					for(int m = 0 ; m < hitPos[cLayer].size(); m++)
-						segmp->Fill(simPos-hitPos[cLayer][m]);
-
-					//cout<<"Simulated position: "<<simPos<<endl;
-
-
-
-					//Advancing within the current cluster
-					k = k2;
-						}
-					}
-
-		//Advancing and looking for other clusters
-		ix = i2;
-		jx = j2;
-				}
-			}
-	}
+    pos_sim->ShareEnergy();
+    pos_sim->AddNoise();
+    pos_sim->Segm(segmp);
 }
 
-  //time simulation ended
+  //simulations ended
+  delete pos_sim;
   delete time_sim;
 
   cout <<endl <<endl;

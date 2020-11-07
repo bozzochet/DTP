@@ -11,9 +11,7 @@ install(FILES
         geometry.h
         physics_var.h
         physics_types.h
-        pos_segm.h
         time_segm.h
-        segm.h
         absStrip.h
         vector2.h
         DESTINATION "${INSTALL_INC_DIR}"
