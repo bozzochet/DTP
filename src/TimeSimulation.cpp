@@ -80,7 +80,7 @@ void TimeSimulation::AddSignal
 //fill with charge derivative
 
   current_t peak;
-  time_t t_peak; //delta_t between hitTime and current = peak
+  mytime_t t_peak; //delta_t between hitTime and current = peak
 
   for(int i=0; i < charge->GetN()-1; ++i)
   {
