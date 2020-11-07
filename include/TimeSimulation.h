@@ -1,11 +1,14 @@
 
 /**********************************************************************
 
-  TimeSimulation class simulates the time development of the current
-  signal generated in the strip by the passage of a particle.
+  TimeSimulation class simulates signal of current in time
+  generated in the strips by particles hits.
 
   The signal simulated, line from 0 to peak and an exponential
   descent, based on collected charge.
+
+  Charge collecting process follows the capacitor charging law and
+  noise is added to charge signal.
 
  *********************************************************************/
 
@@ -25,8 +28,9 @@
 #include "TObject.h"
 #include "TGraph.h"
 #include "TF1.h"
-#include "TH1F.h"
 #include "TAxis.h"
+#include "TRandom3.h"
+#include "TH1F.h"
 
 #include <vector>
 #include <string>
@@ -62,25 +66,33 @@ class TimeSimulation : protected Stopwatch
 
 // variables
 
-  //current signal components
-  TF1 *up_ = NULL;
-  TF1 *charge_ = NULL; //charge collected in time
+  TF1 *up_ = NULL; //slope of current signal to the peak
+  TF1 *charge_ = NULL; //charge collected in time without noise
 
-  //energy deposit
+  //energy deposit by particles
   energies_map_t energies_;
+
+  //random generator
+  TRandom3 *random_ = NULL;
+
+  //hist for analysis
+  TH1F *deviation_ = NULL;
 
 
 // methods
 
-  // add signal simulated with line_ and exp_ , based on energy_
-  void AddSignal(TH1F*, const energy_t&, const mytime_t&);
+  //generate charge signal in time with noise
+  TGraph* GetChargeSignal(const energy_t&);
+
+  /* add to signal a single hit current generated using up_ and
+   * charge signal obtained by GetChargeSignal */
+  void AddSignal
+    (TGraph *signal, const TGraph *charge, const mytime_t &hitTime);
 
 
 public:
 
-  //set line_ and exp_
   TimeSimulation();
-
   virtual ~TimeSimulation();
 
   //store hit times; TrCluster store times in ns
@@ -94,9 +106,19 @@ public:
   virtual inline void Reset()
   { Stopwatch::Reset(); }
 
-  /* return current signal on strip ( #ladder, #strip) at vec begin
-   * and collected charge graphs for every hit */
-  std::vector<TH1F*>* GetSignal(const int &ladder, const int &strip);
+  /* get current signal on strip ( #ladder, #strip) in vec begin
+   * and collected charge graphs for every hit*/
+  void GetSignal
+    (std::vector<TGraph*> &vec, const int &ladder, const int &strip);
+
+  /*
+   * NEED IMPLEMENTATION: in case of multiple hits on the same strip
+   * GetSignal is able to generate the multiple signals and append them
+   * to the total signal returnes; at this moment the signals are NOT
+   * summed (as has to be). Multiple currents are just drawn on the
+   * same graph
+   *
+   */
 
 };
 

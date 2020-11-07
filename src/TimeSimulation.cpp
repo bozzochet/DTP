@@ -18,6 +18,13 @@ TimeSimulation::TimeSimulation()
 
   up_->SetParName(0, "Slew rate");
   up_->SetParameter("Slew rate", SLEW_RATE_);
+
+  random_ = new TRandom3(9298);
+
+  deviation_ = new TH1F("charge_dev", "charge deviation", 1000, 0, 1);
+
+  deviation_->GetXaxis()->SetTitle("relative deviation");
+  deviation_->GetYaxis()->SetTitle("Entries");
 }
 
 
@@ -25,49 +32,97 @@ TimeSimulation::~TimeSimulation()
 {
   delete up_;
   delete charge_;
+  delete deviation_;
+  delete random_;
+}
+
+
+TGraph* TimeSimulation::GetChargeSignal(const energy_t &energy)
+{
+  charge_t Q = energy / ENERGY_COUPLE_ * FOND_CHARGE_;
+
+  std::cout <<"\nQ = " << Q <<" C\n";
+
+  charge_->SetParameter("Q", Q);
+
+//get ideal charge signal
+
+  TGraph* real_charge = new TGraph(charge_);
+
+//add noise
+
+  for(int i=0; i < real_charge->GetN(); ++i)
+  {
+    mytime_t t;
+    charge_t q;
+
+    real_charge->GetPoint(i,t,q);
+
+    charge_t q0 = q;
+    q += (q / 10.0) * random_->Uniform();
+
+    deviation_->Fill( (q - q0) / q0);
+
+    real_charge->SetPoint(i,t,q);
+  }
+
+  real_charge->Sort();
+
+  return real_charge;
 }
 
 
 void TimeSimulation::AddSignal
-  (TH1F *hist, const energy_t &hitEnergy, const mytime_t &hitTime)
+  (TGraph *gr, const TGraph *charge, const mytime_t &hitTime)
 {
-  charge_t Q = hitEnergy / ENERGY_COUPLE_
-    * FOND_CHARGE_;
-
-  charge_->SetParameter("Q", Q);
 
   std::cout <<"\nhit time = " << hitTime <<" s\n";
-  std::cout <<"Q = " << Q <<" C\n";
 
-  TGraph *down = new TGraph(charge_, "d"); //derivative of charge_
+// fill with charge derivative
 
-// fill hist with up_
+  current_t peak;
+  time_t t_peak; //delta_t between hitTime and current = peak
 
-  //t_peak is delta_t between hit and peak of current
-  mytime_t t_peak = down->Eval(0) / up_->GetParameter("Slew rate");
-
-  for( mytime_t t = 0; t < t_peak; t += T_SAMPLING_ )
-    hist->Fill(t + hitTime, up_->Eval(t));
-
-// fill with down_
-
-  for(int i = 0; i < (int) down->GetN(); ++i)
+  for(int i=0; i < charge->GetN()-1; ++i)
   {
-    mytime_t t;
-    current_t I;
+    mytime_t t1, t2;
+    charge_t q1, q2;
 
-    down->GetPoint(i, t, I);
-    hist->Fill(t + hitTime + t_peak, I);
+    //charge is sorted
+    charge->GetPoint(i, t1, q1);
+    charge->GetPoint(i+1, t2, q2);
+
+    if(i==0)
+    {
+      peak = (q2 - q1) / (t2 - t1);
+      t_peak = peak / up_->GetParameter("Slew rate");
+    }
+
+    gr->SetPoint(
+      gr->GetN(),
+      hitTime + t_peak + (t2 + t1)*0.5,
+      (q2 - q1) / (t2 - t1)
+    );
+
+    /* SetPoint could be replaced by AddPoint but it's beeing used
+     * 6.18 ROOT version, where AddPoint was not defined yet */
   }
 
+// fill gr with up_
+
+  for( mytime_t t = 0; t < t_peak; t += T_SAMPLING_ )
+    gr->SetPoint(gr->GetN(), t + hitTime, up_->Eval(t));
+
+    /* SetPoint could be replaced by AddPoint but it's beeing used
+     * 6.18 ROOT version, where AddPoint was not defined yet */
+
+  gr->Sort();
 }
 
 
-std::vector<TH1F*>* TimeSimulation::GetSignal
-  (const int &lad, const int &strip)
+void TimeSimulation::GetSignal
+  (std::vector<TGraph*> &vec, const int &lad, const int &strip)
 {
-  std::vector<TH1F*> *vec = new std::vector<TH1F*>;
-
   std::string name = "current(:)";
   name.insert(8, std::to_string(lad));
   name.insert(name.length()-1, std::to_string(strip));
@@ -77,40 +132,36 @@ std::vector<TH1F*>* TimeSimulation::GetSignal
   title.insert(title.length()-1, std::to_string(strip));
 
   /* name and title variables are used again near the end of
-   * this method for another hist; they will be replaced for the needs
+   * this method for another graph; they will be replaced for the needs
    */
 
-  TH1F *hist = new TH1F
-    ( name.c_str(), title.c_str(), N_BINS_, T_START_, T_END_ );
+  TGraph *gr = new TGraph();
 
-  //hist is stored in vec[0]
-  vec->push_back(hist);
+  gr->SetNameTitle(name.c_str(), title.c_str());
 
-  hist->GetXaxis()->SetTitle("run time [s]");
-  hist->GetYaxis()->SetTitle("current [A]");
+  //gr is stored in vec[0]
+  vec.push_back(gr);
 
-  //draw hist with points instead of using bars
-  hist->SetLineColor(kWhite);
-  hist->SetMarkerColor(kBlue);
-  hist->SetMarkerStyle(kFullDotMedium);
+  gr->GetXaxis()->SetTitle("run time [s]");
+  gr->GetYaxis()->SetTitle("current [A]");
 
-  //GENERATE NOISE HERE
+  std::vector<energy_t> *energies ;
+  bool dark = false;
 
   if(energies_.find(absStrip(lad,strip)) == energies_.end())
-    return vec; //return hist with noise only
-
-// fill hist with signal and push_back charge collection graphs
-
-  for(int i = 0; i < (int) energies_[absStrip(lad,strip)].size(); ++i)
   {
-    AddSignal
-    (
-      hist,
-      energies_[absStrip(lad,strip)][i],
-      times_[absStrip(lad,strip)][i]
-    );
+    dark = true; //no hit => strip is dark: fill with noise only
+    energies = new std::vector<energy_t> (1,0);
+  }
+  else
+    energies = &energies_[absStrip(lad,strip)];
 
-//hist for charge collected
+// fill gr with signal and push_back charge collection graphs
+
+  for(int i = 0; i < (int) energies->size(); ++i)
+  {
+    //charge collected with noise
+    TGraph *charge = GetChargeSignal(energies->at(i));
 
     name = "charge(:)";
     name.insert(name.length()-3, std::to_string(i));
@@ -122,22 +173,16 @@ std::vector<TH1F*>* TimeSimulation::GetSignal
     title.insert(title.length()-9, std::to_string(lad));
     title.insert(title.length()-1, std::to_string(strip));
 
-    TH1F *charge = new TH1F
-      (name.c_str(), title.c_str(), N_BINS_, T_START_, T_END_);
+    charge->SetNameTitle(name.c_str(), title.c_str());
 
     charge->GetXaxis()->SetTitle("time from hit [s]");
     charge->GetYaxis()->SetTitle("charge collected [C]");
 
-    //draw charge with points instead of using bars
-    charge->SetLineColor(kWhite);
-    charge->SetMarkerColor(kBlue);
-    charge->SetMarkerStyle(kFullDotMedium);
+    vec.push_back(charge);
 
-    for( mytime_t t = 0; t < T_END_; t += T_SAMPLING_ )
-      charge->Fill(t, charge_->Eval(t));
-
-    vec->push_back(charge);
+    AddSignal(gr, charge, times_[absStrip(lad,strip)][i] );
   }
 
-  return vec;
+  if(dark)
+    delete energies;
 }

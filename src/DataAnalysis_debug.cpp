@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
 
 	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
 
-  std::vector<TH1F*> *vec_current;
+  std::vector<TGraph*> vec_current;
 
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
@@ -241,7 +241,7 @@ int main(int argc, char **argv) {
       //get signal example
       if(j==0 && i==0)
       {
-        vec_current = time_sim->GetSignal(cl->ladder, cl->strip);
+        time_sim->GetSignal(vec_current, cl->ladder, cl->strip);
       }
 
 			//Filling the strips with the current energy
@@ -485,8 +485,8 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(segmp);
 
-  for(int i = 0; i < (int) vec_current->size(); ++i)
-    outFile->WriteTObject(vec_current->at(i));
+  for(int i = 0; i < (int) vec_current.size(); ++i)
+    outFile->WriteTObject(vec_current[i]);
 
   outFile->Close();
 
