@@ -20,11 +20,6 @@ TimeSimulation::TimeSimulation()
   up_->SetParameter("Slew rate", SLEW_RATE_);
 
   random_ = new TRandom3(9298);
-
-  deviation_ = new TH1F("charge_dev", "charge deviation", 1000, 0, 1);
-
-  deviation_->GetXaxis()->SetTitle("relative deviation");
-  deviation_->GetYaxis()->SetTitle("Entries");
 }
 
 
@@ -32,53 +27,51 @@ TimeSimulation::~TimeSimulation()
 {
   delete up_;
   delete charge_;
-  delete deviation_;
   delete random_;
 }
 
 
-TGraph* TimeSimulation::GetChargeSignal(const energy_t &energy)
+charge_t TimeSimulation::GetChargeSignal
+  (TGraph *real_charge, const energy_t &energy, const bool fill_graph)
 {
-  charge_t Q = energy / ENERGY_COUPLE_ * FOND_CHARGE_;
 
-  std::cout <<"\nQ = " << Q <<" C\n";
+//set graph
 
-  charge_->SetParameter("Q", Q);
-
-//get ideal charge signal
-
-  TGraph* real_charge = new TGraph(charge_);
-
-//add noise
-
-  for(int i=0; i < real_charge->GetN(); ++i)
+  if(fill_graph)
   {
-    mytime_t t;
-    charge_t q;
-
-    real_charge->GetPoint(i,t,q);
-
-    charge_t q0 = q;
-    q += (q / 10.0) * random_->Uniform();
-
-    deviation_->Fill( (q - q0) / q0);
-
-    real_charge->SetPoint(i,t,q);
+    real_charge->SetNameTitle("charge", "charge collected");
+    real_charge->GetXaxis()->SetTitle("time from hit [s]");
+    real_charge->GetYaxis()->SetTitle("charge collected [C]");
   }
 
-  real_charge->Sort();
+//compute signal and deviations
 
-  return real_charge;
+  charge_t Q = energy / ENERGY_COUPLE_ * FOND_CHARGE_;
+  charge_->SetParameter("Q", Q);
+
+  for( mytime_t t = 0; t < T_END_; t += T_SAMPLING_ )
+  {
+    charge_t q0 = charge_->Eval(t); //ideal
+    charge_t q = q0 + (q0/10.0) * random_->Uniform(); //add noise
+
+    charge_dev_.push_back( (q - q0) / q0);
+
+    if(fill_graph)
+      real_charge->SetPoint(real_charge->GetN(), t, q);
+  }
+
+  if(fill_graph)
+    real_charge->Sort();
+
+  return Q;
 }
 
 
 void TimeSimulation::AddSignal
-  (TGraph *gr, const TGraph *charge, const mytime_t &hitTime)
+  (TGraph *signal, const TGraph *charge, const mytime_t &hitTime)
 {
 
-  std::cout <<"\nhit time = " << hitTime <<" s\n";
-
-// fill with charge derivative
+//fill with charge derivative
 
   current_t peak;
   time_t t_peak; //delta_t between hitTime and current = peak
@@ -98,8 +91,8 @@ void TimeSimulation::AddSignal
       t_peak = peak / up_->GetParameter("Slew rate");
     }
 
-    gr->SetPoint(
-      gr->GetN(),
+    signal->SetPoint(
+      signal->GetN(),
       hitTime + t_peak + (t2 + t1)*0.5,
       (q2 - q1) / (t2 - t1)
     );
@@ -108,81 +101,40 @@ void TimeSimulation::AddSignal
      * 6.18 ROOT version, where AddPoint was not defined yet */
   }
 
-// fill gr with up_
+//fill signal with up_
 
   for( mytime_t t = 0; t < t_peak; t += T_SAMPLING_ )
-    gr->SetPoint(gr->GetN(), t + hitTime, up_->Eval(t));
+    signal->SetPoint(signal->GetN(), t + hitTime, up_->Eval(t));
 
     /* SetPoint could be replaced by AddPoint but it's beeing used
      * 6.18 ROOT version, where AddPoint was not defined yet */
 
-  gr->Sort();
+  signal->Sort();
 }
 
 
 void TimeSimulation::GetSignal
-  (std::vector<TGraph*> &vec, const int &lad, const int &strip)
+  (TGraph *signal, const TGraph *charge, const mytime_t &hitTime)
 {
-  std::string name = "current(:)";
-  name.insert(8, std::to_string(lad));
-  name.insert(name.length()-1, std::to_string(strip));
 
-  std::string title = "current signal [ladder:  strip: ]";
-  title.insert(24, std::to_string(lad));
-  title.insert(title.length()-1, std::to_string(strip));
+//set graph
 
-  /* name and title variables are used again near the end of
-   * this method for another graph; they will be replaced for the needs
-   */
+  signal->SetNameTitle("current", "current_signal");
+  signal->GetXaxis()->SetTitle("run time [s]");
+  signal->GetYaxis()->SetTitle("current [A]");
 
-  TGraph *gr = new TGraph();
+//fill signal
 
-  gr->SetNameTitle(name.c_str(), title.c_str());
+  AddSignal(signal, charge, hitTime);
+}
 
-  //gr is stored in vec[0]
-  vec.push_back(gr);
 
-  gr->GetXaxis()->SetTitle("run time [s]");
-  gr->GetYaxis()->SetTitle("current [A]");
+void TimeSimulation::GetChargeDeviation(TH1F *hist)
+{
+  hist->SetNameTitle("charge_dev", "charge deviation");
+  hist->GetXaxis()->SetTitle("relative deviation");
+  hist->GetYaxis()->SetTitle("entries");
 
-  std::vector<energy_t> *energies ;
-  bool dark = false;
-
-  if(energies_.find(absStrip(lad,strip)) == energies_.end())
-  {
-    dark = true; //no hit => strip is dark: fill with noise only
-    energies = new std::vector<energy_t> (1,0);
-  }
-  else
-    energies = &energies_[absStrip(lad,strip)];
-
-// fill gr with signal and push_back charge collection graphs
-
-  for(int i = 0; i < (int) energies->size(); ++i)
-  {
-    //charge collected with noise
-    TGraph *charge = GetChargeSignal(energies->at(i));
-
-    name = "charge(:)";
-    name.insert(name.length()-3, std::to_string(i));
-    name.insert(name.length()-2, std::to_string(lad));
-    name.insert(name.length()-1, std::to_string(strip));
-
-    title = "charge collected [hit:  ladder:  strip: ]";
-    title.insert(title.length()-18, std::to_string(i));
-    title.insert(title.length()-9, std::to_string(lad));
-    title.insert(title.length()-1, std::to_string(strip));
-
-    charge->SetNameTitle(name.c_str(), title.c_str());
-
-    charge->GetXaxis()->SetTitle("time from hit [s]");
-    charge->GetYaxis()->SetTitle("charge collected [C]");
-
-    vec.push_back(charge);
-
-    AddSignal(gr, charge, times_[absStrip(lad,strip)][i] );
-  }
-
-  if(dark)
-    delete energies;
+ for(int i=0; i < (int) charge_dev_.size(); ++i)
+   hist->Fill(charge_dev_[i]);
 }

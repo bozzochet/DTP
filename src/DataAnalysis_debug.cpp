@@ -5,7 +5,6 @@
 #include "globals_and_types.h"
 #include "vector2.h"
 #include "progress.h"
-#include "Stopwatch.h"
 #include "TimeSimulation.h"
 #include "TrCluster.hh"
 
@@ -151,7 +150,10 @@ int main(int argc, char **argv) {
 
 	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
 
-  std::vector<TGraph*> vec_current;
+  TGraph *current_example = new TGraph();
+  TGraph *charge_example = new TGraph();
+  TH1F *charge_dev = new TH1F
+    ("charge_dev", "charge deviation", 1000, 0, 1);
 
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
@@ -185,7 +187,6 @@ int main(int argc, char **argv) {
 
   for (int i = 0; i < events->GetEntries(); i++) {
 
-    if(i!=0) break;
     debug::out <<"\n event: " <<i <<std::endl;
 
     //print and update progress bar
@@ -212,9 +213,6 @@ int main(int argc, char **argv) {
 		stripReset(eDepSegm);
 		hitReset(hitPos,Nlayers);
 
-    time_sim->Reset();
-    debug::out <<"\nreset\n";
-
 		for (int j = 0; j < a->GetEntries(); j++) {
 
       debug::out <<"\nentry: " <<j <<std::endl;
@@ -233,16 +231,17 @@ int main(int argc, char **argv) {
 
 			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
 
-      // taking hit times
-      debug::out <<"\nsplit: ";
-      time_sim->SetHit(cl);
       debug::out <<cl->time <<std::endl;
 
       //get signal example
       if(j==0 && i==0)
       {
-        time_sim->GetSignal(vec_current, cl->ladder, cl->strip);
+        time_sim->GetChargeSignal(charge_example, cl->eDep);
+        time_sim->GetSignal(current_example, charge_example, cl->time);
       }
+      else
+        time_sim->SimulateCharge(cl->eDep);
+        //just to compute charge deviations
 
 			//Filling the strips with the current energy
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
@@ -402,6 +401,7 @@ int main(int argc, char **argv) {
 }
 
   //time simulation ended
+  time_sim->GetChargeDeviation(charge_dev);
   delete time_sim;
 
   cout <<endl <<endl;
@@ -484,10 +484,9 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(segmp);
-
-  for(int i = 0; i < (int) vec_current.size(); ++i)
-    outFile->WriteTObject(vec_current[i]);
-
+  outFile->WriteTObject(current_example);
+  outFile->WriteTObject(charge_example);
+  outFile->WriteTObject(charge_dev);
   outFile->Close();
 
   debug::end_debug();

@@ -18,7 +18,6 @@
 
 #include "globals_and_types.h"
 #include "absStrip.h"
-#include "Stopwatch.h"
 #include "TrCluster.hh"
 #include "vector2.h"
 
@@ -38,15 +37,8 @@
 #include <iostream>
 
 
-class TimeSimulation : protected Stopwatch
+class TimeSimulation
 {
-
-// typedefs
-
-  typedef std::map <abs_strip_t, std::vector<energy_t> >
-    energies_map_t;
-
-
 // const variables
 
   //slew rate of line_
@@ -69,20 +61,14 @@ class TimeSimulation : protected Stopwatch
   TF1 *up_ = NULL; //slope of current signal to the peak
   TF1 *charge_ = NULL; //charge collected in time without noise
 
-  //energy deposit by particles
-  energies_map_t energies_;
-
   //random generator
   TRandom3 *random_ = NULL;
 
-  //hist for analysis
-  TH1F *deviation_ = NULL;
+  //charge deviations from ideal curve
+  std::vector<double> charge_dev_;
 
 
 // methods
-
-  //generate charge signal in time with noise
-  TGraph* GetChargeSignal(const energy_t&);
 
   /* add to signal a single hit current generated using up_ and
    * charge signal obtained by GetChargeSignal */
@@ -95,21 +81,19 @@ public:
   TimeSimulation();
   virtual ~TimeSimulation();
 
-  //store hit times; TrCluster store times in ns
-  inline void SetHit(const TrCluster *cl)
-  {
-    Stopwatch::Split(cl->ladder, cl->strip, cl->time * 1e-9);
-    energies_[absStrip(cl->ladder, cl->strip)].push_back(cl->eDep);
-  }
+  //simulate charge collection but without filling a graph
+  inline charge_t SimulateCharge(const energy_t &energy)
+  { return GetChargeSignal(NULL, energy, false); }
 
-  //Stopwatch::Reset is protected in this class
-  virtual inline void Reset()
-  { Stopwatch::Reset(); }
+  /* generate charge signal in time with noise;
+   * return charge created by hit */
+  charge_t GetChargeSignal
+    (TGraph *charge, const energy_t&, const bool = true);
 
-  /* get current signal on strip ( #ladder, #strip) in vec begin
-   * and collected charge graphs for every hit*/
+  /* get current signal on strip ( #ladder, #strip) based on charge
+   * collected */
   void GetSignal
-    (std::vector<TGraph*> &vec, const int &ladder, const int &strip);
+    (TGraph *signal, const TGraph *charge, const mytime_t &hitTime);
 
   /*
    * NEED IMPLEMENTATION: in case of multiple hits on the same strip
@@ -120,6 +104,8 @@ public:
    *
    */
 
+   //must pass a pointer to no object to get a copy of deviation_
+   void GetChargeDeviation(TH1F *hist);
 };
 
 

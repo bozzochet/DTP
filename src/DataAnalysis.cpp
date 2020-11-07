@@ -2,7 +2,6 @@
 #include "globals_and_types.h"
 #include "vector2.h"
 #include "progress.h"
-#include "Stopwatch.h"
 #include "TimeSimulation.h"
 #include "TrCluster.hh"
 
@@ -142,8 +141,6 @@ int main(int argc, char **argv) {
 		stripReset(eDepSegm);
 		hitReset(hitPos,Nlayers);
 
-    time_sim->Reset();
-
 		for (int j = 0; j < a->GetEntries(); j++) {
 
 			//cout<<endl<<"Entry #"<<i+j<<endl;
@@ -155,9 +152,6 @@ int main(int argc, char **argv) {
 			//Filling the hits array
 
 			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
-
-      // taking hit times
-      time_sim->SetHit(cl);
 
 			//Filling the strips with the current energy
 			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
