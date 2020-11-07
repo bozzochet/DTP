@@ -49,11 +49,18 @@ charge_t TimeSimulation::GetChargeSignal
   charge_t Q = energy / ENERGY_COUPLE_ * FOND_CHARGE_;
   charge_->SetParameter("Q", Q);
 
-  for( mytime_t t = 0; t < T_END_; t += T_SAMPLING_ )
-  {
-    charge_t q0 = charge_->Eval(t); //ideal
-    charge_t q = q0 + (q0/10.0) * random_->Uniform(); //add noise
+//signal
+  charge_t q = 0;
 
+  for( mytime_t t = T_SAMPLING_; t < T_END_; t += T_SAMPLING_ )
+  {
+    //ideal charge collected
+    charge_t dq = charge_->Eval(t) - charge_->Eval(t - T_SAMPLING_);
+
+    charge_t q_noise = dq / 10.0 * random_->Uniform();
+
+    //charge collected at step t
+    q += dq + q_noise;
 
     if(fill_graph)
       real_charge->SetPoint(real_charge->GetN(), t, q);
