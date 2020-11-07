@@ -286,7 +286,7 @@ int main(int argc, char **argv) {
 					//Finding simulated position
 
 					double simPos = ((strip[kMax].first*strip[kMax].second) + (strip[kNext].first*strip[kNext].second)) / (strip[kMax].second + strip[kNext].second);
-					int cLayer = ix/(Nsquares*2);
+					int cLayer = ix/(Nsquares*Nrows);
 
 					//Comparing the simulated hit positions with the real ones on the same layer
 
