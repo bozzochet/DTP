@@ -9,9 +9,9 @@ void ToyNoiseVsTime(){
   TCanvas* c_vs_t = new TCanvas();
   h_vs_t->Draw();
 
-  TH1F* h_int_vs_t = new TH1F("h_int_vs_t", "h_int_vs_t; t; Events", 10000000, 0, 1000000);
-  TH1F* h_vs_dt = new TH1F("h_vs_dt", "h_vs_dt; dt; Event", 1000, 0, 10000);
-  TH1F* h_vs_df = new TH1F("h_vs_df", "h_vs_df; df; Event", 500, 0, 0.01);
+  TH1F* h_int_vs_t = new TH1F("h_int_vs_t", "h_int_vs_t; t; Integrated Events", 10000000, 0, 1000000);
+  TH1F* h_vs_dt = new TH1F("h_vs_dt", "h_vs_dt; dt; Events", 1000, 0, 10000);
+  TH1F* h_vs_df = new TH1F("h_vs_df", "h_vs_df; df; Events", 500, 0, 0.01);
 
   double entriessofar;
   double deltat=0;
@@ -55,14 +55,20 @@ void ToyNoiseVsTime(){
   h_vs_f->SetBit(TH1::kNoStats);
   h_vs_f->SetBit(TH1::kNoTitle);
 #else
-  TH1F* h_vs_f = new TH1F("h_vs_f", "h_vs_f; f; Event", 100000, 1.0E-6, 0.001);
-
+  TH1F* h_int_vs_f = new TH1F("h_int_vs_f", "h_int_vs_f; f; Integrated Events", 100000, 1.0E-6, 0.001);
   for (int ii=1; ii<=h_int_vs_t->GetNbinsX(); ii++) {
     double bc = h_int_vs_t->GetBinContent(ii);
     double xx = h_int_vs_t->GetBinCenter(ii);
     double f = 1.0/xx;
-    h_vs_f->Fill(f, bc);
-  }  
+    h_int_vs_f->Fill(f, bc);
+  }
+
+  TH1F* h_vs_f = new TH1F("h_vs_f", "h_vs_f; f; Events", 100000, 1.0E-6, 0.001);
+  for (int ii=h_int_vs_f->GetNbinsX(); ii>0; ii--) {
+    double bcprev = h_int_vs_f->GetBinContent(ii+1);
+    double bc = h_int_vs_f->GetBinContent(ii);
+    h_vs_f->SetBinContent(ii, bc-bcprev);
+  }
 #endif
     
   TCanvas* c_vs_f = new TCanvas();
@@ -75,7 +81,8 @@ void ToyNoiseVsTime(){
   f->SetLineWidth(3);
   f->SetParameter(0, 1.0E-5);
   f->SetParameter(1, -2.0);
-  h_vs_f->Fit(f, "", "", 1.0E-6, 1.0E-4);
+  h_vs_f->Rebin(10);
+  h_vs_f->Fit(f, "", "", 1.0E-6, 3.0E-5);
   f->Draw("same");
   // h_vs_f->Draw("same");
   
