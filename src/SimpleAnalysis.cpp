@@ -7,21 +7,40 @@
 
 /* Analysis ROOT script for the output file created by SimpleRun.mac. */
 
-#include "globals_and_types.h"
+#include "TrCluster.hh"
+#include "physics.h"
 #include "progress.h"
+#include "Geometry.h"
+
 #include "TFile.h"
 #include "TString.h"
 #include "TTree.h"
-#include "TrCluster.hh"
+
 #include "montecarlo/readers/GGSTHadrIntReader.h"
 #include "montecarlo/readers/GGSTHitsReader.h"
 #include "montecarlo/readers/GGSTMCTruthReader.h"
 #include "montecarlo/readers/GGSTRootReader.h"
 #include "utils/GGSSmartLog.h"
+
 #include <iostream>
 #include <vector>
 #include <cmath>
+
 using namespace std;
+
+//global geometric parameters
+
+Geometry GEO;
+
+const int Nlayers = GEO.GetNlayers();
+const int Nstrips = GEO.GetNstrips();
+const int Nrows = GEO.GetNrows();
+const int Nsquares = GEO.GetNsquares();
+const int pitch = GEO.GetPitch();
+const int squareSide = GEO.GetSquareSide();
+const int Nladders = GEO.GetNladders();
+
+
 
 int findStrip(double position) {
   int stripHit = (position+(Nsquares*squareSide*0.5))/pitch;

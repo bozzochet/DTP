@@ -1,10 +1,11 @@
 
-#include "globals_and_types.h"
+#include "physics.h"
 #include "vector2.h"
 #include "progress.h"
 #include "PosSimulation.h"
 #include "TimeSimulation.h"
 #include "TrCluster.hh"
+#include "Geometry.h"
 
 #include "TCanvas.h"
 #include "TClonesArray.h"
@@ -23,6 +24,21 @@
 #include <vector>
 
 using namespace std;
+
+
+//global geometric parameters
+
+Geometry GEO;
+
+const int Nlayers = GEO.GetNlayers();
+const int Nstrips = GEO.GetNstrips();
+const int Nrows = GEO.GetNrows();
+const int Nsquares = GEO.GetNsquares();
+const int pitch = GEO.GetPitch();
+const int squareSide = GEO.GetSquareSide();
+const int Nladders = GEO.GetNladders();
+
+
 
 int main(int argc, char **argv) {
 
@@ -83,7 +99,7 @@ int main(int argc, char **argv) {
 
 	*/
 
-  PosSimulation *pos_sim = new PosSimulation(3, tr);
+  PosSimulation *pos_sim = new PosSimulation(&GEO, 3, tr);
   TimeSimulation *time_sim = new TimeSimulation();
 
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
