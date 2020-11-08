@@ -244,8 +244,8 @@ void ToySegmentation() {
     if (nentries==1) printf("*****************\n");
 
     if (nentries==1) printf("**** collected: *****\n");
-    //    std::vector< std::pair<double, bool> > ene_collected = ChargeCoupling(ene_dep);
-    std::vector< std::pair<double, bool> > ene_collected = ChargeCoupling(ene_dep, false);
+    std::vector< std::pair<double, bool> > ene_collected = ChargeCoupling(ene_dep);
+    //    std::vector< std::pair<double, bool> > ene_collected = ChargeCoupling(ene_dep, false);
     for (int ii=0; ii<(int)(ene_collected.size()); ii++) {
       if (nentries==1) printf("%d) %f (%d) \n", ii, ene_collected[ii].first, ene_collected[ii].second);
     }
