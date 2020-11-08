@@ -1,3 +1,7 @@
+
+#ifndef TR_CLUSTER_INCLUDE
+#define TR_CLUSTER_INCLUDE
+
 #include <iostream>
 #include "TObject.h"
 
@@ -36,3 +40,5 @@ ClassDef(TrCluster, 2)
 	std::cout << "cluster = (" << clust[0] << " , " << clust[1] << std::endl;
 	}
 };
+
+#endif

@@ -1,8 +1,10 @@
 
+
+#include "DEBUG.h"
+
 #include "globals_and_types.h"
 #include "vector2.h"
 #include "progress.h"
-#include "PosSimulation.h"
 #include "TimeSimulation.h"
 #include "TrCluster.hh"
 
@@ -24,7 +26,93 @@
 
 using namespace std;
 
+void stripReset(vector2<double> &array) {
+	for (int ii = 0; ii < array.size(); ii++)
+		for (int jj = 0; jj < array[ii].size(); jj++)
+			array[ii][jj] = 0;
+}
+
+void addNoise(vector2<double> &array, TRandom3* tr) {
+
+	for (int ii = 0; ii < array.size(); ii++) {
+		for (int jj = 0; jj < array[ii].size(); jj++) {
+			double fluct = tr->Gaus(0, 9e-6);
+
+			array[ii][jj] += fluct;
+			}
+		}
+}
+
+void hitReset(vector2<double> &array, int dim) {
+		for(int i=0; i<array.size();i++) {
+			array[i].clear();
+			array[i].shrink_to_fit();
+		}
+}
+
+void shareEnergy(vector2<double> &array, int jump) {
+	vector<double> fill;
+	for (int ix = 0; ix < array.size(); ix++) {
+		for (int jx = 0; jx < array[0].size(); jx+=jump) {
+			fill.clear();
+			fill.shrink_to_fit();
+			int i0 = ix;
+			int j0 = jx;
+
+			//Saving the energy from non-active strips
+
+			for(int jp = 1; jp<jump; jp++) {
+
+				if(j0!=array[0].size()-1) {
+					j0++;
+				}
+
+				else {
+					i0++;
+					j0 = 0;
+				}
+
+				if(i0==array.size())
+					break;
+
+				if(array[i0][j0]!=0) {
+					fill.push_back(array[i0][j0]);
+					array[i0][j0] = 0;
+					}
+			}
+
+			//Moving to right-side strip
+
+			if(j0!=array.size()-1) {
+				j0++;
+			}
+			else if( (i0+1) % Nsquares != 0) {
+						i0++;
+						j0 = 0;
+					}
+			else {
+			/* no active strips between (ix,jx) and layer
+			* row end: distribute the entire energy to
+			* (ix,jx) strip
+			*/
+			i0 = ix;
+			j0 = jx;
+			}
+
+        	//Distributing the energy to left and right-side strips
+
+			for(int s = 0; s < fill.size(); s++) {
+				array[ix][jx] += fill[s]/(2*(s+1));
+				array[i0][j0] += fill[s]/(2*(fill.size()-s));
+			}
+
+		}
+	}
+}
+
 int main(int argc, char **argv) {
+
+  debug::start_debug();
 
 	const int nLayer = 26;
 	auto inFile = TFile::Open(argv[1]);
@@ -62,6 +150,9 @@ int main(int argc, char **argv) {
 
 	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
 
+  TGraph *current_example = new TGraph();
+  TGraph *charge_example = new TGraph();
+
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
 	vector2<TrCluster> v;
@@ -83,13 +174,19 @@ int main(int argc, char **argv) {
 
 	*/
 
-  PosSimulation *pos_sim = new PosSimulation(3, tr);
+  const int jump = 3;
+	vector2<double> eDepSegm(Nladders, vector<double>(Nstrips));
+	vector2<double> hitPos(Nlayers);
+
   TimeSimulation *time_sim = new TimeSimulation();
 
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
     <<" events:\n";
 
   for (int i = 0; i < events->GetEntries(); i++) {
+
+    if(i!=0) break;
+    debug::out <<"\n event: " <<i <<std::endl;
 
     //print and update progress bar
     progress(i, events->GetEntries());
@@ -111,38 +208,200 @@ int main(int argc, char **argv) {
 		}
     */
 
-		pos_sim->Reset();
+		// eDepSegm array initialisation
+		stripReset(eDepSegm);
+		hitReset(hitPos,Nlayers);
 
 		for (int j = 0; j < a->GetEntries(); j++) {
 
+      debug::out <<"\nentry: " <<j <<std::endl;
+
 			//cout<<endl<<"Entry #"<<i+j<<endl;
 			TrCluster *cl = (TrCluster *)a->At(j);
-			v[cl->layer].push_back(*cl);
+
+      debug::out <<std::endl;
+      debug::print_cl(cl);
+
+      v[cl->layer].push_back(*cl);
 			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
 			if(cl->eDep > 9e-6) hEdep->Fill(cl->eDep); //total
 
-      pos_sim->SetHitPos(cl->layer, cl->pos[cl->segm]);
-      pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[0]);
+			//Filling the hits array
+
+			hitPos[cl->layer].push_back(cl->pos[cl->segm]);
+
+      debug::out <<cl->time <<std::endl;
+
+      //get signal example
+      if(j==0 && i==0)
+      {
+        //eDep is in GeV; TimeSimulation works with eV
+        time_sim->GetChargeSignal
+          (charge_example, cl->eDep*1e-9);
+
+        //time is in ns; TimeSimulation works with s
+        time_sim->GetSignal
+          (current_example, charge_example, cl->time*1e-9);
+      }
+
+			//Filling the strips with the current energy
+			eDepSegm[cl->ladder][cl->strip] += cl->clust[0];
 
 			if(cl->strip == Nstrips-1 && (cl->ladder+1) % Nsquares == 0) //hit on the last strip of the last ladder of the layer row
 
 				continue; //cl->clust[1] energy is lost
 
 			else if(cl->strip==Nstrips-1)
-        pos_sim->DepositEnergy(cl->ladder+1, 0, cl->clust[1]);
-			else
-				pos_sim->DepositEnergy(cl->ladder, cl->strip+1, cl->clust[1]);
+						eDepSegm[cl->ladder+1][0] += cl->clust[1];
+					else
+						eDepSegm[cl->ladder][cl->strip+1] += cl->clust[1];
 		}
 
 		// Sharing of the energy from non-active strips
 
-    pos_sim->ShareEnergy();
-    pos_sim->AddNoise();
-    pos_sim->Segm(segmp);
+		if(jump!=1)
+      shareEnergy(eDepSegm,jump);
+
+		addNoise(eDepSegm,tr);
+
+		for (int ix = 0; ix < Nladders; ix++) {
+			for (int jx = 0; jx < Nstrips; jx+=jump) {
+
+
+			//Find the boundaries of the clusters
+
+			if(eDepSegm[ix][jx] >= 27e-6) {
+				//cout<<"Analysing cluster\n";
+				vector_pair<double> strip;
+
+				int i1, j1;
+				bool firstPoint = true;
+				for(int ii = ix; ii>=0; ii--) {
+					for(int jj = Nstrips-1; jj>=jump; jj-= jump) {
+						if(firstPoint) {
+							jj = jx;
+							firstPoint = false;
+						}
+						i1 = ii;
+						j1 = jj;
+
+						/* evaluate if the strip is the first of the first ladder
+						* on the layer row
+						*/
+						bool first_ladder = ii % Nsquares == 0 && jj == 0;
+
+						if(eDepSegm[ii][jj] < 9e-6 || first_ladder)
+							goto nextPart1;
+					}
+				}
+
+				nextPart1:
+
+				firstPoint = true;
+				int i2, j2;
+				for(int ii = ix; ii<Nladders; ii++) {
+					for(int jj = 0; jj<Nstrips; jj+= jump) {
+						if(firstPoint) {
+							jj = jx;
+							firstPoint = false;
+						}
+						i2 = ii;
+						j2 = jj;
+
+						/* evaluate if the strip is the first of the first ladder
+						* on the layer row
+						*/
+						bool first_ladder = ii % Nsquares == 0 && jj == 0;
+
+						if(eDepSegm[ii][jj] < 9e-6 || first_ladder)
+							goto nextPart2;
+					}
+				}
+
+				nextPart2:
+
+				//Filling vector with current cluster
+
+				while((i1*Nstrips)+j1 <= (i2*Nstrips)+j2) {
+
+          if(j1>Nstrips-1 && i1 == Nladders-1)
+            break;
+          else if(j1>Nstrips-1) {
+            i1++;
+            j1 = 0;
+          }
+
+					double thisPos = ((i1%Nsquares)*squareSide) + (j1*pitch) - (Nsquares*squareSide*0.5);
+					strip.push_back(make_pair(thisPos,eDepSegm[i1][j1]));
+
+					j1+=jump;
+				}
+
+				for(int k = 0; k < strip.size(); k++) {
+					if(strip[k].second >= 27e-6) {
+
+					//Finding the boundaries of the peak
+
+					int k1 = k-1;
+					int k2 = k+1;
+
+					while(k1>0 && strip[k1].second >= 27e-6)
+						k1--;
+					while(k2<(strip.size()-1) && strip[k2].second >= 27e-6)
+						k2++;
+
+					//Finding the peak
+
+					int kMax = k1;
+					for(int kHold = k1; kHold <= k2; kHold++)
+						if(strip[kHold].second>strip[kMax].second)
+							kMax = kHold;
+
+
+					//cout<<"Analysing peak of "<< strip[kMax].second <<"keV\n";
+
+					//Finding neighbour strip
+
+					double kNext;
+
+          if(kMax == 0)
+            kNext = 1;
+          else if(kMax == strip.size()-1)
+            kNext = strip.size()-2;
+					else if(strip[kMax+1].second > strip[kMax-1].second)
+						kNext = kMax+1;
+					else
+						kNext = kMax-1;
+
+
+					//Finding simulated position
+
+					double simPos = ((strip[kMax].first*strip[kMax].second) + (strip[kNext].first*strip[kNext].second)) / (strip[kMax].second + strip[kNext].second);
+					int cLayer = ix/(Nsquares*2);
+
+					//Comparing the simulated hit positions with the real ones on the same layer
+
+					for(int m = 0 ; m < hitPos[cLayer].size(); m++)
+						segmp->Fill(simPos-hitPos[cLayer][m]);
+
+					//cout<<"Simulated position: "<<simPos<<endl;
+
+
+
+					//Advancing within the current cluster
+					k = k2;
+						}
+					}
+
+		//Advancing and looking for other clusters
+		ix = i2;
+		jx = j2;
+				}
+			}
+	}
 }
 
-  //simulations ended
-  delete pos_sim;
+  //time simulation ended
   delete time_sim;
 
   cout <<endl <<endl;
@@ -225,5 +484,10 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(segmp);
-	outFile->Close();
+  outFile->WriteTObject(current_example);
+  outFile->WriteTObject(charge_example);
+  outFile->Close();
+
+  debug::end_debug();
+
 	}

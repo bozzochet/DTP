@@ -65,10 +65,33 @@ if (${ROOT_VERSION} VERSION_GREATER "6.0")
       DESTINATION "${INSTALL_LIB_DIR}")
 endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 
+######################### EXTRA LIBS #########################
+
+set(TIME_SIMULATION_SRC TimeSimulation.cpp)
+add_library(TimeSimulation SHARED ${TIME_SIMULATION_SRC})
+set_target_properties(TimeSimulation PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
+)
+install(TARGETS TimeSimulation DESTINATION "${INSTALL_LIB_DIR}")
+
+#################
+
+set(POS_SIMULATION_SRC PosSimulation.cpp)
+add_library(PosSimulation SHARED ${POS_SIMULATION_SRC})
+set_target_properties(PosSimulation PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
+)
+install(TARGETS PosSimulation DESTINATION "${INSTALL_LIB_DIR}")
+
+#################
+
+set(EXTRA_LIBRARIES TimeSimulation PosSimulation)
+
 #################
 
 set(SimpleAnalysis_SRC
-	SimpleAnalysis1.cpp
+	SimpleAnalysis.cpp
+  progress.cpp
 	G__TrCluster.cxx
 )
 
@@ -76,6 +99,7 @@ add_executable(SimpleAnalysis ${SimpleAnalysis_SRC})
 target_link_libraries(SimpleAnalysis
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}
+  ${EXTRA_LIBRARIES}
 )
 
 set_target_properties(SimpleAnalysis PROPERTIES
@@ -88,6 +112,7 @@ install(TARGETS SimpleAnalysis DESTINATION "${INSTALL_BIN_DIR}")
 
 set(DataAnalysis_SRC
 	DataAnalysis.cpp
+  progress.cpp
 	G__TrCluster.cxx
 )
 
@@ -95,6 +120,7 @@ add_executable(DataAnalysis ${DataAnalysis_SRC})
 target_link_libraries(DataAnalysis
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}
+  ${EXTRA_LIBRARIES}
 )
 
 set_target_properties(DataAnalysis PROPERTIES
@@ -103,6 +129,26 @@ set_target_properties(DataAnalysis PROPERTIES
 
 install(TARGETS DataAnalysis DESTINATION "${INSTALL_BIN_DIR}")
 
+#################
+
+set(DataAnalysis_debug_SRC
+	DataAnalysis_debug.cpp
+  progress.cpp
+	G__TrCluster.cxx
+)
+
+add_executable(DataAnalysis_debug ${DataAnalysis_debug_SRC})
+target_link_libraries(DataAnalysis_debug
+  ${ROOT_LIBRARIES}
+  ${GGS_ANALYSIS_LIBRARIES}
+  ${EXTRA_LIBRARIES}
+)
+
+set_target_properties(DataAnalysis_debug PROPERTIES
+				     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
+				     )
+
+install(TARGETS DataAnalysis_debug DESTINATION "${INSTALL_BIN_DIR}")
 
 #################
 
@@ -122,5 +168,20 @@ set_target_properties(alternative_simple_analysis PROPERTIES
 				     )
 
 install(TARGETS alternative_simple_analysis DESTINATION "${INSTALL_BIN_DIR}")
+
+#################
+
+set(weightfield2_signal_SRC weightfield2_signal.cpp)
+
+add_executable(weightfield2_signal ${weightfield2_signal_SRC})
+target_link_libraries(weightfield2_signal
+  ${ROOT_LIBRARIES}
+)
+
+set_target_properties(weightfield2_signal PROPERTIES
+				     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
+				     )
+
+install(TARGETS weightfield2_signal DESTINATION "${INSTALL_BIN_DIR}")
 
 #################

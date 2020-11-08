@@ -7,7 +7,8 @@
 
 /* Analysis ROOT script for the output file created by SimpleRun.mac. */
 
-// GGS headers
+#include "globals_and_types.h"
+#include "progress.h"
 #include "TFile.h"
 #include "TString.h"
 #include "TTree.h"
@@ -22,19 +23,19 @@
 #include <cmath>
 using namespace std;
 
-int findStrip(double position, double props[]) {
-  int stripHit = (position+(props[1]*props[3]*0.5))/props[4];
-  return stripHit % (int(props[2]));
+int findStrip(double position) {
+  int stripHit = (position+(Nsquares*squareSide*0.5))/pitch;
+  return stripHit % (int(Nstrips));
 }
 
-int findLadder(int ID, int layer, bool condition, double props[]) {
+int findLadder(int ID, int layer, bool condition) {
   if(!condition) {
-    int row = (ID - (pow(props[1],2)*layer))/props[1];
-    bool leftOrRight = ID % (int(props[1])) > (props[1]*0.5);
-    return row + (props[1]*leftOrRight) + (props[1]*2*layer);
+    int row = (ID - (pow(Nsquares,2)*layer))/Nsquares;
+    bool leftOrRight = ID % (int(Nsquares)) > (Nsquares*0.5);
+    return row + (Nsquares*leftOrRight) + (Nsquares*2*layer);
     }
   else
-    return (ID % ((int(props[1]))*2)) + (layer*props[1]*2);
+    return (ID % ((int(Nsquares))*2)) + (layer*Nsquares*2);
 }
 
 int main(int argc, char **argv) {
@@ -81,21 +82,21 @@ int main(int argc, char **argv) {
 	/*const GGSTGeoParams *geoParams = reader.GetGeoParams();
 
 	int Nsquares = geoParams->GetRealGeoParam("Nsquares"); //squares per side
-	int Nlad = Nsquares*5; //number of ladders
+	int Nladders = Nsquares*5; //number of ladders
 	int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
 	double squareSide = geoParams->GetRealGeoParam("squareSide");*/
-
-	const int Nsquares = 8; //squares per side
-	const int Nlad = Nsquares*2*10; //number of ladders
-	const int Nstrips = 640; //strips per ladder
-	const double squareSide = 10;
-	const double pitch = squareSide/(double(Nstrips));
-  double detectorProps[5] = {Nlad, Nsquares, Nstrips, squareSide, pitch};
 
   TClonesArray a("TrCluster", 200);
   tree->Branch("Events", &a);
 
   for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
+
+    //print and update progress bar;
+    progress(iEv, reader.GetEntries());
+
+    /* IMPORTANT: cout and printf MUST print strings beginning and
+     * ending with a new line (i.e. "\n" or endl) to not overwrite
+     * the bar */
 
     reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
     GGSTPartHit *phit;
@@ -105,12 +106,12 @@ int main(int argc, char **argv) {
 
     GGSTHadrIntInfo *intInfo = hadrReader->GetInelastic();
     if (intInfo)
-      cout << "  Inelastic interaction happened at z = " << intInfo->GetInteractionPoint()[2] << endl;
+      cout << "\n  Inelastic interaction happened at z = " << intInfo->GetInteractionPoint()[2] << endl;
     if (hadrReader->GetNQuasiElastic() > 0) {
       for (int iqe = 0; iqe < hadrReader->GetNQuasiElastic(); iqe++) {
         GGSTHadrIntInfo *qintInfo = hadrReader->GetQuasiElastic(iqe);
         if (qintInfo)
-          cout << "  QuasiElastic interaction happened at z = " << qintInfo->GetInteractionPoint()[2] << endl;
+          cout << "\n  QuasiElastic interaction happened at z = " << qintInfo->GetInteractionPoint()[2] << endl;
       }
     }
     // Hits loop
@@ -120,15 +121,15 @@ int main(int argc, char **argv) {
 		inthit = hReader->GetHit("siSensor", iHit);
 		int nPHit = inthit->GetNPartHits();
 		int llayer = inthit->GetVolumeID() / (Nsquares * Nsquares);
-		cout<<"layer : "<<llayer<<endl;
-		cout<<"square : "<<inthit->GetVolumeID()<<endl;
+		//cout<<"layer : "<<llayer<<endl;
+		//cout<<"square : "<<inthit->GetVolumeID()<<endl;
 
 
 
 		for (int i = 0; i < nPHit; i++) {
 			TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
 			phit = inthit->GetPartHit(i);
-      cout<<"Entry #"<<iHit+i+1<<endl;
+      //cout<<"Entry #"<<iHit+i+1<<endl;
 
 			c->segm = llayer % 2 == 0;
 			c->pos[0] = 0.5 * (phit->entrancePoint[0] + phit->exitPoint[0]); // x coordinate
@@ -143,18 +144,18 @@ int main(int argc, char **argv) {
 			c->ID = inthit->GetVolumeID();
 
 			//Find the nearest strip to the left
-			c->strip = findStrip(c->pos[c->segm], detectorProps);
+			c->strip = findStrip(c->pos[c->segm]);
 
 
 			// Find the ladder it belongs
-      c->ladder = findLadder(c->ID, c->layer, c->segm, detectorProps);
+      c->ladder = findLadder(c->ID, c->layer, c->segm);
 
       //Deposit energy and create cluster
       double thisPos = ((c->ladder%Nsquares)*squareSide) + (c->strip*pitch) - (Nsquares*squareSide*0.5);
       double fraction = (c->pos[c->segm]-thisPos)/pitch;
 
-			c->clust[0] = c->eDep * (fraction);
-			c->clust[1] = c->eDep * (1-fraction);
+			c->clust[0] = c->eDep * (1-fraction);
+			c->clust[1] = c->eDep * (fraction);
 
       }
     }
@@ -162,6 +163,8 @@ int main(int argc, char **argv) {
     tree->Fill();
 
   }
+
+  cout <<endl <<endl;
 
   // Save histograms
   outFile->cd();
