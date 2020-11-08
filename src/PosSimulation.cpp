@@ -81,7 +81,9 @@ void PosSimulation::GetCluster(int &i1, int &j1, int &i2, int &j2)
 {
   bool firstPoint = true;
 
-  for(int ii = i1; ii>=0; ii--)
+  int row = i1 / Nsquares; //get number of row which ladder belongs to
+
+  for(int ii = i1; ii / Nsquares == row && ii >= 0; ii--)
     for(int jj = Nstrips-1; jj>=jump; jj-= jump) {
 
       if(firstPoint) {
@@ -89,21 +91,16 @@ void PosSimulation::GetCluster(int &i1, int &j1, int &i2, int &j2)
         firstPoint = false;
       }
 
+      if((*eDepSegm)[ii][jj] < 9e-6)
+        break;
+
       i1 = ii;
       j1 = jj;
-
-      /* evaluate if the strip is the first of the first ladder
-       * on the layer row
-       */
-      bool first_ladder = ii % Nsquares == 0 && jj == 0;
-
-      if((*eDepSegm)[ii][jj] < 9e-6 || first_ladder)
-        break;
     }
 
   firstPoint = true;
 
-  for(int ii = i2; ii<Nladders; ii++)
+  for(int ii = i2; ii / Nsquares == row && ii >= 0; ii++)
     for(int jj = 0; jj<Nstrips; jj+= jump) {
 
       if(firstPoint) {
@@ -111,16 +108,11 @@ void PosSimulation::GetCluster(int &i1, int &j1, int &i2, int &j2)
         firstPoint = false;
       }
 
+      if((*eDepSegm)[ii][jj] < 9e-6)
+        break;
+
       i2 = ii;
       j2 = jj;
-
-      /* evaluate if the strip is the first of the first ladder
-       * on the layer row
-       */
-      bool first_ladder = ii % Nsquares == 0 && jj == 0;
-
-      if((*eDepSegm)[ii][jj] < 9e-6 || first_ladder)
-        break;
     }
 }
 
