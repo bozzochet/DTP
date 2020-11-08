@@ -1,0 +1,7 @@
+# detector parameters useful for digitization and analysis
+
+/Detector/Nlayers     10
+/Detector/Nsquares     8       #squares per side on layer
+/Detector/Nrows        2       #rows of ladders on a layer
+/Detector/Nstrips    640       #strips per ladder
+/Detector/pitch        0.015   #strips pitch in cm

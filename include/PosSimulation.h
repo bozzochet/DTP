@@ -3,8 +3,9 @@
 #define POS_SIMULATION
 
 
-#include "globals_and_types.h"
+#include "physics.h"
 #include "vector2.h"
+#include "Geometry.h"
 
 #include "TRandom3.h"
 #include "TH1F.h"
@@ -16,7 +17,7 @@ using namespace std;
 
 class PosSimulation
 {
-
+  Geometry *geo_ = NULL;
   TRandom3 *random_ = NULL;
   vector2<double> *eDepSegm = NULL;
 	vector2<double> *hitPos = NULL;
@@ -26,8 +27,12 @@ class PosSimulation
 
   inline void SetVectors()
   {
-    eDepSegm = new vector2<double> (Nladders, vector<double>(Nstrips));
-  	hitPos = new vector2<double> (Nlayers);
+    eDepSegm = new vector2<double>
+      (
+        geo_->GetNladders(), vector<double>(geo_->GetNstrips())
+      );
+
+  	hitPos = new vector2<double> (geo_->GetNlayers());
   }
 
   void GetCluster(int&, int&, int&, int&);
@@ -39,8 +44,8 @@ class PosSimulation
 
 public:
 
-  PosSimulation(int j, TRandom3 *r)
-  { SetVectors(); jump = j; random_ = r; }
+  PosSimulation(Geometry *geo, int j, TRandom3 *r)
+  { geo_ = geo; SetVectors(); jump = j; random_ = r; }
 
   ~PosSimulation()
   { delete eDepSegm; delete hitPos; }

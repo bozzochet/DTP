@@ -16,7 +16,7 @@
 #define TIME_SIMULATION_INCLUDE
 
 
-#include "globals_and_types.h"
+#include "physics.h"
 #include "absStrip.h"
 #include "TrCluster.hh"
 #include "vector2.h"
