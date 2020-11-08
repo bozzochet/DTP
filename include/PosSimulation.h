@@ -30,6 +30,12 @@ class PosSimulation
   	hitPos = new vector2<double> (Nlayers);
   }
 
+  void GetCluster(int&, int&, int&, int&);
+
+  void FillCluster(vector_pair<double>&, int, int, int, int);
+
+  void FillHist(TH1F*, const vector_pair<double>&, const int);
+
 
 public:
 
