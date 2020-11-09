@@ -2,10 +2,11 @@
 #include "TimeSimulation.h"
 
 
-TimeSimulation::TimeSimulation()
+TimeSimulation::TimeSimulation(const length_t &thickness)
 {
-  up_ = new TF1("up", "[0]*x", T_START_, T_END_);
+  noise_ = new Noise(thickness);
 
+  up_ = new TF1("up", "[0]*x", T_START_, T_END_);
   up_->SetParName(0, "Slew rate");
   up_->SetParameter("Slew rate", SLEW_RATE_);
 
@@ -15,6 +16,7 @@ TimeSimulation::TimeSimulation()
 
 TimeSimulation::~TimeSimulation()
 {
+  delete noise_;
   delete up_;
   delete random_;
 }
@@ -28,7 +30,7 @@ void TimeSimulation::AddChargeSignal(TGraph *signal, const TF1 *ideal)
   signal->Sort();
 }
 
-charge_t TimeSimulation::AddChargeNoise(TGraph *signal, const charge_t &Q)
+charge_t TimeSimulation::AddChargeNoise(TGraph *signal)
 {
   TH1F *uniform = new TH1F
     ("h_uniform", "uniform", signal->GetN()-1, 0, 1e+6);
@@ -48,7 +50,7 @@ charge_t TimeSimulation::AddChargeNoise(TGraph *signal, const charge_t &Q)
 
     integral += uniform->GetBinContent(i);
 
-    charge_t dq = Q * CHARGE_NOISE_ *
+    charge_t dq = noise_->GetChargeNoise() *
       integral / uniform->GetSumOfWeights();
 
     //make dq a multiple of fondamental charge
@@ -59,7 +61,7 @@ charge_t TimeSimulation::AddChargeNoise(TGraph *signal, const charge_t &Q)
 
   signal->Sort();
 
-  return Q * CHARGE_NOISE_ ;
+  return noise_->GetChargeNoise();
 }
 
 
@@ -87,9 +89,10 @@ charge_t TimeSimulation::GetChargeSignal
   charge->SetParameter("Q", Q);
 
   AddChargeSignal(signal, charge);
+
   delete charge;
 
-  if(noise) Q += AddChargeNoise(signal, Q);
+  if(noise) Q += AddChargeNoise(signal);
 
   return Q;
 }

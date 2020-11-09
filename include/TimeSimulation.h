@@ -39,6 +39,24 @@
 
 class TimeSimulation
 {
+
+  //make CHARGE_NOISE_ not editable after initialization
+  class Noise
+  {
+    charge_t CHARGE_NOISE_ = 0;
+
+  public:
+
+    Noise(const length_t &thickness)
+    // Q_noise ~ 8 um^(-1) * thickness * e
+    { CHARGE_NOISE_ = thickness * (8 * 1e+6) * FOND_CHARGE; }
+
+    inline charge_t GetChargeNoise()
+    { return CHARGE_NOISE_; }
+
+  };
+
+
 // const variables
 
   //slew rate of line_
@@ -50,9 +68,6 @@ class TimeSimulation
   //charge function is stopped when reaching this fraction of peak
   const double STOP_CHARGE_FRACTION_ = 0.999;
 
-  //charge noise fraction
-  const double CHARGE_NOISE_ = 0.1;
-
   //signal parameters
   const mytime_t T_START_ = 0;
   const mytime_t T_END_ = 5e-9;
@@ -61,6 +76,8 @@ class TimeSimulation
 
 
 // variables
+
+  Noise *noise_ = NULL;
 
   TF1 *up_ = NULL; //slope of current signal to the peak
 
@@ -78,19 +95,23 @@ class TimeSimulation
   void AddChargeSignal(TGraph *signal, const TF1 *ideal);
 
   //return total charge noise
-  charge_t AddChargeNoise(TGraph *signal, const charge_t&);
+  charge_t AddChargeNoise(TGraph *signal);
 
   inline charge_t GetChargeFromEnergy(const energy_t &E)
   { return E / ENERGY_COUPLE * FOND_CHARGE; }
 
+
 public:
 
-  TimeSimulation();
+  TimeSimulation(const double&);
   virtual ~TimeSimulation();
 
   //add noise to signal passed
-  inline charge_t GetChargeNoise(TGraph *signal, const energy_t &E)
-  { return AddChargeNoise(signal, GetChargeFromEnergy(E)); }
+  inline charge_t GetChargeNoise(TGraph *signal)
+  { return AddChargeNoise(signal); }
+
+  inline charge_t GetTotalChargeNoise()
+  { return noise_->GetChargeNoise(); }
 
   /* generate charge signal in time with noise;
    * return charge created by hit */

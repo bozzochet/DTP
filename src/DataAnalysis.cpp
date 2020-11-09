@@ -109,7 +109,9 @@ int main(int argc, char **argv) {
 	*/
 
   PosSimulation *pos_sim = new PosSimulation(&GEO, 3, tr);
-  TimeSimulation *time_sim = new TimeSimulation();
+
+  //thickness is given in mm; TimeSimulation wants m
+  TimeSimulation *time_sim = new TimeSimulation(thickness*1e-3);
 
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
     <<" events:\n";
@@ -160,7 +162,7 @@ int main(int argc, char **argv) {
         current_ideal->SetNameTitle("current_ideal", "ideal current");
 
         charge_noise = new TGraph(*charge_ideal); //copy ideal
-        time_sim->GetChargeNoise(charge_noise, cl->eDep*1e+9);
+        time_sim->GetChargeNoise(charge_noise);
         charge_noise->SetNameTitle("charge_noise", "charge with noise");
 
         current_noise = new TGraph();
