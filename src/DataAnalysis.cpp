@@ -80,6 +80,7 @@ int main(int argc, char **argv) {
 
 	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
 
+/*
   TGraph *current_ideal;
   TGraph *current_noise;
 
@@ -88,6 +89,10 @@ int main(int argc, char **argv) {
 
   TMultiGraph *charge = new TMultiGraph("charge", "charge");
   TMultiGraph *current = new TMultiGraph("current", "current");
+*/
+
+  TH1F *htime = new TH1F
+    ("htime", "timing; ; entries", 1000, -0.05, 0.05);
 
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
@@ -113,7 +118,7 @@ int main(int argc, char **argv) {
   PosSimulation *pos_sim = new PosSimulation(&GEO, 3, tr);
 
   //thickness is given in mm; TimeSimulation wants m
-  TimeSimulation *time_sim = new TimeSimulation(thickness*1e-3, tr);
+  TimeSimulation *time_sim = new TimeSimulation(thickness*1e-3);
 
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
     <<" events:\n";
@@ -150,6 +155,7 @@ int main(int argc, char **argv) {
 			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
 			if(cl->eDep > 9e-6) hEdep->Fill(cl->eDep); //total
 
+/*
       if(i==0 && j==0)
       {
         charge_ideal = new TGraph();
@@ -186,6 +192,20 @@ int main(int argc, char **argv) {
         current->Add(current_noise);
         current->Add(current_ideal);
       }
+*/
+      TGraph *current = new TGraph();
+      TGraph *charge = new TGraph();
+
+      time_sim->GetChargeSignal(charge, cl->eDep*1e+9);
+      time_sim->GetCurrentSignal(current, charge, cl->time*1e-9);
+
+      mytime_t t_meas = time_sim->GetTime(current);
+      mytime_t t_true = cl->time*1e-9;
+
+      htime->Fill((t_meas - t_true) / t_true);
+
+      delete current;
+      delete charge;
 
       pos_sim->SetHitPos(cl->layer, cl->pos[cl->segm]);
       pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[0]);
@@ -291,11 +311,14 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(segmp);
+/*
   outFile->WriteTObject(current_ideal);
   outFile->WriteTObject(current_noise);
   outFile->WriteTObject(charge_ideal);
   outFile->WriteTObject(charge_noise);
   outFile->WriteTObject(current);
   outFile->WriteTObject(charge);
-	outFile->Close();
+*/
+  outFile->WriteTObject(htime);
+  outFile->Close();
 	}

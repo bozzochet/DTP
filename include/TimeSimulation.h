@@ -65,7 +65,7 @@ class TimeSimulation
 // const variables
 
   //slew rate of line_
-  const double SLEW_RATE_ = 1e+4;
+  const double SLEW_RATE_ = 1e+5;
 
   //tau of strip as a capacitor
   const mytime_t T_CAPACITOR_ = 1e-9;
@@ -108,10 +108,10 @@ class TimeSimulation
 
 public:
 
-  TimeSimulation(const double &thickness, random_gen_t *random)
+  TimeSimulation(const double &thickness)
   {
     noise_ = new Noise(thickness);
-    random_ = random;
+    random_ = new random_gen_t();
   };
 
   virtual ~TimeSimulation()
@@ -152,6 +152,11 @@ public:
    * same graph
    *
    */
+
+   /* get time when current becomes > threshold_fraction * peak
+    * IMPORTANT: current MUST be sorted */
+   mytime_t GetTime
+    (const signal_t *current, const double threshold_fraction = 0.1);
 };
 
 
