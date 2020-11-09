@@ -108,10 +108,10 @@ class TimeSimulation
 
 public:
 
-  TimeSimulation(const double &thickness)
+  TimeSimulation(const double &thickness, random_gen_t *random)
   {
     noise_ = new Noise(thickness);
-    random_ = new random_gen_t(9298);
+    random_ = random;
   };
 
   virtual ~TimeSimulation()

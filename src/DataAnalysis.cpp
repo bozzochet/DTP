@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
   PosSimulation *pos_sim = new PosSimulation(&GEO, 3, tr);
 
   //thickness is given in mm; TimeSimulation wants m
-  TimeSimulation *time_sim = new TimeSimulation(thickness*1e-3);
+  TimeSimulation *time_sim = new TimeSimulation(thickness*1e-3, tr);
 
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
     <<" events:\n";
