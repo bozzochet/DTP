@@ -4,16 +4,6 @@
 
 TimeSimulation::TimeSimulation()
 {
-  charge_ = new TF1(
-    "charge",
-    "[0] * (1 - TMath::Exp(-[1]*x) )",
-    T_START_, T_END_
-  );
-
-  charge_->SetParName(0, "Q");
-  charge_->SetParName(1, "k");
-  charge_->SetParameter("k", 1.0 / T_CAPACITOR_);
-
   up_ = new TF1("up", "[0]*x", T_START_, T_END_);
 
   up_->SetParName(0, "Slew rate");
@@ -26,50 +16,87 @@ TimeSimulation::TimeSimulation()
 TimeSimulation::~TimeSimulation()
 {
   delete up_;
-  delete charge_;
   delete random_;
 }
 
 
-charge_t TimeSimulation::GetChargeSignal
-  (TGraph *real_charge, const energy_t &energy, const bool noise)
+void TimeSimulation::AddChargeSignal(TGraph *signal, const TF1 *ideal)
 {
+  for(mytime_t t = 0; t < ideal->GetXmax(); t += T_SAMPLING_ )
+    signal->SetPoint(signal->GetN(), t, ideal->Eval(t));
 
-//set graph
+  signal->Sort();
+}
 
-    real_charge->SetNameTitle("charge", "charge collected");
-    real_charge->GetXaxis()->SetTitle("time from hit [s]");
-    real_charge->GetYaxis()->SetTitle("charge collected [C]");
+charge_t TimeSimulation::AddChargeNoise(TGraph *signal, const charge_t &Q)
+{
+  TH1F *uniform = new TH1F
+    ("h_uniform", "uniform", signal->GetN()-1, 0, 1e+6);
 
-//compute signal and deviations
+  for(int i = 0; i < 1e+4; ++i)
+    uniform->Fill(random_->Uniform(0, 1e+6));
 
-  charge_t Q = energy / ENERGY_COUPLE_ * FOND_CHARGE_;
-  charge_->SetParameter("Q", Q);
+  int integral = 0; //integral of uniform
 
-//signal
-  charge_t q = 0;
-
-  for( mytime_t t = T_SAMPLING_; t < T_END_; t += T_SAMPLING_ )
+  //charge collected is 0 at t=0 => no noise at t=0 => start from i=1
+  for(int i = 1; i < signal->GetN(); ++i)
   {
-    //ideal charge collected
-    charge_t dq = charge_->Eval(t) - charge_->Eval(t - T_SAMPLING_);
+    charge_t q;
+    mytime_t t;
 
-    charge_t q_noise = 0;
-    if(noise) q_noise = dq / 10.0 * random_->Uniform();
+    signal->GetPoint(i, t, q);
 
-    //charge collected at step t
-    q += dq + q_noise;
+    integral += uniform->GetBinContent(i);
 
-    real_charge->SetPoint(real_charge->GetN(), t, q);
+    charge_t dq = Q * CHARGE_NOISE_ *
+      integral / uniform->GetSumOfWeights();
+
+    //make dq a multiple of fondamental charge
+    //dq = TMath::Floor(dq / FOND_CHARGE) * FOND_CHARGE;
+    //NOT WORKING: Q < fond_charge (?)
+
+    signal->SetPoint(i, t, q + dq);
   }
 
-  real_charge->Sort();
+  signal->Sort();
+
+  return Q * CHARGE_NOISE_ ;
+}
+
+
+charge_t TimeSimulation::GetChargeSignal
+  (TGraph *signal, const energy_t &energy, const bool noise)
+{
+  signal->SetNameTitle("charge", "charge collected");
+  signal->GetXaxis()->SetTitle("time from hit [s]");
+  signal->GetYaxis()->SetTitle("charge collected [C]");
+
+  //cumulative function of ideal charge collected
+
+  charge_t Q = GetChargeFromEnergy(energy);
+
+  TF1 *charge = new TF1(
+    "charge",
+    "[0] * (1 - TMath::Exp(-[1]*x) )",
+    0, - T_CAPACITOR_ * TMath::Log(1-STOP_CHARGE_FRACTION_)
+  );
+
+  charge->SetParName(0, "Q");
+  charge->SetParName(1, "k");
+
+  charge->SetParameter("k", 1.0 / T_CAPACITOR_);
+  charge->SetParameter("Q", Q);
+
+  AddChargeSignal(signal, charge);
+  delete charge;
+
+  if(noise) Q += AddChargeNoise(signal, Q);
 
   return Q;
 }
 
 
-void TimeSimulation::AddSignal
+void TimeSimulation::AddCurrentSignal
   (TGraph *signal, const TGraph *charge, const mytime_t &hitTime)
 {
 
@@ -110,17 +137,12 @@ void TimeSimulation::AddSignal
 }
 
 
-void TimeSimulation::GetSignal
+void TimeSimulation::GetCurrentSignal
   (TGraph *signal, const TGraph *charge, const mytime_t &hitTime)
 {
-
-//set graph
-
   signal->SetNameTitle("current", "current signal");
   signal->GetXaxis()->SetTitle("run time [s]");
   signal->GetYaxis()->SetTitle("current [A]");
 
-//fill signal
-
-  AddSignal(signal, charge, hitTime);
+  AddCurrentSignal(signal, charge, hitTime);
 }

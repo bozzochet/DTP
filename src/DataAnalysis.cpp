@@ -17,6 +17,7 @@
 #include "TStyle.h"
 #include "TTree.h"
 #include "TTreeReader.h"
+#include "TMultiGraph.h"
 
 #include "utils/GGSSmartLog.h"
 
@@ -78,6 +79,13 @@ int main(int argc, char **argv) {
 
 	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
 
+  TGraph *current_ideal;
+  TGraph *current_noise;
+  TGraph *charge_ideal;
+  TGraph *charge_noise;
+  TMultiGraph *charge = new TMultiGraph("charge", "charge");
+  TMultiGraph *current = new TMultiGraph("current", "current");
+
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
 	vector2<TrCluster> v;
@@ -107,6 +115,9 @@ int main(int argc, char **argv) {
 
   for (int i = 0; i < events->GetEntries(); i++) {
 
+    if(i!=0)
+      break;
+
     //print and update progress bar
     progress(i, events->GetEntries());
 
@@ -131,11 +142,48 @@ int main(int argc, char **argv) {
 
 		for (int j = 0; j < a->GetEntries(); j++) {
 
-			//cout<<endl<<"Entry #"<<i+j<<endl;
+      //cout<<endl<<"Entry #"<<i+j<<endl;
 			TrCluster *cl = (TrCluster *)a->At(j);
 			v[cl->layer].push_back(*cl);
 			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
 			if(cl->eDep > 9e-6) hEdep->Fill(cl->eDep); //total
+
+      if(i==0 && j==0)
+      {
+        charge_ideal = new TGraph();
+        time_sim->GetChargeSignal(charge_ideal, cl->eDep*1e-9, false);
+        charge_ideal->SetNameTitle("charge_ideal", "ideal charge");
+
+        current_ideal = new TGraph();
+        time_sim->GetCurrentSignal(current_ideal, charge_ideal, cl->time*1e-9);
+        current_ideal->SetNameTitle("current_ideal", "ideal current");
+
+        charge_noise = new TGraph(*charge_ideal); //copy ideal
+        time_sim->GetChargeNoise(charge_noise, cl->eDep*1e-9);
+        charge_noise->SetNameTitle("charge_noise", "charge with noise");
+
+        current_noise = new TGraph();
+        time_sim->GetCurrentSignal(current_noise, charge_noise, cl->time*1e-9);
+        current_noise->SetNameTitle("current_noise", "current with noise");
+
+        charge_noise->SetLineColor(kBlue);
+        current_noise->SetLineColor(kBlue);
+
+        charge_ideal->SetLineColor(kRed);
+        current_ideal->SetLineColor(kRed);
+
+        charge_noise->SetLineWidth(2);
+        current_noise->SetLineWidth(2);
+
+        charge_ideal->SetLineWidth(2);
+        current_ideal->SetLineWidth(2);
+
+        charge->Add(charge_noise);
+        charge->Add(charge_ideal);
+
+        current->Add(current_noise);
+        current->Add(current_ideal);
+      }
 
       pos_sim->SetHitPos(cl->layer, cl->pos[cl->segm]);
       pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[0]);
@@ -241,5 +289,11 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(segmp);
+  outFile->WriteTObject(current_ideal);
+  outFile->WriteTObject(current_noise);
+  outFile->WriteTObject(charge_ideal);
+  outFile->WriteTObject(charge_noise);
+  outFile->WriteTObject(current);
+  outFile->WriteTObject(charge);
 	outFile->Close();
 	}

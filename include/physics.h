@@ -10,8 +10,8 @@ typedef double charge_t; //electric charge expressed in Coulomb
 typedef double energy_t; //eV
 typedef double current_t; //A
 
-const energy_t ENERGY_COUPLE_ = 3.6;
-const charge_t FOND_CHARGE_ = 1.6e-19;
+const energy_t ENERGY_COUPLE = 3.6;
+const charge_t FOND_CHARGE = 1.6e-19;
 
 
 #endif
