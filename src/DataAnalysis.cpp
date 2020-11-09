@@ -120,9 +120,6 @@ int main(int argc, char **argv) {
 
   for (int i = 0; i < events->GetEntries(); i++) {
 
-    if(i!=0 && argc > 1)
-      break;
-
     //print and update progress bar
     progress(i, events->GetEntries());
 
