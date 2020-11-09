@@ -6,11 +6,11 @@ TimeSimulation::TimeSimulation(const length_t &thickness)
 {
   noise_ = new Noise(thickness);
 
-  up_ = new TF1("up", "[0]*x", T_START_, T_END_);
+  up_ = new signal_fun_t("up", "[0]*x", T_START_, T_END_);
   up_->SetParName(0, "Slew rate");
   up_->SetParameter("Slew rate", SLEW_RATE_);
 
-  random_ = new TRandom3(9298);
+  random_ = new random_gen_t(9298);
 }
 
 
@@ -22,7 +22,7 @@ TimeSimulation::~TimeSimulation()
 }
 
 
-void TimeSimulation::AddChargeSignal(TGraph *signal, const TF1 *ideal)
+void TimeSimulation::AddChargeSignal(signal_t *signal, const signal_fun_t *ideal)
 {
   for(mytime_t t = 0; t < ideal->GetXmax(); t += T_SAMPLING_ )
     signal->SetPoint(signal->GetN(), t, ideal->Eval(t));
@@ -30,9 +30,9 @@ void TimeSimulation::AddChargeSignal(TGraph *signal, const TF1 *ideal)
   signal->Sort();
 }
 
-charge_t TimeSimulation::AddChargeNoise(TGraph *signal)
+charge_t TimeSimulation::AddChargeNoise(signal_t *signal)
 {
-  TH1F *uniform = new TH1F
+  hist_t *uniform = new hist_t
     ("h_uniform", "uniform", signal->GetN()-1, 0, 1e+6);
 
   for(int i = 0; i < 1e+4; ++i)
@@ -66,7 +66,7 @@ charge_t TimeSimulation::AddChargeNoise(TGraph *signal)
 
 
 charge_t TimeSimulation::GetChargeSignal
-  (TGraph *signal, const energy_t &energy, const bool noise)
+  (signal_t *signal, const energy_t &energy, const bool noise)
 {
   signal->SetNameTitle("charge", "charge collected");
   signal->GetXaxis()->SetTitle("time from hit [s]");
@@ -76,7 +76,7 @@ charge_t TimeSimulation::GetChargeSignal
 
   charge_t Q = GetChargeFromEnergy(energy);
 
-  TF1 *charge = new TF1(
+  signal_fun_t *charge = new signal_fun_t(
     "charge",
     "[0] * (1 - TMath::Exp(-[1]*x) )",
     0, - T_CAPACITOR_ * TMath::Log(1-STOP_CHARGE_FRACTION_)
@@ -99,7 +99,7 @@ charge_t TimeSimulation::GetChargeSignal
 
 
 void TimeSimulation::AddCurrentSignal
-  (TGraph *signal, const TGraph *charge, const mytime_t &hitTime)
+  (signal_t *signal, const signal_t *charge, const mytime_t &hitTime)
 {
 
 //fill with charge derivative
@@ -140,7 +140,7 @@ void TimeSimulation::AddCurrentSignal
 
 
 void TimeSimulation::GetCurrentSignal
-  (TGraph *signal, const TGraph *charge, const mytime_t &hitTime)
+  (signal_t *signal, const signal_t *charge, const mytime_t &hitTime)
 {
   signal->SetNameTitle("current", "current signal");
   signal->GetXaxis()->SetTitle("run time [s]");

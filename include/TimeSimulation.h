@@ -40,6 +40,11 @@
 class TimeSimulation
 {
 
+  typedef TGraph signal_t;
+  typedef TH1F hist_t;
+  typedef TF1 signal_fun_t;
+  typedef TRandom3 random_gen_t;
+
   //make CHARGE_NOISE_ not editable after initialization
   class Noise
   {
@@ -79,10 +84,10 @@ class TimeSimulation
 
   Noise *noise_ = NULL;
 
-  TF1 *up_ = NULL; //slope of current signal to the peak
+  signal_fun_t *up_ = NULL; //slope of current signal to the peak
 
   //random generator
-  TRandom3 *random_ = NULL;
+  random_gen_t *random_ = NULL;
 
 
 // methods
@@ -90,12 +95,12 @@ class TimeSimulation
   /* add to signal a single hit current generated using up_ and
    * charge signal obtained by GetChargeSignal */
   void AddCurrentSignal
-    (TGraph *signal, const TGraph *charge, const mytime_t &hitTime);
+    (signal_t *signal, const signal_t *charge, const mytime_t &hitTime);
 
-  void AddChargeSignal(TGraph *signal, const TF1 *ideal);
+  void AddChargeSignal(signal_t *signal, const signal_fun_t *ideal);
 
   //return total charge noise
-  charge_t AddChargeNoise(TGraph *signal);
+  charge_t AddChargeNoise(signal_t *signal);
 
   inline charge_t GetChargeFromEnergy(const energy_t &E)
   { return E / ENERGY_COUPLE * FOND_CHARGE; }
@@ -107,7 +112,7 @@ public:
   virtual ~TimeSimulation();
 
   //add noise to signal passed
-  inline charge_t GetChargeNoise(TGraph *signal)
+  inline charge_t GetChargeNoise(signal_t *signal)
   { return AddChargeNoise(signal); }
 
   inline charge_t GetTotalChargeNoise()
@@ -116,12 +121,12 @@ public:
   /* generate charge signal in time with noise;
    * return charge created by hit */
   charge_t GetChargeSignal
-    (TGraph *signal, const energy_t&, const bool noise = true);
+    (signal_t *signal, const energy_t&, const bool noise = true);
 
   /* get current signal on strip ( #ladder, #strip) based on charge
    * collected */
   void GetCurrentSignal
-    (TGraph *signal, const TGraph *charge, const mytime_t &hitTime);
+    (signal_t *signal, const signal_t *charge, const mytime_t &hitTime);
 
   /*
    * NEED IMPLEMENTATION: in case of multiple hits on the same strip
