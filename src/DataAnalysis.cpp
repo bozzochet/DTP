@@ -82,8 +82,10 @@ int main(int argc, char **argv) {
 
   TGraph *current_ideal;
   TGraph *current_noise;
+
   TGraph *charge_ideal;
   TGraph *charge_noise;
+
   TMultiGraph *charge = new TMultiGraph("charge", "charge");
   TMultiGraph *current = new TMultiGraph("current", "current");
 
@@ -118,7 +120,7 @@ int main(int argc, char **argv) {
 
   for (int i = 0; i < events->GetEntries(); i++) {
 
-    if(i!=0)
+    if(i!=0 && argc > 1)
       break;
 
     //print and update progress bar
@@ -162,7 +164,7 @@ int main(int argc, char **argv) {
         current_ideal->SetNameTitle("current_ideal", "ideal current");
 
         charge_noise = new TGraph(*charge_ideal); //copy ideal
-        time_sim->GetChargeNoise(charge_noise);
+        time_sim->AddChargeNoise(charge_noise);
         charge_noise->SetNameTitle("charge_noise", "charge with noise");
 
         current_noise = new TGraph();

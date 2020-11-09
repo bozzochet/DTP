@@ -74,17 +74,12 @@ class TimeSimulation
   const double STOP_CHARGE_FRACTION_ = 0.999;
 
   //signal parameters
-  const mytime_t T_START_ = 0;
-  const mytime_t T_END_ = 5e-9;
-  const int N_BINS_ = 1000;
-  const mytime_t T_SAMPLING_ = (T_END_ - T_START_) / (double) N_BINS_;
+  const mytime_t T_SAMPLING_ = 1e-11;
 
 
 // variables
 
   Noise *noise_ = NULL;
-
-  signal_fun_t *up_ = NULL; //slope of current signal to the peak
 
   //random generator
   random_gen_t *random_ = NULL;
@@ -93,43 +88,64 @@ class TimeSimulation
 // methods
 
   /* add to signal a single hit current generated using up_ and
-   * charge signal obtained by GetChargeSignal */
+   * charge signal obtained by GetChargeSignal; signal points are
+   * sorted after this method execution*/
   void AddCurrentSignal
-    (signal_t *signal, const signal_t *charge, const mytime_t &hitTime);
+  (
+    signal_t *signal, const signal_t *charge,
+    const mytime_t &hitTime
+  );
 
+  // signal points are sorted after this method execution
   void AddChargeSignal(signal_t *signal, const signal_fun_t *ideal);
-
-  //return total charge noise
-  charge_t AddChargeNoise(signal_t *signal);
 
   inline charge_t GetChargeFromEnergy(const energy_t &E)
   { return E / ENERGY_COUPLE * FOND_CHARGE; }
 
 
+  bool Trigger(double&, const signal_t*, const int&, const double&);
+
+
 public:
 
-  TimeSimulation(const double&);
-  virtual ~TimeSimulation();
+  TimeSimulation(const double &thickness)
+  {
+    noise_ = new Noise(thickness);
+    random_ = new random_gen_t(9298);
+  };
 
-  //add noise to signal passed
-  inline charge_t GetChargeNoise(signal_t *signal)
-  { return AddChargeNoise(signal); }
+  virtual ~TimeSimulation()
+  {
+    delete noise_;
+    delete random_;
+  }
+
+  /* add noise to signal passed and return total charge noise
+   * collected;
+   * IMPORTANT: signals passed MUST be sorted */
+  charge_t AddChargeNoise(signal_t *signal);
 
   inline charge_t GetTotalChargeNoise()
   { return noise_->GetChargeNoise(); }
 
   /* generate charge signal in time with noise;
-   * return charge created by hit */
+   * return charge created by hit; signal points are sorted after this
+   * method execution */
   charge_t GetChargeSignal
-    (signal_t *signal, const energy_t&, const bool noise = true);
+  (
+    signal_t *signal, const energy_t&,
+    const bool noise = true
+  );
 
   /* get current signal on strip ( #ladder, #strip) based on charge
-   * collected */
+   * collected; signal points are sorted after this method execution */
   void GetCurrentSignal
-    (signal_t *signal, const signal_t *charge, const mytime_t &hitTime);
+  (
+    signal_t *signal, const signal_t *charge, const mytime_t &hitTime
+  );
 
   /*
-   * NEED IMPLEMENTATION: in case of multiple hits on the same strip
+   * IMPLEMENTATION NEEDED: in case of multiple hits on the same strip
    * GetSignal is able to generate the multiple signals and append them
    * to the total signal returnes; at this moment the signals are NOT
    * summed (as has to be). Multiple currents are just drawn on the
