@@ -52,8 +52,7 @@ charge_t TimeSimulation::AddChargeNoise(TGraph *signal, const charge_t &Q)
       integral / uniform->GetSumOfWeights();
 
     //make dq a multiple of fondamental charge
-    //dq = TMath::Floor(dq / FOND_CHARGE) * FOND_CHARGE;
-    //NOT WORKING: Q < fond_charge (?)
+    dq = TMath::Floor(dq / FOND_CHARGE) * FOND_CHARGE;
 
     signal->SetPoint(i, t, q + dq);
   }

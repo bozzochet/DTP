@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
       if(i==0 && j==0)
       {
         charge_ideal = new TGraph();
-        time_sim->GetChargeSignal(charge_ideal, cl->eDep*1e-9, false);
+        time_sim->GetChargeSignal(charge_ideal, cl->eDep*1e+9, false);
         charge_ideal->SetNameTitle("charge_ideal", "ideal charge");
 
         current_ideal = new TGraph();
@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
         current_ideal->SetNameTitle("current_ideal", "ideal current");
 
         charge_noise = new TGraph(*charge_ideal); //copy ideal
-        time_sim->GetChargeNoise(charge_noise, cl->eDep*1e-9);
+        time_sim->GetChargeNoise(charge_noise, cl->eDep*1e+9);
         charge_noise->SetNameTitle("charge_noise", "charge with noise");
 
         current_noise = new TGraph();
