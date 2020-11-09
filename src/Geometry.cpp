@@ -16,7 +16,7 @@ Geometry::Geometry()
 
   int found = 0; //variables found
 
-  while(found < 5)
+  while(found < map_name_.size())
   {
     //search line with values and get values
 
@@ -32,10 +32,14 @@ Geometry::Geometry()
 
     //translate void* to right type
 
-    if( std::strcmp(name.c_str(), "pitch") == 0)
+    if
+    (
+      std::strcmp(name.c_str(), "pitch") == 0
+      || std::strcmp(name.c_str(), "thickness") == 0
+    )
     {
-      double *pitch = (double*) value;
-      *pitch = std::stod(str_value);
+      double *val_double = (double*) value;
+      *val_double = std::stod(str_value);
     }
     else
     {

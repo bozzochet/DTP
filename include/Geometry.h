@@ -16,11 +16,12 @@ class Geometry
 {
   const std::string filename_ = "macros/geo.mac";
 
-  int Nlayers_ = 0;
-  int Nsquares_ = 0;
-  int Nrows_ = 0;
-  int Nstrips_ = 0;
-  double pitch_ = 0;
+  int Nlayers_ = -1;
+  int Nsquares_ = -1;
+  int Nrows_ = -1;
+  int Nstrips_ = -1;
+  double pitch_ = -1;
+  double thickness_ = -1;
 
   //name and references to class variables
   const std::map <std::string, void*> map_name_ = {
@@ -28,7 +29,8 @@ class Geometry
     {"Nstrips", (void*) &Nstrips_},
     {"Nsquares", (void*) &Nsquares_},
     {"Nrows", (void*) &Nrows_},
-    {"pitch", (void*) &pitch_}
+    {"pitch", (void*) &pitch_},
+    {"thickness", (void*) &thickness_}
   };
 
 
@@ -61,6 +63,9 @@ public:
 
   inline double GetPitch()
   { return pitch_; }
+
+  inline double GetThickness()
+  { return thickness_; }
 
   inline double GetSquareSide()
   { return pitch_ * Nstrips_; }

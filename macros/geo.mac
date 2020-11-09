@@ -5,3 +5,4 @@
 /Detector/Nrows        2       #rows of ladders on a layer
 /Detector/Nstrips    640       #strips per ladder
 /Detector/pitch        0.015   #strips pitch in cm
+/Detector/thickness    0.3     #thickness of layers in mm
