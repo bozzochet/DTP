@@ -78,8 +78,10 @@ charge_t TimeSimulation::GetChargeSignal
 
 
 void TimeSimulation::AddCurrentSignal
-  (signal_t *signal, const signal_t *charge, const mytime_t &hitTime)
+  (mytime_t hitTime, signal_t *signal, const signal_t *charge)
 {
+  //align hitTime to samples
+  hitTime = TMath::Floor(hitTime / T_SAMPLING_) * T_SAMPLING_;
 
 //fill with charge derivative
 
@@ -124,13 +126,13 @@ void TimeSimulation::AddCurrentSignal
 
 
 void TimeSimulation::GetCurrentSignal
-  (signal_t *signal, const signal_t *charge, const mytime_t &hitTime)
+  (mytime_t hitTime, signal_t *signal, const signal_t *charge)
 {
   signal->SetNameTitle("current", "current signal");
   signal->GetXaxis()->SetTitle("run time [s]");
   signal->GetYaxis()->SetTitle("current [A]");
 
-  AddCurrentSignal(signal, charge, hitTime);
+  AddCurrentSignal(hitTime, signal, charge);
 }
 
 

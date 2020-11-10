@@ -97,10 +97,7 @@ class TimeSimulation
    * charge signal obtained by GetChargeSignal; signal points are
    * sorted after this method execution*/
   void AddCurrentSignal
-  (
-    signal_t *signal, const signal_t *charge,
-    const mytime_t &hitTime
-  );
+    (mytime_t hitTime, signal_t *signal, const signal_t *charge);
 
   // signal points are sorted after this method execution
   void AddChargeSignal(signal_t *signal, const signal_fun_t *ideal);
@@ -146,9 +143,7 @@ public:
   /* get current signal on strip ( #ladder, #strip) based on charge
    * collected; signal points are sorted after this method execution */
   void GetCurrentSignal
-  (
-    signal_t *signal, const signal_t *charge, const mytime_t &hitTime
-  );
+    (mytime_t hitTime, signal_t *signal, const signal_t *charge);
 
   /*
    * IMPLEMENTATION NEEDED: in case of multiple hits on the same strip
