@@ -77,8 +77,8 @@ int main(int argc, char **argv)
 
   TH1F *h_time = new TH1F
   (
-    "h_time", "measure deviations; relative deviation; entries",
-    10000, -0.5, 0
+    "h_time", "time measures; t_meas - t_true [s]; entries",
+    10000, -1e-9, 1e-9
   );
 
   TRandom3 *random = new TRandom3(9298);
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
     delete current;
 
     for(int j = 0; j < (int) true_time.size(); ++j)
-      h_time->Fill( (meas_time - true_time[j]) / true_time[j] );
+      h_time->Fill( meas_time - true_time[j] );
 
     analyzed_hits += true_time.size();
   }
