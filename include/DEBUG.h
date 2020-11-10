@@ -1,4 +1,7 @@
 
+#ifndef DEBUG_INCLUDE
+#define DEBUG_INCLUDE
+
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -67,3 +70,5 @@ namespace debug {
     out <<"}\n\n";
   }
 }
+
+#endif
