@@ -3,10 +3,8 @@
 #include "vector2.h"
 #include "progress.h"
 #include "PosSim.h"
-#include "TimeSim.h"
 #include "TrCluster.hh"
 #include "Geometry.h"
-#include "TimeSegm.h"
 
 #include "TCanvas.h"
 #include "TClonesArray.h"
@@ -118,12 +116,6 @@ int main(int argc, char **argv) {
 
   PosSim *pos_sim = new PosSim(&GEO, 2, tr);
 
-  TimeSegm *time_segm = new TimeSegm(&GEO, A, 1);
-
-  //thickness is given in mm; TimeSim wants m
-  TimeSim *time_sim =
-    new TimeSim(time_segm, tr, thickness*1e-3);
-
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
     <<" events:\n";
 
@@ -159,53 +151,6 @@ int main(int argc, char **argv) {
 			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
 			if(cl->eDep > 9e-6) hEdep->Fill(cl->eDep); //total
 
-/*
-      if(i==0 && j==0)
-      {
-        charge_ideal = new TGraph();
-        time_sim->GetChargeSignal(charge_ideal, cl->eDep*1e+9, false);
-        charge_ideal->SetNameTitle("charge_ideal", "ideal charge");
-
-        current_ideal = new TGraph();
-        time_sim->GetCurrentSignal(current_ideal, charge_ideal, cl->time*1e-9);
-        current_ideal->SetNameTitle("current_ideal", "ideal current");
-
-        charge_noise = new TGraph(*charge_ideal); //copy ideal
-        time_sim->AddChargeNoise(charge_noise);
-        charge_noise->SetNameTitle("charge_noise", "charge with noise");
-
-        current_noise = new TGraph();
-        time_sim->GetCurrentSignal(current_noise, charge_noise, cl->time*1e-9);
-        current_noise->SetNameTitle("current_noise", "current with noise");
-
-        charge_noise->SetLineColor(kBlue);
-        current_noise->SetLineColor(kBlue);
-
-        charge_ideal->SetLineColor(kRed);
-        current_ideal->SetLineColor(kRed);
-
-        charge_noise->SetLineWidth(2);
-        current_noise->SetLineWidth(2);
-
-        charge_ideal->SetLineWidth(2);
-        current_ideal->SetLineWidth(2);
-
-        charge->Add(charge_noise);
-        charge->Add(charge_ideal);
-
-        current->Add(current_noise);
-        current->Add(current_ideal);
-      }
-*/
-
-      /****************************************
-       * BUG: strip < 0 from TrCluster object *
-       ****************************************/
-
-      if(cl->ladder >= 0 && cl->strip >= 0) //BUG TEMPORARY FIX
-        time_segm->SetHit
-          (cl->ladder, cl->strip, cl->time * 1e-9, cl->eDep * 1e+9);
-
       pos_sim->SetHitPos(cl->layer, cl->pos[cl->segm]);
       pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[0]);
 
@@ -229,37 +174,7 @@ int main(int argc, char **argv) {
   delete pos_sim;
 
   cout <<endl <<endl;
-
-
-  //time deviations
-
-  std::cout <<"Evaluating timing measure... " <<time_segm->GetNgroups()
-    <<" events\n";
-
-  for(int i=0; i < time_segm->GetNgroups(); ++i)
-  {
-
-    //print and update progress bar
-    progress(i, time_segm->GetNgroups());
-
-    std::vector<mytime_t> true_time;
-    time_segm->GetTimes(i, true_time);
-
-    TGraph *current = new TGraph();
-    time_sim->GetCurrentSignal(i, current);
-
-    mytime_t meas_time = time_sim->GetTime(current, 0.1);
-
-    delete current;
-
-    for(int j = 0; j < (int) true_time.size(); ++j)
-      htime->Fill( (meas_time - true_time[j]) / true_time[j] );
-  }
-
-  delete time_sim;
-  delete time_segm;
-
-  cout <<endl <<endl;
+  
 
 	// Find tStart and tMean
 
