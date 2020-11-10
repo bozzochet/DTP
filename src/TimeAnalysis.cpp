@@ -93,6 +93,8 @@ int main(int argc, char **argv)
   std::cout <<std::endl <<argv[1] <<" contains " <<events->GetEntries()
     <<" events. \n\nStart scan...\n";
 
+  int total_hits = 0; //hits found for time measures
+
   for (int i = 0; i < events->GetEntries(); i++)
   {
     //print and update progress bar
@@ -112,7 +114,7 @@ int main(int argc, char **argv)
         ((TrCluster*) branch->At(j)) ->ladder >= 0
         && ((TrCluster*) branch->At(j)) ->strip >= 0
       )
-
+      {
         time_segm->SetHit
         (
           ((TrCluster*) branch->At(j)) ->ladder,
@@ -125,6 +127,9 @@ int main(int argc, char **argv)
           ((TrCluster*) branch->At(j)) ->eDep * 1e+9
         );
 
+        ++total_hits;
+      }
+
   }
 
 
@@ -134,17 +139,19 @@ int main(int argc, char **argv)
   std::cout <<"\n\nEvaluating timing measures deviations... "
     <<time_segm->GetNgroups() <<" events\n";
 
+  int analyzed_hits = 0;
+
   for(int i=0; i < time_segm->GetNgroups(); ++i)
   {
     //print and update progress bar
-    progress(i, time_segm->GetNgroups());
+    progress(analyzed_hits, total_hits);
 
     std::vector<mytime_t> true_time;
     time_segm->GetTimes(i, true_time);
 
     if(true_time.size() == 0)
       continue;
-      
+
     TGraph *current = new TGraph();
     time_sim->GetCurrentSignal(i, current);
 
@@ -154,6 +161,8 @@ int main(int argc, char **argv)
 
     for(int j = 0; j < (int) true_time.size(); ++j)
       h_time->Fill( (meas_time - true_time[j]) / true_time[j] );
+
+    ++analyzed_hits;
   }
 
   delete time_sim;
