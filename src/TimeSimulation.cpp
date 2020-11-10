@@ -142,10 +142,10 @@ void TimeSimulation::GetCurrentSignal
 }
 
 
-void TimeSimulation::GetCurrentSignal(signal_t *signal, const int &i)
+void TimeSimulation::GetCurrentSignal(const int &gr, signal_t *signal)
 {
   std::map <mytime_t, energy_t> time_energy_;
-  segm_->GetHits(time_energy_, i);
+  segm_->GetHits(gr, time_energy_);
 
   for(auto it = time_energy_.begin(); it != time_energy_.end(); ++it)
   {

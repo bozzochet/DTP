@@ -156,7 +156,7 @@ public:
   /* get current signal i-th group of strips;
    * signal passed MUST BE VOID;
    * signal points are sorted after this method execution */
-   void GetCurrentSignal(signal_t *signal, const int &i);
+   void GetCurrentSignal(const int &i, signal_t *signal);
 
    /* get time when current becomes > threshold_fraction * peak
     * IMPORTANT: current MUST be sorted */

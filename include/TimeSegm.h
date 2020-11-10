@@ -112,7 +112,7 @@ public:
   inline int GetNgroups()
   { return group_.size(); }
 
-  inline void GetHits(std::map<mytime_t, energy_t> &m, const int &i)
+  inline void GetHits(const int &i, std::map<mytime_t, energy_t> &m)
   { group_[i]->GetHits(m); }
 
   void SetHit
