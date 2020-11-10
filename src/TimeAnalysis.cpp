@@ -90,11 +90,13 @@ int main(int argc, char **argv)
 
 
 
-  std::cout <<std::endl <<argv[1] <<" contains " <<events->GetEntries()
-    <<" events. \n\nStart scan...\n";
+  std::cout <<"\nAnalysis of " <<events->GetEntries() <<" events...\n";
+
+  int negative_lad_strip = 0; //for debug purpose
 
   for (int i = 0; i < events->GetEntries(); i++)
   {
+
     //print and update progress bar
     progress(i, events->GetEntries());
 
@@ -127,6 +129,9 @@ int main(int argc, char **argv)
           ((TrCluster*) branch->At(j)) ->eDep * 1e+9
         );
       }
+
+      else
+        ++negative_lad_strip; //for debug purpose
 
 
     //constant fraction of current signal
@@ -165,11 +170,21 @@ int main(int argc, char **argv)
   std::cout <<std::endl <<std::endl;
 
 
+  //debug
+
+  if(negative_lad_strip > 0)
+  {
+    std::cerr <<"[DEBUG] negative strips or ladders:\t";
+    std::cerr <<negative_lad_strip <<std::endl;
+  }
+
 
   // write output
 
   outFile->WriteTObject(h_time);
   outFile->Close();
+
+  std::cout <<"Results written in:\tTimeAnalysis.root\n\n";
 
   return 0;
 }
