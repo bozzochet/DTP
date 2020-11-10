@@ -15,7 +15,7 @@ TimeSegm::TimeSegm
     jump_ = jump;
 
     //compute groups on a single row
-    Ngroups_ =
+    Ngroups_row_ =
 
       S == A ?
         TMath::Ceil
@@ -43,7 +43,7 @@ TimeSegm::TimeSegm
      *            floor( (Nstirps * Nsquares) / jump )
      */
 
-    const int N = Ngroups_ * geo_->GetNrows() * geo_->GetNlayers();
+    const int N = Ngroups_row_ * geo_->GetNrows() * geo_->GetNlayers();
 
     for(int i=0; i < N; ++i)
     {
@@ -82,10 +82,10 @@ void TimeSegm::SetHit
   int i = -1;
 
   if(S_ == A)
-    i = (lad % geo_->GetNsquares()) * Ngroups_ + strip / jump_;
+    i = (lad % geo_->GetNsquares()) * Ngroups_row_ + strip / jump_;
 
   else if(S_ == B)
-    i = (lad % geo_->GetNsquares()) * Ngroups_ + strip % jump_;
+    i = (lad % geo_->GetNsquares()) * Ngroups_row_ + strip % jump_;
 
   //else if(S_ == C)
     //SEGM C
@@ -97,4 +97,24 @@ void TimeSegm::SetHit
   }
 
   group_[i]->SetHit(t,E);
+}
+
+
+void TimeSegm::Group::GetHits(std::map <mytime_t, energy_t> &m)
+{
+  if( !sorted_)
+  {
+    time_energy_->Sort();
+    sorted_ = true;
+  }
+
+  for(int i = 0; i < time_energy_->GetN(); ++i)
+  {
+    mytime_t t;
+    energy_t E;
+
+    time_energy_->GetPoint(i, t, E);
+
+    m[t] = E;
+  }
 }

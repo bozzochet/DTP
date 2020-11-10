@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
 
   PosSimulation *pos_sim = new PosSimulation(&GEO, 2, tr);
 
-  TimeSegm *time_segm = new TimeSegm(&GEO, A, 2);
+  TimeSegm *time_segm = new TimeSegm(&GEO, A, 1);
 
   //thickness is given in mm; TimeSimulation wants m
   TimeSimulation *time_sim =
@@ -197,6 +197,8 @@ int main(int argc, char **argv) {
         current->Add(current_ideal);
       }
 */
+      time_segm->SetHit
+        (cl->ladder, cl->strip, cl->time * 1e-9, cl->eDep * 1e+9);
 
       pos_sim->SetHitPos(cl->layer, cl->pos[cl->segm]);
       pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[0]);

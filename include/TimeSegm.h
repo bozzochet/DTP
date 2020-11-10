@@ -47,23 +47,30 @@ class TimeSegm
   {
     const char *name_ = "_NONE_";
 
-    TGraph *energy_; //store points (hit time, energy deposited)
+    TGraph *time_energy_; //store points (hit time, energy deposited)
 
     bool sorted_ = false;
 
   public:
 
     Group(const char *name)
-    { name_ = name; energy_ = new TGraph(); }
+    { name_ = name; time_energy_ = new TGraph(); }
 
     ~Group()
-    { delete energy_; }
+    { delete time_energy_; }
 
     inline void SetHit(const mytime_t &t, const energy_t &E)
-    { sorted_ = false; energy_->SetPoint(energy_->GetN(), t, E); }
+    {
+      sorted_ = false;
+      time_energy_->SetPoint(time_energy_->GetN(), t, E);
+    }
 
     inline const char* GetName()
     { return name_; }
+
+    /* get time_energy_ points;
+     * after execution, map passed contains points sorted */
+    void GetHits(std::map <mytime_t, energy_t>&);
 
   };
 
@@ -76,7 +83,7 @@ class TimeSegm
   int jump_ = 0;
   double side_ = 0;
 
-  int Ngroups_ = 0; //groups per row
+  int Ngroups_row_ = 0; //groups per row
 
   std::vector<Group*> group_;
 
@@ -101,6 +108,12 @@ public:
 
   inline double GetSide()
   { return side_; }
+
+  inline int GetNgroups()
+  { return group_.size(); }
+
+  inline void GetHits(std::map<mytime_t, energy_t> &m, const int &i)
+  { group_[i]->GetHits(m); }
 
   void SetHit
     (

@@ -48,8 +48,11 @@ charge_t TimeSimulation::AddChargeNoise(signal_t *signal)
 
 
 charge_t TimeSimulation::GetChargeSignal
-  (signal_t *signal, const energy_t &energy, const bool noise)
+  (const energy_t &energy, signal_t *signal, const bool noise)
 {
+  if(signal->GetN() != 0)
+    return 0;
+
   signal->SetNameTitle("charge", "charge collected");
   signal->GetXaxis()->SetTitle("time from hit [s]");
   signal->GetYaxis()->SetTitle("charge collected [C]");
@@ -128,11 +131,107 @@ void TimeSimulation::AddCurrentSignal
 void TimeSimulation::GetCurrentSignal
   (mytime_t hitTime, signal_t *signal, const signal_t *charge)
 {
+  if(signal->GetN() != 0)
+    return;
+
   signal->SetNameTitle("current", "current signal");
   signal->GetXaxis()->SetTitle("run time [s]");
   signal->GetYaxis()->SetTitle("current [A]");
 
   AddCurrentSignal(hitTime, signal, charge);
+}
+
+
+void TimeSimulation::GetCurrentSignal(signal_t *signal, const int &i)
+{
+  std::map <mytime_t, energy_t> time_energy_;
+  segm_->GetHits(time_energy_, i);
+
+  for(auto it = time_energy_.begin(); it != time_energy_.end(); ++it)
+  {
+    signal_t *charge = new signal_t();
+    GetChargeSignal(it->second, charge);
+
+    signal_t *current = new signal_t();
+    GetCurrentSignal(it->first, current, charge);
+
+    SumCurrentSignal(signal, current);
+
+    delete charge;
+    delete current;
+  }
+}
+
+
+void TimeSimulation::SumCurrentSignal
+  (signal_t *sum, const signal_t *add)
+{
+
+  // get max and min and bin length (t_sample)
+
+  mytime_t t_sum_sample, t_sum_min, t_sum_max;
+  mytime_t t_add_sample, t_add_min, t_add_max;
+  current_t tmp;
+
+  sum->GetPoint(0, t_sum_min, tmp);
+  sum->GetPoint(1, t_sum_sample, tmp);
+  sum->GetPoint(sum->GetN()-1, t_sum_max, tmp);
+
+  add->GetPoint(0, t_add_min, tmp);
+  add->GetPoint(1, t_add_sample, tmp);
+  add->GetPoint(add->GetN()-1, t_add_max, tmp);
+
+  if(t_add_sample != t_sum_sample)
+    return;
+
+  mytime_t t_sample = t_sum_sample;
+
+  //sum
+
+  for(int i=0; i < add->GetN(); ++i)
+  {
+    mytime_t t_add = 0, t_sum = 0;
+    current_t I_add = 0, I_sum = 0;
+
+    add->GetPoint(i, t_add, I_add);
+
+    int i_sum = (t_add - t_sum_min) / t_sample;
+
+    /* "add" signal point is < of every "sum" signal point: add zeros
+     * at the begin of "sum" signal */
+
+    for(mytime_t t = t_sum_min - t_sample; i_sum < 0; t -= t_sample)
+    {
+      sum->InsertPointBefore(1, t, 0);
+      t_sum_min = t;
+      i_sum = (t_add - t_sum_min) / t_sample;
+    }
+
+    // evaluate if "add" signal point is inside "sum" range or above
+
+    if(i_sum < sum->GetN())
+      sum->GetPoint(i_sum, t_sum, I_sum);
+
+    /* append 0 to "sum" signal until "sum" range reaches "add" signal
+     * point */
+
+    else
+      for
+      (
+        mytime_t t = t_sum_max + t_sample;
+        i_sum > sum->GetN();
+        t += t_sample
+      )
+      {
+        sum->SetPoint(sum->GetN(), t, 0);
+        t_sum_max = t; //this does not affect t in the next iterations
+      }
+
+    //if "add" point was above, i_sum should be equal to sum->GetN()
+
+    sum->SetPoint(i_sum, t_add + t_sum, I_add + I_sum);
+  }
+
 }
 
 

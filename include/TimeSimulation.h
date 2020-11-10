@@ -107,6 +107,11 @@ class TimeSimulation
 
   bool Trigger(double&, const signal_t*, const int&, const double&);
 
+  /* add second signal to first one passed;
+   * signals passed MUST BE sorted and sampled with same time;
+   * first signal is sorted after this method execution */
+  void SumCurrentSignal(signal_t*, const signal_t*);
+
 
 public:
 
@@ -132,27 +137,26 @@ public:
   { return noise_->GetChargeNoise(); }
 
   /* generate charge signal in time with noise;
-   * return charge created by hit; signal points are sorted after this
-   * method execution */
+   * return charge created by hit;
+   * signal passed MUST BE VOID;
+   * signal points are sorted after this method execution */
   charge_t GetChargeSignal
   (
-    signal_t *signal, const energy_t&,
+    const energy_t&, signal_t *signal,
     const bool noise = true
   );
 
   /* get current signal on strip ( #ladder, #strip) based on charge
-   * collected; signal points are sorted after this method execution */
+   * collected;
+   * signal passed MUST BE VOID;
+   * signal points are sorted after this method execution */
   void GetCurrentSignal
     (mytime_t hitTime, signal_t *signal, const signal_t *charge);
 
-  /*
-   * IMPLEMENTATION NEEDED: in case of multiple hits on the same strip
-   * GetSignal is able to generate the multiple signals and append them
-   * to the total signal returnes; at this moment the signals are NOT
-   * summed (as has to be). Multiple currents are just drawn on the
-   * same graph
-   *
-   */
+  /* get current signal i-th group of strips;
+   * signal passed MUST BE VOID;
+   * signal points are sorted after this method execution */
+   void GetCurrentSignal(signal_t *signal, const int &i);
 
    /* get time when current becomes > threshold_fraction * peak
     * IMPORTANT: current MUST be sorted */
