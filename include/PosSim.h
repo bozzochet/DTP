@@ -1,6 +1,6 @@
 
-#ifndef POS_SIMULATION
-#define POS_SIMULATION
+#ifndef POS_SIM
+#define POS_SIM
 
 
 #include "physics.h"
@@ -15,7 +15,7 @@
 using namespace std;
 
 
-class PosSimulation
+class PosSim
 {
   Geometry *geo_ = NULL;
   TRandom3 *random_ = NULL;
@@ -44,10 +44,10 @@ class PosSimulation
 
 public:
 
-  PosSimulation(Geometry *geo, int j, TRandom3 *r)
+  PosSim(Geometry *geo, int j, TRandom3 *r)
   { geo_ = geo; SetVectors(); jump = j; random_ = r; }
 
-  ~PosSimulation()
+  ~PosSim()
   { delete eDepSegm; delete hitPos; }
 
   inline void Reset()

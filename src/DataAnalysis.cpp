@@ -2,8 +2,8 @@
 #include "physics.h"
 #include "vector2.h"
 #include "progress.h"
-#include "PosSimulation.h"
-#include "TimeSimulation.h"
+#include "PosSim.h"
+#include "TimeSim.h"
 #include "TrCluster.hh"
 #include "Geometry.h"
 #include "TimeSegm.h"
@@ -116,13 +116,13 @@ int main(int argc, char **argv) {
 
 	*/
 
-  PosSimulation *pos_sim = new PosSimulation(&GEO, 2, tr);
+  PosSim *pos_sim = new PosSim(&GEO, 2, tr);
 
   TimeSegm *time_segm = new TimeSegm(&GEO, A, 1);
 
-  //thickness is given in mm; TimeSimulation wants m
-  TimeSimulation *time_sim =
-    new TimeSimulation(time_segm, thickness*1e-3);
+  //thickness is given in mm; TimeSim wants m
+  TimeSim *time_sim =
+    new TimeSim(time_segm, tr, thickness*1e-3);
 
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
     <<" events:\n";

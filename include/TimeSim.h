@@ -1,7 +1,7 @@
 
 /**********************************************************************
 
-  TimeSimulation class simulates signal of current in time
+  TimeSim class simulates signal of current in time
   generated in the strips by particles hits.
 
   The signal simulated, line from 0 to peak and an exponential
@@ -12,8 +12,8 @@
 
  *********************************************************************/
 
-#ifndef TIME_SIMULATION_INCLUDE
-#define TIME_SIMULATION_INCLUDE
+#ifndef TIME_SIM_INCLUDE
+#define TIME_SIM_INCLUDE
 
 
 #include "physics.h"
@@ -41,7 +41,7 @@
 
 
 
-class TimeSimulation
+class TimeSim
 {
 
   typedef TGraph signal_t;
@@ -115,14 +115,15 @@ class TimeSimulation
 
 public:
 
-  TimeSimulation(TimeSegm *segm, const double &thickness)
+  TimeSim
+    (TimeSegm *segm, random_gen_t *random, const double &thickness)
   {
     segm_ = segm;
+    random_ = random;
     noise_ = new Noise(thickness);
-    random_ = new random_gen_t();
   };
 
-  virtual ~TimeSimulation()
+  virtual ~TimeSim()
   {
     delete noise_;
     delete random_;

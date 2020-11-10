@@ -1,8 +1,8 @@
 
-#include "PosSimulation.h"
+#include "PosSim.h"
 
 
-void PosSimulation::ShareEnergy()
+void PosSim::ShareEnergy()
 {
   std::vector<double> fill;
   for (int ix = 0; ix < (*eDepSegm).size(); ix++) {
@@ -64,7 +64,7 @@ void PosSimulation::ShareEnergy()
 }
 
 
-void PosSimulation::AddNoise()
+void PosSim::AddNoise()
 {
 
 	for (int ii = 0; ii < (*eDepSegm).size(); ii++) {
@@ -77,7 +77,7 @@ void PosSimulation::AddNoise()
 }
 
 
-void PosSimulation::GetCluster(int &i1, int &j1, int &i2, int &j2)
+void PosSim::GetCluster(int &i1, int &j1, int &i2, int &j2)
 {
   bool firstPoint = true;
 
@@ -117,7 +117,7 @@ void PosSimulation::GetCluster(int &i1, int &j1, int &i2, int &j2)
 }
 
 
-void PosSimulation::FillCluster
+void PosSim::FillCluster
   (vector_pair<double> &strip, int i1, int j1, int i2, int j2)
 {
   while((i1*geo_->GetNstrips())+j1 <= (i2*geo_->GetNstrips())+j2) {
@@ -137,7 +137,7 @@ void PosSimulation::FillCluster
 }
 
 
-void PosSimulation::FillHist
+void PosSim::FillHist
   (TH1F *segmp, const vector_pair<double> &strip, const int layer)
 {
   for(int k = 0; k < strip.size(); k++) {
@@ -196,7 +196,7 @@ void PosSimulation::FillHist
 }
 
 
-void PosSimulation::Segm(TH1F *segmp)
+void PosSim::Segm(TH1F *segmp)
 {
   for (int ix = 0; ix < geo_->GetNladders(); ix++)
     for (int jx = 0; jx < geo_->GetNstrips(); jx+=jump) {

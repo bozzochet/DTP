@@ -1,15 +1,15 @@
 
-#include "TimeSimulation.h"
+#include "TimeSim.h"
 
 
-void TimeSimulation::AddChargeSignal(signal_t *signal, const signal_fun_t *ideal)
+void TimeSim::AddChargeSignal(signal_t *signal, const signal_fun_t *ideal)
 {
   for(mytime_t t = 0; t < ideal->GetXmax(); t += T_SAMPLING_ )
     signal->SetPoint(signal->GetN(), t, ideal->Eval(t));
 }
 
 
-charge_t TimeSimulation::AddChargeNoise(signal_t *signal)
+charge_t TimeSim::AddChargeNoise(signal_t *signal)
 {
   hist_t *uniform = new hist_t
     ("h_uniform", "uniform", signal->GetN()-1, 0, 1e+6);
@@ -47,7 +47,7 @@ charge_t TimeSimulation::AddChargeNoise(signal_t *signal)
 }
 
 
-charge_t TimeSimulation::GetChargeSignal
+charge_t TimeSim::GetChargeSignal
   (const energy_t &energy, signal_t *signal, const bool noise)
 {
   if(signal->GetN() != 0)
@@ -80,7 +80,7 @@ charge_t TimeSimulation::GetChargeSignal
 }
 
 
-void TimeSimulation::AddCurrentSignal
+void TimeSim::AddCurrentSignal
   (mytime_t hitTime, signal_t *signal, const signal_t *charge)
 {
   //align hitTime to samples
@@ -128,7 +128,7 @@ void TimeSimulation::AddCurrentSignal
 }
 
 
-void TimeSimulation::GetCurrentSignal
+void TimeSim::GetCurrentSignal
   (mytime_t hitTime, signal_t *signal, const signal_t *charge)
 {
   if(signal->GetN() != 0)
@@ -142,7 +142,7 @@ void TimeSimulation::GetCurrentSignal
 }
 
 
-void TimeSimulation::GetCurrentSignal(const int &gr, signal_t *signal)
+void TimeSim::GetCurrentSignal(const int &gr, signal_t *signal)
 {
   std::map <mytime_t, energy_t> time_energy_;
   segm_->GetHits(gr, time_energy_);
@@ -163,7 +163,7 @@ void TimeSimulation::GetCurrentSignal(const int &gr, signal_t *signal)
 }
 
 
-void TimeSimulation::SumCurrentSignal
+void TimeSim::SumCurrentSignal
   (signal_t *sum, const signal_t *add)
 {
 
@@ -235,7 +235,7 @@ void TimeSimulation::SumCurrentSignal
 }
 
 
-mytime_t TimeSimulation::GetTime
+mytime_t TimeSim::GetTime
   (const signal_t *current, const double threshold)
 {
   const current_t I_max = current->GetMaximum();
