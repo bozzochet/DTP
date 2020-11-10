@@ -226,10 +226,22 @@ int main(int argc, char **argv) {
     pos_sim->Segm(segmp);
 }
 
+  delete pos_sim;
+
+  cout <<endl <<endl;
+
+
   //time deviations
+
+  std::cout <<"Evaluating timing measure... " <<time_segm->GetNgroups()
+    <<" events\n";
 
   for(int i=0; i < time_segm->GetNgroups(); ++i)
   {
+
+    //print and update progress bar
+    progress(i, time_segm->GetNgroups());
+
     std::vector<mytime_t> true_time;
     time_segm->GetTimes(i, true_time);
 
@@ -244,9 +256,8 @@ int main(int argc, char **argv) {
       htime->Fill( (meas_time - true_time[j]) / true_time[j] );
   }
 
-  //simulations ended
-  delete pos_sim;
   delete time_sim;
+  delete time_segm;
 
   cout <<endl <<endl;
 
