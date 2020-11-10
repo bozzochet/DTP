@@ -6,6 +6,7 @@
 #include "TimeSimulation.h"
 #include "TrCluster.hh"
 #include "Geometry.h"
+#include "TimeSegm.h"
 
 #include "TCanvas.h"
 #include "TClonesArray.h"
@@ -80,6 +81,7 @@ int main(int argc, char **argv) {
 
 	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
 
+/*
   TGraph *current_ideal;
   TGraph *current_noise;
 
@@ -88,6 +90,10 @@ int main(int argc, char **argv) {
 
   TMultiGraph *charge = new TMultiGraph("charge", "charge");
   TMultiGraph *current = new TMultiGraph("current", "current");
+*/
+
+  TH1F *htime = new TH1F
+    ("htime", "timing; ; entries", 1000, -0.05, 0.05);
 
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
@@ -110,10 +116,13 @@ int main(int argc, char **argv) {
 
 	*/
 
-  PosSimulation *pos_sim = new PosSimulation(&GEO, 3, tr);
+  PosSimulation *pos_sim = new PosSimulation(&GEO, 2, tr);
+
+  TimeSegm *time_segm = new TimeSegm(&GEO, A, 2);
 
   //thickness is given in mm; TimeSimulation wants m
-  TimeSimulation *time_sim = new TimeSimulation(thickness*1e-3);
+  TimeSimulation *time_sim =
+    new TimeSimulation(time_segm, thickness*1e-3);
 
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
     <<" events:\n";
@@ -150,6 +159,7 @@ int main(int argc, char **argv) {
 			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
 			if(cl->eDep > 9e-6) hEdep->Fill(cl->eDep); //total
 
+/*
       if(i==0 && j==0)
       {
         charge_ideal = new TGraph();
@@ -186,6 +196,7 @@ int main(int argc, char **argv) {
         current->Add(current_noise);
         current->Add(current_ideal);
       }
+*/
 
       pos_sim->SetHitPos(cl->layer, cl->pos[cl->segm]);
       pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[0]);
@@ -291,11 +302,14 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(segmp);
+/*
   outFile->WriteTObject(current_ideal);
   outFile->WriteTObject(current_noise);
   outFile->WriteTObject(charge_ideal);
   outFile->WriteTObject(charge_noise);
   outFile->WriteTObject(current);
   outFile->WriteTObject(charge);
-	outFile->Close();
+*/
+  outFile->WriteTObject(htime);
+  outFile->Close();
 	}

@@ -132,3 +132,23 @@ void TimeSimulation::GetCurrentSignal
 
   AddCurrentSignal(signal, charge, hitTime);
 }
+
+
+mytime_t TimeSimulation::GetTime
+  (const signal_t *current, const double threshold)
+{
+  const current_t I_max = current->GetMaximum();
+
+  for(int i = 0; i < current->GetN(); ++i)
+  {
+    mytime_t t;
+    current_t I;
+
+    current->GetPoint(i, t, I);
+
+    if(I > threshold * I_max)
+      return t;
+  }
+
+  return -9999;
+}

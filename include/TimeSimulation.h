@@ -20,6 +20,7 @@
 #include "absStrip.h"
 #include "TrCluster.hh"
 #include "vector2.h"
+#include "TimeSegm.h"
 
 #include "TFile.h"
 #include "TCanvas.h"
@@ -37,6 +38,9 @@
 #include <iostream>
 
 
+
+
+
 class TimeSimulation
 {
 
@@ -44,6 +48,7 @@ class TimeSimulation
   typedef TH1F hist_t;
   typedef TF1 signal_fun_t;
   typedef TRandom3 random_gen_t;
+
 
   //make CHARGE_NOISE_ not editable after initialization
   class Noise
@@ -58,14 +63,13 @@ class TimeSimulation
 
     inline charge_t GetChargeNoise()
     { return CHARGE_NOISE_; }
-
   };
 
 
 // const variables
 
   //slew rate of line_
-  const double SLEW_RATE_ = 1e+4;
+  const double SLEW_RATE_ = 1e+5;
 
   //tau of strip as a capacitor
   const mytime_t T_CAPACITOR_ = 1e-9;
@@ -78,6 +82,8 @@ class TimeSimulation
 
 
 // variables
+
+  TimeSegm *segm_ = NULL;
 
   Noise *noise_ = NULL;
 
@@ -102,16 +108,16 @@ class TimeSimulation
   inline charge_t GetChargeFromEnergy(const energy_t &E)
   { return E / ENERGY_COUPLE * FOND_CHARGE; }
 
-
   bool Trigger(double&, const signal_t*, const int&, const double&);
 
 
 public:
 
-  TimeSimulation(const double &thickness)
+  TimeSimulation(TimeSegm *segm, const double &thickness)
   {
+    segm_ = segm;
     noise_ = new Noise(thickness);
-    random_ = new random_gen_t(9298);
+    random_ = new random_gen_t();
   };
 
   virtual ~TimeSimulation()
@@ -152,6 +158,12 @@ public:
    * same graph
    *
    */
+
+   /* get time when current becomes > threshold_fraction * peak
+    * IMPORTANT: current MUST be sorted */
+   mytime_t GetTime
+    (const signal_t *current, const double threshold_fraction = 0.1);
+
 };
 
 
