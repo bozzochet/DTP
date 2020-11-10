@@ -6,6 +6,7 @@
 #include "TimeSimulation.h"
 #include "TrCluster.hh"
 #include "Geometry.h"
+#include "TimeSegm.h"
 
 #include "TCanvas.h"
 #include "TClonesArray.h"
@@ -115,10 +116,13 @@ int main(int argc, char **argv) {
 
 	*/
 
-  PosSimulation *pos_sim = new PosSimulation(&GEO, 3, tr);
+  PosSimulation *pos_sim = new PosSimulation(&GEO, 2, tr);
+
+  TimeSegm *time_segm = new TimeSegm(&GEO, A, 2);
 
   //thickness is given in mm; TimeSimulation wants m
-  TimeSimulation *time_sim = new TimeSimulation(thickness*1e-3);
+  TimeSimulation *time_sim =
+    new TimeSimulation(time_segm, thickness*1e-3);
 
   cout <<endl <<"Begin analysis of " <<events->GetEntries()
     <<" events:\n";
@@ -193,19 +197,6 @@ int main(int argc, char **argv) {
         current->Add(current_ideal);
       }
 */
-      TGraph *current = new TGraph();
-      TGraph *charge = new TGraph();
-
-      time_sim->GetChargeSignal(charge, cl->eDep*1e+9);
-      time_sim->GetCurrentSignal(current, charge, cl->time*1e-9);
-
-      mytime_t t_meas = time_sim->GetTime(current);
-      mytime_t t_true = cl->time*1e-9;
-
-      htime->Fill((t_meas - t_true) / t_true);
-
-      delete current;
-      delete charge;
 
       pos_sim->SetHitPos(cl->layer, cl->pos[cl->segm]);
       pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[0]);

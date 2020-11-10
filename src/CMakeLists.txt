@@ -85,7 +85,16 @@ install(TARGETS PosSimulation DESTINATION "${INSTALL_LIB_DIR}")
 
 #################
 
-set(EXTRA_LIBRARIES TimeSimulation PosSimulation)
+set(TIME_SEGM_SRC TimeSegm.cpp)
+add_library(TimeSegm SHARED ${TIME_SEGM_SRC})
+set_target_properties(TimeSegm PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
+)
+install(TARGETS TimeSegm DESTINATION "${INSTALL_LIB_DIR}")
+
+#################
+
+set(EXTRA_LIBRARIES TimeSimulation PosSimulation TimeSegm)
 
 #################
 
