@@ -69,6 +69,9 @@ class TimeSegm
     inline const char* GetName()
     { return name_; }
 
+    inline void Clear()
+    { delete time_energy_; time_energy_ = new TGraph(); }
+
     /* get time_energy_ points;
      * after execution, map passed contains points sorted */
     void GetHits(std::map <mytime_t, energy_t>&);
@@ -120,6 +123,12 @@ public:
 
   inline void GetTimes(const int &i, std::vector<mytime_t> &v)
   { group_[i]->GetTimes(v); }
+
+  inline void Clear()
+  {
+    for(int i = 0; i < (int) group_.size(); ++i)
+      group_[i]->Clear();
+  }
 
   void SetHit
     (

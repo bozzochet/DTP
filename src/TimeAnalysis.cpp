@@ -78,7 +78,7 @@ int main(int argc, char **argv)
   TH1F *h_time = new TH1F
   (
     "h_time", "time measures; t_meas - t_true [s]; entries",
-    10000, -1e-9, 1e-9
+    10000, -5e-10, 5e-10
   );
 
   TRandom3 *random = new TRandom3(9298);
@@ -93,8 +93,6 @@ int main(int argc, char **argv)
   std::cout <<std::endl <<argv[1] <<" contains " <<events->GetEntries()
     <<" events. \n\nStart scan...\n";
 
-  int total_hits = 0; //hits found for time measures
-
   for (int i = 0; i < events->GetEntries(); i++)
   {
     //print and update progress bar
@@ -102,7 +100,9 @@ int main(int argc, char **argv)
 
     events->GetEntry(i); //get one object (particle or other) trace
 
-    //scan a single objects' hits
+
+    //scan a single particle hits
+
     for(int j = 0; j < branch->GetEntries(); ++j)
 
       /****************************************
@@ -126,43 +126,37 @@ int main(int argc, char **argv)
           //convert GeV to eV
           ((TrCluster*) branch->At(j)) ->eDep * 1e+9
         );
-
-        ++total_hits;
       }
 
-  }
 
+    //constant fraction of current signal
 
+    for(int k=0; k < time_segm->GetNgroups(); ++k)
+    {
+      //print and update progress bar
+      //progress(analyzed_hits, total_hits);
 
-  //time deviations
+      std::vector<mytime_t> true_time;
+      time_segm->GetTimes(k, true_time);
 
-  std::cout <<"\n\nEvaluating timing measures deviations... "
-    <<total_hits <<" events\n";
+      if(true_time.size() == 0)
+        continue;
+        //HERE COULD BE GENERATED NOISE SIGNAL WITHOUT HIT
 
-  int analyzed_hits = 0;
+      TGraph *current = new TGraph();
+      time_sim->GetCurrentSignal(k, current);
 
-  for(int i=0; i < time_segm->GetNgroups(); ++i)
-  {
-    //print and update progress bar
-    progress(analyzed_hits, total_hits);
+      mytime_t meas_time = time_sim->GetTime(current, 0.1);
 
-    std::vector<mytime_t> true_time;
-    time_segm->GetTimes(i, true_time);
+      delete current;
 
-    if(true_time.size() == 0)
-      continue;
+      for(int l = 0; l < (int) true_time.size(); ++l)
+        h_time->Fill( meas_time - true_time[l] );
 
-    TGraph *current = new TGraph();
-    time_sim->GetCurrentSignal(i, current);
+      //analyzed_hits += true_time.size();
+    }
 
-    mytime_t meas_time = time_sim->GetTime(current, 0.1);
-
-    delete current;
-
-    for(int j = 0; j < (int) true_time.size(); ++j)
-      h_time->Fill( meas_time - true_time[j] );
-
-    analyzed_hits += true_time.size();
+    time_segm->Clear(); //clear particle traces
   }
 
   delete time_sim;
