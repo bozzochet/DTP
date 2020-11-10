@@ -36,9 +36,10 @@ const int Nlayers = GEO.GetNlayers();
 const int Nstrips = GEO.GetNstrips();
 const int Nrows = GEO.GetNrows();
 const int Nsquares = GEO.GetNsquares();
-const int pitch = GEO.GetPitch();
-const int squareSide = GEO.GetSquareSide();
+const double pitch = GEO.GetPitch();
+const double squareSide = GEO.GetSquareSide();
 const int Nladders = GEO.GetNladders();
+const double thickness = GEO.GetThickness();
 
 
 
