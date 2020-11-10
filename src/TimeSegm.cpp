@@ -92,7 +92,24 @@ void TimeSegm::SetHit
 
   else
   {
-    std::cout <<"\n[TIMESEGM] fatal error on SetHit\n";
+    std::cout <<"\n[TIMESEGM] fatal error on SetHit: ";
+    std::cout <<"S_ set badly\n";
+    std::cout <<"segm: " <<S_ <<std::endl;
+
+    exit(1);
+  }
+
+  if( i >= (int) group_.size() || i < 0)
+  {
+    std::cout <<"\n[TIMESEGM] fatal error on SetHit: ";
+    std::cout <<"call out of vector size\n";
+
+    std::cout <<"i: " <<i <<" segm: " << (char) S_ <<" size: "
+      <<group_.size();
+    std::cout <<"\nlad: " <<lad <<" Nsquares: " <<geo_->GetNsquares();
+    std::cout <<"\nNgroups per row: " <<Ngroups_row_ <<" strip: " <<strip;
+    std::cout <<" jump: " <<jump_ <<std::endl;
+
     exit(1);
   }
 

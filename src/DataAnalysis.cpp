@@ -197,8 +197,14 @@ int main(int argc, char **argv) {
         current->Add(current_ideal);
       }
 */
-      time_segm->SetHit
-        (cl->ladder, cl->strip, cl->time * 1e-9, cl->eDep * 1e+9);
+
+      /****************************************
+       * BUG: strip < 0 from TrCluster object *
+       ****************************************/
+
+      if(cl->ladder >= 0 && cl->strip >= 0) //BUG TEMPORARY FIX
+        time_segm->SetHit
+          (cl->ladder, cl->strip, cl->time * 1e-9, cl->eDep * 1e+9);
 
       pos_sim->SetHitPos(cl->layer, cl->pos[cl->segm]);
       pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[0]);
@@ -233,7 +239,7 @@ int main(int argc, char **argv) {
     mytime_t meas_time = time_sim->GetTime(current, 0.1);
 
     delete current;
-    
+
     for(int j = 0; j < (int) true_time.size(); ++j)
       htime->Fill( (meas_time - true_time[j]) / true_time[j] );
   }
