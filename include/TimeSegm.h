@@ -27,6 +27,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 
 enum time_segm : const char
@@ -72,6 +73,8 @@ class TimeSegm
      * after execution, map passed contains points sorted */
     void GetHits(std::map <mytime_t, energy_t>&);
 
+    void GetTimes(std::vector<mytime_t>&);
+
   };
 
 
@@ -114,6 +117,9 @@ public:
 
   inline void GetHits(const int &i, std::map<mytime_t, energy_t> &m)
   { group_[i]->GetHits(m); }
+
+  inline void GetTimes(const int &i, std::vector<mytime_t> &v)
+  { group_[i]->GetTimes(v); }
 
   void SetHit
     (

@@ -118,3 +118,23 @@ void TimeSegm::Group::GetHits(std::map <mytime_t, energy_t> &m)
     m[t] = E;
   }
 }
+
+
+void TimeSegm::Group::GetTimes(std::vector<mytime_t> &v)
+{
+  if( !sorted_)
+  {
+    time_energy_->Sort();
+    sorted_ = true;
+  }
+
+  for(int i = 0; i < time_energy_->GetN(); ++i)
+  {
+    mytime_t t;
+    energy_t E;
+
+    time_energy_->GetPoint(i, t, E);
+
+    v.push_back(t);
+  }
+}

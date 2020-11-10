@@ -220,6 +220,24 @@ int main(int argc, char **argv) {
     pos_sim->Segm(segmp);
 }
 
+  //time deviations
+
+  for(int i=0; i < time_segm->GetNgroups(); ++i)
+  {
+    std::vector<mytime_t> true_time;
+    time_segm->GetTimes(i, true_time);
+
+    TGraph *current = new TGraph();
+    time_sim->GetCurrentSignal(i, current);
+
+    mytime_t meas_time = time_sim->GetTime(current, 0.1);
+
+    delete current;
+    
+    for(int j = 0; j < (int) true_time.size(); ++j)
+      htime->Fill( (meas_time - true_time[j]) / true_time[j] );
+  }
+
   //simulations ended
   delete pos_sim;
   delete time_sim;
