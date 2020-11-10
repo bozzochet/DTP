@@ -112,7 +112,7 @@ int main(int argc, char **argv)
         ((TrCluster*) branch->At(j)) ->ladder >= 0
         && ((TrCluster*) branch->At(j)) ->strip >= 0
       )
-      
+
         time_segm->SetHit
         (
           ((TrCluster*) branch->At(j)) ->ladder,
@@ -142,6 +142,9 @@ int main(int argc, char **argv)
     std::vector<mytime_t> true_time;
     time_segm->GetTimes(i, true_time);
 
+    if(true_time.size() == 0)
+      continue;
+      
     TGraph *current = new TGraph();
     time_sim->GetCurrentSignal(i, current);
 
