@@ -78,7 +78,7 @@ int main(int argc, char **argv)
   TH1F *h_time = new TH1F
   (
     "h_time", "measure deviations; relative deviation; entries",
-    1000, -0.05, 0.05
+    10000, -0.5, 0.5
   );
 
   TRandom3 *random = new TRandom3(9298);
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
   //time deviations
 
   std::cout <<"\n\nEvaluating timing measures deviations... "
-    <<time_segm->GetNgroups() <<" events\n";
+    <<total_hits <<" events\n";
 
   int analyzed_hits = 0;
 
