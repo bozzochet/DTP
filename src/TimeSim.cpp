@@ -169,17 +169,23 @@ void TimeSim::SumCurrentSignal
 
   // get max and min and bin length (t_sample)
 
-  mytime_t t_sum_sample, t_sum_min, t_sum_max;
-  mytime_t t_add_sample, t_add_min, t_add_max;
+  mytime_t t_sum_sample=0, t_sum_min=0, t_sum_max=0;
+  mytime_t t_add_sample=0, t_add_min=0, t_add_max=0;
   current_t tmp;
 
   sum->GetPoint(0, t_sum_min, tmp);
-  sum->GetPoint(1, t_sum_sample, tmp);
   sum->GetPoint(sum->GetN()-1, t_sum_max, tmp);
 
   add->GetPoint(0, t_add_min, tmp);
   add->GetPoint(1, t_add_sample, tmp);
   add->GetPoint(add->GetN()-1, t_add_max, tmp);
+
+  //when sum is void set its t_sample = t_add_sample
+  
+  if(sum->GetN() == 0)
+    t_sum_sample = t_add_sample;
+  else
+    sum->GetPoint(1, t_sum_sample, tmp);
 
   if(t_add_sample != t_sum_sample)
     return;
