@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     //scan a single particle hits
 
     for(int j = 0; j < branch->GetEntries(); ++j)
-
+    {
       /****************************************
       * BUG: strip < 0 from TrCluster object *
       ****************************************/
@@ -132,6 +132,8 @@ int main(int argc, char **argv)
 
       else
         ++negative_lad_strip; //for debug purpose
+
+    } //scan single particle hits
 
 
     //constant fraction of current signal
