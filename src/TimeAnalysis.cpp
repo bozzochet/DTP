@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
   //output file
 
-  TFile *outFile = new TFile("TimeAnalysis.root", "recreate");
+  TFile *outFile = new TFile("time.root", "recreate");
 
   if(outFile->IsZombie())
   {
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
   TH1F *h_time = new TH1F
   (
     "h_time", "time measures; t_meas - t_true [s]; entries",
-    10000, -5e-10, 5e-10
+    10000, -4e-10, 0
   );
 
   TRandom3 *random = new TRandom3(9298);
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
   if(negative_lad_strip > 0)
   {
     std::cerr <<"[DEBUG] negative strips or ladders:\t";
-    std::cerr <<negative_lad_strip <<std::endl;
+    std::cerr <<negative_lad_strip <<std::endl <<std::endl;
   }
 
 
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
   outFile->WriteTObject(h_time);
   outFile->Close();
 
-  std::cout <<"Results written in:\tTimeAnalysis.root\n\n";
+  std::cout <<"Results written in:\ttime.root\n\n";
 
   return 0;
 }
