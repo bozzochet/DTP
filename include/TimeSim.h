@@ -116,9 +116,6 @@ public:
     (TimeSegm *segm, random_gen_t *random)
   { segm_ = segm; random_ = random; }
 
-  virtual ~TimeSim()
-  { delete random_; }
-
 
   /* add noise to signal passed and return total charge noise
    * collected;
