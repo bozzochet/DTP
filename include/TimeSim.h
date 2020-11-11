@@ -47,24 +47,6 @@ class TimeSim
   typedef TRandom3 random_gen_t;
 
 
-  //make CHARGE_NOISE_ not editable after initialization
-  class Noise
-  {
-    const double PAIR_NOISE_ = 8; //pairs producted per um
-
-    charge_t CHARGE_NOISE_ = 0;
-
-  public:
-
-    Noise(const length_t &thickness)
-    // Q_noise ~ pair_noise um^(-1) * thickness * e
-    { CHARGE_NOISE_ = thickness * (PAIR_NOISE_ * 1e+6) * FOND_CHARGE; }
-
-    inline charge_t GetChargeNoise()
-    { return CHARGE_NOISE_; }
-  };
-
-
 // const variables
 
   //slew rate of line_
@@ -79,12 +61,15 @@ class TimeSim
   //signal parameters
   const mytime_t T_SAMPLING_ = 1e-11;
 
+  /* noise deviation:
+   *   pair/um * thickness * fond_charge */
+  const charge_t CHARGE_NOISE_ = 8 * 300 * FOND_CHARGE;
+
+
 
 // variables
 
   TimeSegm *segm_ = NULL;
-
-  Noise *noise_ = NULL;
 
   //random generator
   random_gen_t *random_ = NULL;
@@ -128,18 +113,11 @@ class TimeSim
 public:
 
   TimeSim
-    (TimeSegm *segm, random_gen_t *random, const double &thickness)
-  {
-    segm_ = segm;
-    random_ = random;
-    noise_ = new Noise(thickness);
-  };
+    (TimeSegm *segm, random_gen_t *random)
+  { segm_ = segm; random_ = random; }
 
   virtual ~TimeSim()
-  {
-    delete noise_;
-    delete random_;
-  }
+  { delete random_; }
 
 
   /* add noise to signal passed and return total charge noise
@@ -147,8 +125,6 @@ public:
    * IMPORTANT: signals passed MUST be sorted */
   charge_t AddChargeNoise(signal_t *signal);
 
-  inline charge_t GetTotalChargeNoise()
-  { return noise_->GetChargeNoise(); }
 
   /* generate charge signal in time with noise;
    * return charge created by hit;

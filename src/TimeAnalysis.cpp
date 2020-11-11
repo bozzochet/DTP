@@ -130,8 +130,7 @@ int analyze
 
   TimeSegm *time_segm = new TimeSegm(&GEO, S, J);
 
-  TimeSim *time_sim = new TimeSim
-    (time_segm, random, thickness * 1e-3 /*convert mm to m*/ );
+  TimeSim *time_sim = new TimeSim(time_segm, random);
 
 
 

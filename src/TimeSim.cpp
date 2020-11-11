@@ -10,8 +10,16 @@ charge_t TimeSim::AddChargeNoise(signal_t *signal)
   for(int i = 0; i < 1e+4; ++i)
     uniform->Fill(random_->Uniform(0, 1e+6));
 
-  int integral = 0; //integral of uniform
-  charge_t q_noise = 0; //total noise added
+
+  //uniform integral
+  int integral = 0;
+
+  //cumulative noise added
+  charge_t q_noise = 0;
+
+  //random total charge noise
+  charge_t Q_NOISE = random_->Gaus(0, CHARGE_NOISE_);
+
 
   //charge collected is 0 at t=0 => no noise at t=0 => start from i=1
   for(int i = 1; i < signal->GetN(); ++i)
@@ -23,8 +31,7 @@ charge_t TimeSim::AddChargeNoise(signal_t *signal)
 
     integral += uniform->GetBinContent(i);
 
-    charge_t dq = noise_->GetChargeNoise() *
-      integral / uniform->GetSumOfWeights();
+    charge_t dq =  Q_NOISE * integral / uniform->GetSumOfWeights();
 
     //make dq a multiple of fondamental charge
     dq = TMath::Floor(dq / FOND_CHARGE) * FOND_CHARGE;
