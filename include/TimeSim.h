@@ -38,9 +38,6 @@
 #include <iostream>
 
 
-
-
-
 class TimeSim
 {
 
