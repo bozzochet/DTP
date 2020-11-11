@@ -142,8 +142,7 @@ public:
    * signal points are sorted after this method execution */
   charge_t GetChargeSignal
   (
-    const energy_t&, signal_t *signal,
-    const bool noise = true
+    const energy_t&, signal_t *signal, const bool noise = true
   );
 
   /* get current signal on strip ( #ladder, #strip) based on charge
