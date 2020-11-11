@@ -78,7 +78,7 @@ int main(int argc, char **argv)
   TH1F *h_time = new TH1F
   (
     "h_time", "time measures; t_meas - t_true [s]; entries",
-    10000, -4e-10, 0
+    10000, -5e-11, 5e-11
   );
 
   TRandom3 *random = new TRandom3(9298);
