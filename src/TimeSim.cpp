@@ -147,10 +147,10 @@ void TimeSim::GetCurrentSignal
 
 void TimeSim::GetCurrentSignal(const int &gr, signal_t *signal)
 {
-  std::map <mytime_t, energy_t> time_energy_;
-  segm_->GetHits(gr, time_energy_);
+  std::map <mytime_t, energy_t> time_energy;
+  segm_->GetHits(gr, time_energy);
 
-  for(auto it = time_energy_.begin(); it != time_energy_.end(); ++it)
+  for(auto it = time_energy.begin(); it != time_energy.end(); ++it)
   {
     signal_t *charge = new signal_t();
     GetChargeSignal(it->second, charge);
