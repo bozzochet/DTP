@@ -84,7 +84,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
                                      0,                      // copy number
                                      fCheckOverlaps);        // checking overlaps
   G4int N = 8;
-  G4double dim = 10 * cm;
+  G4double dim = 0.015 * 10 * cm;
   G4int strips = 640;
   G4double pad_x = N * dim;
   G4double pad_y = N * dim;

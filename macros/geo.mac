@@ -1,5 +1,8 @@
 # detector parameters useful for digitization and analysis
 
+# WARNING: NOT IMPLEMENTED YET IN DETECTOR CONSTRUCTION
+# DO NOT MODIFY WITHOUT MODIFYING DETECTOR CONSTRUCTION CODE
+
 /Detector/Nlayers     10
 /Detector/Nsquares     8       #squares per side on layer
 /Detector/Nrows        2       #rows of ladders on a layer
