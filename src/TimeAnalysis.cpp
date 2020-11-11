@@ -16,6 +16,7 @@
 #include "TRandom3.h"
 
 #include <iostream>
+#include <ctime>
 
 
 
@@ -57,6 +58,9 @@ int main(int argc, char **argv)
   for(int i = -1; i < 2; ++i)
   {
 
+    std::clock_t start = std::clock();
+
+
     if(i == -1)
     {
       std::cout <<"\nANALYSIS WITHOUT SEGM:\n\n";
@@ -70,6 +74,23 @@ int main(int argc, char **argv)
 
       analyze(argv[1], output[i], S[i], J[i], true);
     }
+
+
+    int sec = (std::clock() - start) / CLOCKS_PER_SEC;
+
+    if(sec < 1) continue;
+
+    std::cout <<"task completed in ";
+
+    if(sec / 60 >= 60)
+      std::cout << sec / 3600 << ":" << sec % 3600 / 60 << ":"
+        << (sec % 3600) % 60;
+
+    else if(sec >= 60)
+      std::cout << sec / 60 << ":" << sec % 60;
+
+    else
+      std::cout << sec <<" secondi";
 
   }
 
