@@ -77,10 +77,10 @@ void TimeSegm::SetHit
   int i = -1;
 
   if(S_ == A)
-    i = (lad - 1) * Ngroups_lad_ + strip / jump_ ;
+    i = lad * Ngroups_lad_ + strip / jump_ ;
 
   else if(S_ == B)
-    i = (lad - 1) * Ngroups_lad_ + strip % jump_;
+    i = lad * Ngroups_lad_ + strip % jump_;
 
   //else if(S_ == C)
     //SEGM C
