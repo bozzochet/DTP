@@ -68,18 +68,36 @@ int main(int argc, char **argv)
 
   TTree *events;
 	inFile->GetObject("Tree", events);
-	events->Print();
+	//events->Print();
 
   TClonesArray *branch = new TClonesArray("TrCluster", 200);
 	events->SetBranchAddress("Events", &branch);
 
 
 
+  //time measures with segm and noise
   TH1F *h_time = new TH1F
   (
     "h_time", "time measures; t_meas - t_true [s]; entries",
     10000, -1e-10, 1e-10
   );
+
+  //time measures without segmentation and without noise
+  TH1F *h_ideal = new TH1F
+  (
+    "h_ideal", "time measures; t_meas - t_true [s]; entries",
+    10000, -1e-10, 1e-10
+  );
+
+  //confront signal t0 with t_hit
+  TH1F *h_signal_zero = new TH1F
+  (
+    "h_signal_zero",
+    "hit time for signal; t_signal - t_true [s]; entries",
+    10000, -1e-10, 1e-10
+  );
+
+
 
   TRandom3 *random = new TRandom3(9298);
 
@@ -107,27 +125,40 @@ int main(int argc, char **argv)
 
     for(int j = 0; j < branch->GetEntries(); ++j)
     {
+      TrCluster *cl = (TrCluster*) branch->At(j);
+
       /****************************************
       * BUG: strip < 0 from TrCluster object *
       ****************************************/
 
-      if //TEMPORARY FIX
-      (
-        ((TrCluster*) branch->At(j)) ->ladder >= 0
-        && ((TrCluster*) branch->At(j)) ->strip >= 0
-      )
+      if(cl->ladder >= 0 && cl->strip >= 0) //TEMPORARY FIX
       {
         time_segm->SetHit
         (
-          ((TrCluster*) branch->At(j)) ->ladder,
-          ((TrCluster*) branch->At(j)) ->strip,
-
-          //convert ns to s
-          ((TrCluster*) branch->At(j)) ->time * 1e-9,
-
-          //convert GeV to eV
-          ((TrCluster*) branch->At(j)) ->eDep * 1e+9
+          cl ->ladder, cl ->strip,
+          cl ->time * 1e-9, //convert ns to s
+          cl ->eDep * 1e+9 //convert GeV to eV
         );
+
+        TGraph *current = new TGraph();
+        TGraph *charge = new TGraph();
+
+        time_sim->GetChargeSignal(cl->eDep * 1e+9, charge, false);
+
+        time_sim->GetCurrentSignal(cl->time * 1e-9, current, charge);
+
+        h_ideal->Fill
+          (time_sim->GetTime(current, 0.1) - cl->time * 1e-9);
+
+        mytime_t t0;
+        current_t tmp;
+
+        current->GetPoint(0, t0, tmp);
+
+        h_signal_zero->Fill(t0 - cl->time * 1e-9);
+
+        delete current;
+        delete charge;
       }
 
       else
@@ -184,6 +215,9 @@ int main(int argc, char **argv)
   // write output
 
   outFile->WriteTObject(h_time);
+  outFile->WriteTObject(h_ideal);
+  outFile->WriteTObject(h_signal_zero);
+
   outFile->Close();
 
   std::cout <<"Results written in:\ttime.root\n\n";

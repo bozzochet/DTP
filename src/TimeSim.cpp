@@ -81,10 +81,8 @@ charge_t TimeSim::GetChargeSignal
 
 
 void TimeSim::AddCurrentSignal
-  (mytime_t hitTime, signal_t *signal, const signal_t *charge)
+  (const mytime_t &hitTime, signal_t *signal, const signal_t *charge)
 {
-  //align hitTime to samples
-  hitTime = TMath::Floor(hitTime / T_SAMPLING_) * T_SAMPLING_;
 
 //fill with charge derivative
 
@@ -120,16 +118,21 @@ void TimeSim::AddCurrentSignal
   signal_fun_t *line = new signal_fun_t("line", "[0]*x", 0, t_first);
   line->SetParameter(0, SLEW_RATE_);
 
-  for( mytime_t t = 0; t < t_first; t += T_SAMPLING_ )
+  for
+  (
+    mytime_t t = t_first - 0.5 * T_SAMPLING_;
+    t >= 0;
+    t -= T_SAMPLING_
+  )
     signal->InsertPointBefore
-      ( t / T_SAMPLING_ , t + hitTime, line->Eval(t));
+      (0 , t + hitTime, line->Eval(t));
 
   delete line;
 }
 
 
 void TimeSim::GetCurrentSignal
-  (mytime_t hitTime, signal_t *signal, const signal_t *charge)
+  (const mytime_t &hitTime, signal_t *signal, const signal_t *charge)
 {
   if(signal->GetN() != 0)
     return;
@@ -181,7 +184,7 @@ void TimeSim::SumCurrentSignal
   add->GetPoint(add->GetN()-1, t_add_max, tmp);
 
   //when sum is void set its t_sample = t_add_sample
-  
+
   if(sum->GetN() == 0)
     t_sum_sample = t_add_sample;
   else

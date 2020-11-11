@@ -96,7 +96,9 @@ class TimeSim
    * charge signal obtained by GetChargeSignal; signal points are
    * sorted after this method execution*/
   void AddCurrentSignal
-    (mytime_t hitTime, signal_t *signal, const signal_t *charge);
+  (
+    const mytime_t &hitTime, signal_t *signal, const signal_t *charge
+  );
 
   // signal points are sorted after this method execution
   void AddChargeSignal(signal_t *signal, const signal_fun_t *ideal);
@@ -150,7 +152,9 @@ public:
    * signal passed MUST BE VOID;
    * signal points are sorted after this method execution */
   void GetCurrentSignal
-    (mytime_t hitTime, signal_t *signal, const signal_t *charge);
+  (
+    const mytime_t &hitTime, signal_t *signal, const signal_t *charge
+  );
 
   /* get current signal i-th group of strips;
    * signal passed MUST BE VOID;
