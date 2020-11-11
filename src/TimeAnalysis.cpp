@@ -15,8 +15,8 @@
 #include "TH1F.h"
 #include "TRandom3.h"
 
-
 #include <iostream>
+
 
 
 //global geometric parameters
@@ -33,11 +33,12 @@ const int Nladders = GEO.GetNladders();
 const double thickness = GEO.GetThickness();
 
 
+
 int analyze
-(
-  const char *input, const char *output,
-  const time_segm &S, const int &J
-);
+  (const char*, const char*, const time_segm&, const int&, const bool);
+void analyze_noise(TTree*, TClonesArray*, TimeSim*, TH1F*);
+void analyze_segm(TTree*, TClonesArray*, TimeSegm*, TimeSim*, TH1F*);
+
 
 
 int main(int argc, char **argv)
@@ -48,26 +49,39 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  time_segm S[4] = {A, A, B, B};
-  int J[4] = {1, 10, 1, 10};
-  const char* output[4] = {"time--A1.root", "time--A10.root", "time--B1.root", "time--B10.root"};
+  time_segm S[2] = {A,B};
+  int J[2] = {10,10};
 
-  for(int i=0; i < 4; ++i)
+  const char* output[2] = {"time--A10.root", "time--B10.root"};
+
+  for(int i = -1; i < 2; ++i)
   {
-    std::cout <<std::endl <<(char) S[i] <<std::to_string(J[i])
-      <<" ANALYSIS:\n\n";
 
-    if(analyze(argv[1], output[i], S[i], J[i]) != 0)
-      return 1;
+    if(i == -1)
+    {
+      std::cout <<"\nANALYSIS WITHOUT SEGM:\n\n";
+      analyze(argv[1], "time--nosegm.root", A, 1, false);
+    }
+
+    else
+    {
+      std::cout <<"\nANALYSIS WITH SEGM "
+        <<(char) S[i] <<std::to_string(J[i]) <<":\n\n";
+
+      analyze(argv[1], output[i], S[i], J[i], true);
+    }
+
   }
 
   return 0;
 }
 
+
+
 int analyze
 (
   const char *input, const char *output,
-  const time_segm &S, const int &J
+  const time_segm &S, const int &J, const bool segm
 )
 {
 
@@ -103,24 +117,18 @@ int analyze
 
 
   //time measures with segm and noise
-  TH1F *h_time = new TH1F
+  TH1F *h_segm = new TH1F
   (
-    "h_time", "time measures; t_meas - t_true [s]; entries",
+    "h_segm",
+    "time measures with noise and segm; t_meas - t_true [s]; entries",
     10000, -1e-10, 1e-10
   );
 
-  //time measures without segmentation and without noise
-  TH1F *h_ideal = new TH1F
+  //time measures with noise only
+  TH1F *h_noise = new TH1F
   (
-    "h_ideal", "time measures; t_meas - t_true [s]; entries",
-    10000, -1e-10, 1e-10
-  );
-
-  //confront signal t0 with t_hit
-  TH1F *h_signal_zero = new TH1F
-  (
-    "h_signal_zero",
-    "hit time for signal; t_signal - t_true [s]; entries",
+    "h_noise",
+    "time measures with noise; t_meas - t_true [s]; entries",
     10000, -1e-10, 1e-10
   );
 
@@ -134,9 +142,52 @@ int analyze
 
 
 
+  if( !segm)
+    analyze_noise(events, branch, time_sim, h_noise);
+  else
+  {
+    analyze_segm(events, branch, time_segm, time_sim, h_segm);
+    time_segm->Clear(); //clear particle traces
+  }
+
+
+
+  delete time_sim;
+  delete time_segm;
+  delete random;
+
+  delete branch;
+
+  std::cout <<std::endl <<std::endl;
+
+
+  // write output
+
+  outFile->WriteTObject(h_segm);
+  outFile->WriteTObject(h_noise);
+
+  outFile->Close();
+
+  delete outFile;
+  delete h_segm;
+  delete h_noise;
+
+  std::cout <<"Results written in:\t" <<output <<"\n\n";
+
+  return 0;
+}
+
+
+//constant fraction with noise
+void analyze_noise
+(
+  TTree *events, TClonesArray *branch,
+  TimeSim *time_sim, TH1F *h_noise
+)
+{
+
   std::cout <<"\nAnalysis of " <<events->GetEntries() <<" events...\n";
 
-  int negative_lad_strip = 0; //for debug purpose
 
   for (int i = 0; i < events->GetEntries(); i++)
   {
@@ -144,10 +195,7 @@ int analyze
     //print and update progress bar
     progress(i, events->GetEntries());
 
-    events->GetEntry(i); //get one object (particle or other) trace
-
-
-    //scan a single particle hits
+    events->GetEntry(i); //get one particle trace
 
     for(int j = 0; j < branch->GetEntries(); ++j)
     {
@@ -159,41 +207,56 @@ int analyze
 
       if(cl->ladder >= 0 && cl->strip >= 0) //TEMPORARY FIX
       {
+        TGraph *current = new TGraph();
+        TGraph *charge = new TGraph();
+
+        time_sim->GetChargeSignal(cl->eDep * 1e+9, charge);
+
+        time_sim->GetCurrentSignal(cl->time * 1e-9, current, charge);
+
+        h_noise->Fill
+          (time_sim->GetTime(current, 0.1) - cl->time * 1e-9);
+
+        delete current;
+        delete charge;
+      }
+    }
+  }
+}
+
+
+//constant fraction with segm and noise
+void analyze_segm
+(
+  TTree *events, TClonesArray *branch,
+  TimeSegm *time_segm, TimeSim *time_sim, TH1F *h_segm
+)
+{
+
+  std::cout <<"\nAnalysis of " <<events->GetEntries() <<" events...\n";
+
+
+  for (int i = 0; i < events->GetEntries(); i++)
+  {
+
+    //print and update progress bar
+    progress(i, events->GetEntries());
+
+    events->GetEntry(i); //get one particle trace
+
+    for(int j = 0; j < branch->GetEntries(); ++j)
+    {
+      TrCluster *cl = (TrCluster*) branch->At(j);
+
+      if(cl->ladder >= 0 && cl->strip >= 0) //TEMPORARY FIX
         time_segm->SetHit
         (
           cl ->ladder, cl ->strip,
           cl ->time * 1e-9, //convert ns to s
           cl ->eDep * 1e+9 //convert GeV to eV
         );
+    }
 
-        TGraph *current = new TGraph();
-        TGraph *charge = new TGraph();
-
-        time_sim->GetChargeSignal(cl->eDep * 1e+9, charge, false);
-
-        time_sim->GetCurrentSignal(cl->time * 1e-9, current, charge);
-
-        h_ideal->Fill
-          (time_sim->GetTime(current, 0.1) - cl->time * 1e-9);
-
-        mytime_t t0;
-        current_t tmp;
-
-        current->GetPoint(0, t0, tmp);
-
-        h_signal_zero->Fill(t0 - cl->time * 1e-9);
-
-        delete current;
-        delete charge;
-      }
-
-      else
-        ++negative_lad_strip; //for debug purpose
-
-    } //scan single particle hits
-
-
-    //constant fraction of current signal
 
     for(int k=0; k < time_segm->GetNgroups(); ++k)
     {
@@ -214,39 +277,8 @@ int analyze
 
       delete current;
 
-      for(int l = 0; l < (int) true_time.size(); ++l)
-        h_time->Fill( meas_time - true_time[l] );
-
-      //analyzed_hits += true_time.size();
+      for(int m = 0; m < (int) true_time.size(); ++m)
+        h_segm->Fill( meas_time - true_time[m] );
     }
-
-    time_segm->Clear(); //clear particle traces
   }
-
-  delete time_sim;
-  delete time_segm;
-
-  std::cout <<std::endl <<std::endl;
-
-
-  //debug
-
-  if(negative_lad_strip > 0)
-  {
-    std::cerr <<"[DEBUG] negative strips or ladders:\t";
-    std::cerr <<negative_lad_strip <<std::endl <<std::endl;
-  }
-
-
-  // write output
-
-  outFile->WriteTObject(h_time);
-  outFile->WriteTObject(h_ideal);
-  outFile->WriteTObject(h_signal_zero);
-
-  outFile->Close();
-
-  std::cout <<"Results written in:\t" <<output <<"\n\n";
-
-  return 0;
 }
