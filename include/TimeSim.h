@@ -50,13 +50,15 @@ class TimeSim
   //make CHARGE_NOISE_ not editable after initialization
   class Noise
   {
+    const double PAIR_NOISE_ = 8; //pairs producted per um
+
     charge_t CHARGE_NOISE_ = 0;
 
   public:
 
     Noise(const length_t &thickness)
-    // Q_noise ~ 8 um^(-1) * thickness * e
-    { CHARGE_NOISE_ = thickness * (8 * 1e+6) * FOND_CHARGE; }
+    // Q_noise ~ pair_noise um^(-1) * thickness * e
+    { CHARGE_NOISE_ = thickness * (PAIR_NOISE_ * 1e+6) * FOND_CHARGE; }
 
     inline charge_t GetChargeNoise()
     { return CHARGE_NOISE_; }
