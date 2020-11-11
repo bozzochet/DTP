@@ -82,10 +82,15 @@ void TimeSegm::SetHit
   int i = -1;
 
   if(S_ == A)
-    i = (lad % geo_->GetNsquares()) * Ngroups_row_ + strip / jump_;
+    i = lad / geo_->GetNsquares() * Ngroups_row_
+      + (lad % geo_->GetNsquares() * geo_->GetNstrips() + strip)
+        / jump_
+      + 1;
 
   else if(S_ == B)
-    i = (lad % geo_->GetNsquares()) * Ngroups_row_ + strip % jump_;
+    i = lad / geo_->GetNsquares() * Ngroups_row_
+      + (lad % geo_->GetNsquares() * geo_->GetNstrips() + strip)
+        % jump_;
 
   //else if(S_ == C)
     //SEGM C
