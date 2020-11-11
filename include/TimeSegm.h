@@ -89,7 +89,7 @@ class TimeSegm
   int jump_ = 0;
   double side_ = 0;
 
-  int Ngroups_row_ = 0; //groups per row
+  int Ngroups_lad_ = 0; //groups per ladder
 
   std::vector<Group*> group_;
 

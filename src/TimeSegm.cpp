@@ -14,18 +14,12 @@ TimeSegm::TimeSegm
     S_ = S;
     jump_ = jump;
 
-    //compute groups on a single row
-    Ngroups_row_ =
+    //compute groups on a single ladder
+    Ngroups_lad_ = S == A ? geo_->GetNstrips() / jump : jump;
 
-      S == A ?
-        TMath::Ceil
-          (
-            (double) (geo_->GetNstrips() * geo_->GetNsquares())
-            / (double) jump
-          )
-      :
-        jump
-    ;
+    if(geo_->GetNstrips() % jump != 0 && S == A)
+      ++Ngroups_lad_; //add one group for module division
+
 
     /* if Nstrips * Nsquares is not a multiple of jump:
      *
@@ -43,7 +37,8 @@ TimeSegm::TimeSegm
      *            floor( (Nstirps * Nsquares) / jump )
      */
 
-    const int N = Ngroups_row_ * geo_->GetNrows() * geo_->GetNlayers();
+    //number of total groups
+    const int N = Ngroups_lad_ * geo_->GetNladders();
 
     for(int i=0; i < N; ++i)
     {
@@ -82,20 +77,15 @@ void TimeSegm::SetHit
   int i = -1;
 
   if(S_ == A)
-    i = lad / geo_->GetNsquares() * Ngroups_row_
-      + (lad % geo_->GetNsquares() * geo_->GetNstrips() + strip)
-        / jump_
-      + 1;
+    i = (lad - 1) * Ngroups_lad_ + strip / jump_ ;
 
   else if(S_ == B)
-    i = lad / geo_->GetNsquares() * Ngroups_row_
-      + (lad % geo_->GetNsquares() * geo_->GetNstrips() + strip)
-        % jump_;
+    i = (lad - 1) * Ngroups_lad_ + strip % jump_;
 
   //else if(S_ == C)
     //SEGM C
 
-  else
+  else //error
   {
     std::cout <<"\n[TIMESEGM] fatal error on SetHit: ";
     std::cout <<"S_ set badly\n";
@@ -104,6 +94,8 @@ void TimeSegm::SetHit
     exit(1);
   }
 
+
+  //error
   if( i >= (int) group_.size() || i < 0)
   {
     std::cout <<"\n[TIMESEGM] fatal error on SetHit: ";
@@ -112,11 +104,13 @@ void TimeSegm::SetHit
     std::cout <<"i: " <<i <<" segm: " << (char) S_ <<" size: "
       <<group_.size();
     std::cout <<"\nlad: " <<lad <<" Nsquares: " <<geo_->GetNsquares();
-    std::cout <<"\nNgroups per row: " <<Ngroups_row_ <<" strip: " <<strip;
+    std::cout <<"\nNgroups per row: " <<Ngroups_lad_ <<" strip: "
+      <<strip;
     std::cout <<" jump: " <<jump_ <<std::endl;
 
     exit(1);
   }
+
 
   group_[i]->SetHit(t,E);
 }
