@@ -4,7 +4,7 @@
 void progress(const int &n, const int &N) {
 
     double frac = (double) n / (double) N ;
-    if(frac > 0.99) frac = 1; //fix ending with 99%
+    if(n == N-1) frac = 1; //fix ending with 99%
 
     int length = 40; //number of characters to use to print bar
     int completed = frac*length;
