@@ -2,13 +2,6 @@
 #include "TimeSim.h"
 
 
-void TimeSim::AddChargeSignal(signal_t *signal, const signal_fun_t *ideal)
-{
-  for(mytime_t t = 0; t < ideal->GetXmax(); t += T_SAMPLING_ )
-    signal->SetPoint(signal->GetN(), t, ideal->Eval(t));
-}
-
-
 charge_t TimeSim::AddChargeNoise(signal_t *signal)
 {
   hist_t *uniform = new hist_t

@@ -90,6 +90,7 @@ class TimeSim
   random_gen_t *random_ = NULL;
 
 
+
 // methods
 
   /* add to signal a single hit current generated using up_ and
@@ -100,18 +101,28 @@ class TimeSim
     const mytime_t &hitTime, signal_t *signal, const signal_t *charge
   );
 
+
   // signal points are sorted after this method execution
-  void AddChargeSignal(signal_t *signal, const signal_fun_t *ideal);
+  inline void AddChargeSignal
+    (signal_t *signal, const signal_fun_t *ideal)
+  {
+    for(mytime_t t = 0; t < ideal->GetXmax(); t += T_SAMPLING_ )
+      signal->SetPoint(signal->GetN(), t, ideal->Eval(t));
+  }
+
 
   inline charge_t GetChargeFromEnergy(const energy_t &E)
   { return E / ENERGY_COUPLE * FOND_CHARGE; }
 
+
   bool Trigger(double&, const signal_t*, const int&, const double&);
+
 
   /* add second signal to first one passed;
    * signals passed MUST BE sorted and sampled with same time;
    * first signal is sorted after this method execution */
   void SumCurrentSignal(signal_t*, const signal_t*);
+
 
 
 public:
@@ -130,6 +141,7 @@ public:
     delete random_;
   }
 
+
   /* add noise to signal passed and return total charge noise
    * collected;
    * IMPORTANT: signals passed MUST be sorted */
@@ -147,6 +159,7 @@ public:
     const energy_t&, signal_t *signal, const bool noise = true
   );
 
+
   /* get current signal on strip ( #ladder, #strip) based on charge
    * collected;
    * signal passed MUST BE VOID;
@@ -156,10 +169,12 @@ public:
     const mytime_t &hitTime, signal_t *signal, const signal_t *charge
   );
 
+
   /* get current signal i-th group of strips;
    * signal passed MUST BE VOID;
    * signal points are sorted after this method execution */
    void GetCurrentSignal(const int &i, signal_t *signal);
+
 
    /* get time when current becomes > threshold_fraction * peak
     * IMPORTANT: current MUST be sorted */
