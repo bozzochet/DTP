@@ -33,22 +33,49 @@ const int Nladders = GEO.GetNladders();
 const double thickness = GEO.GetThickness();
 
 
+int analyze
+(
+  const char *input, const char *output,
+  const time_segm &S, const int &J
+);
+
+
 int main(int argc, char **argv)
 {
-
-  //input file
-
   if(argc < 2)
   {
     std::cerr <<"\nfatal error: input file not specified\n";
     return 1;
   }
 
-  TFile *inFile = TFile::Open(argv[1]);
+  time_segm S[4] = {A, A, B, B};
+  int J[4] = {1, 10, 1, 10};
+  const char* output[4] = {"time--A1.root", "time--A10.root", "time--B1.root", "time--B10.root"};
+
+  for(int i=0; i < 4; ++i)
+  {
+    std::cout <<std::endl <<(char) S[i] <<std::to_string(J[i])
+      <<" ANALYSIS:\n\n";
+
+    if(analyze(argv[1], output[i], S[i], J[i]) != 0)
+      return 1;
+  }
+
+  return 0;
+}
+
+int analyze
+(
+  const char *input, const char *output,
+  const time_segm &S, const int &J
+)
+{
+
+  TFile *inFile = TFile::Open(input);
 
   if(inFile->IsZombie())
   {
-    std::cerr <<"\nfatal error: unable to open " <<argv[1] <<std::endl;
+    std::cerr <<"\nfatal error: unable to open " <<input <<std::endl;
     return 1;
   }
 
@@ -56,7 +83,7 @@ int main(int argc, char **argv)
 
   //output file
 
-  TFile *outFile = new TFile("time.root", "recreate");
+  TFile *outFile = new TFile(output, "recreate");
 
   if(outFile->IsZombie())
   {
@@ -101,7 +128,7 @@ int main(int argc, char **argv)
 
   TRandom3 *random = new TRandom3(9298);
 
-  TimeSegm *time_segm = new TimeSegm(&GEO, A, 1);
+  TimeSegm *time_segm = new TimeSegm(&GEO, S, J);
 
   TimeSim *time_sim = new TimeSim
     (time_segm, random, thickness * 1e-3 /*convert mm to m*/ );
@@ -220,7 +247,7 @@ int main(int argc, char **argv)
 
   outFile->Close();
 
-  std::cout <<"Results written in:\ttime.root\n\n";
+  std::cout <<"Results written in:\t" <<output <<"\n\n";
 
   return 0;
 }
