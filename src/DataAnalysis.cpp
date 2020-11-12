@@ -154,9 +154,9 @@ int main(int argc, char **argv) {
       pos_sim->SetHitPos(cl->layer, cl->pos[cl->segm]);
       pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[0]);
 
-			if(cl->strip == Nstrips-1 && (cl->ladder+1) % Nsquares == 0) //hit on the last strip of the last ladder of the layer row
-
-				continue; //cl->clust[1] energy is lost
+			if(cl->strip == Nstrips-1 && (cl->ladder+1) % Nsquares == 0)
+        //hit on the last strip of the last ladder of the layer row
+				pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[1]);
 
 			else if(cl->strip==Nstrips-1)
         pos_sim->DepositEnergy(cl->ladder+1, 0, cl->clust[1]);
