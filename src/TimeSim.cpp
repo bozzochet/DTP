@@ -235,7 +235,7 @@ void TimeSim::SumCurrentSignal
 }
 
 
-mytime_t TimeSim::GetTime
+mytime_t TimeSim::GetMeas
   (const signal_t *current, const double threshold)
 {
   const current_t I_max = current->GetMaximum();

@@ -244,7 +244,7 @@ void analyze_noise
         time_sim->GetCurrentSignal(cl->time * 1e-9, current, charge);
 
         h_noise->Fill
-          (time_sim->GetTime(current, 0.1) - cl->time * 1e-9);
+          (time_sim->GetMeas(current, 0.1) - cl->time * 1e-9);
 
         delete current;
         delete charge;
@@ -302,7 +302,7 @@ void analyze_segm
       TGraph *current = new TGraph();
       time_sim->GetCurrentSignal(k, current);
 
-      mytime_t meas_time = time_sim->GetTime(current, 0.1);
+      mytime_t meas_time = time_sim->GetMeas(current, 0.1);
 
       delete current;
 

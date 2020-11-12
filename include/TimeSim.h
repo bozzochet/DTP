@@ -151,7 +151,7 @@ public:
 
    /* get time when current becomes > threshold_fraction * peak
     * IMPORTANT: current MUST be sorted */
-   mytime_t GetTime
+   mytime_t GetMeas
     (const signal_t *current, const double threshold_fraction = 0.1);
 
 };
