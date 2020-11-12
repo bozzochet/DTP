@@ -190,8 +190,9 @@ int analyze
   outFile->Close();
 
   delete outFile;
-  delete h_segm;
-  delete h_noise;
+
+  //delete h_segm;  //cause program crash
+  //delete h_noise;  //cause program crash
 
   std::cout <<"Results written in:\t" <<output <<"\n\n";
 
