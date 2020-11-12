@@ -145,6 +145,9 @@ int analyze
     10000, -1e-10, 1e-10
   );
 
+  h_segm->SetBit(TH1::kAutoBinPTwo);
+
+
   //time measures with noise only
   TH1F *h_noise = new TH1F
   (
@@ -152,6 +155,8 @@ int analyze
     "time measures with noise; t_meas - t_true [s]; entries",
     10000, -3e-12, 3e-12
   );
+
+  h_noise->SetBit(TH1::kAutoBinPTwo);
 
 
 
