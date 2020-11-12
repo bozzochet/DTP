@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
   const char* output[2] = {"time--A10.root", "time--B10.root"};
 
-  for(int i = -1; i < 2; ++i)
+  for(int i = -1; i < 0; ++i)
   {
 
     std::clock_t start = std::clock();
@@ -84,13 +84,13 @@ int main(int argc, char **argv)
 
     if(sec / 60 >= 60)
       std::cout << sec / 3600 << ":" << sec % 3600 / 60 << ":"
-        << (sec % 3600) % 60;
+        << (sec % 3600) % 60 ;
 
     else if(sec >= 60)
-      std::cout << sec / 60 << ":" << sec % 60;
+      std::cout << sec / 60 << ":" << sec % 60 <<" min\n";
 
     else
-      std::cout << sec <<" secondi";
+      std::cout << sec <<" secondi\n";
 
   }
 
@@ -150,7 +150,7 @@ int analyze
   (
     "h_noise",
     "time measures with noise; t_meas - t_true [s]; entries",
-    10000, -1e-10, 1e-10
+    10000, -3e-12, 3e-12
   );
 
 
@@ -172,11 +172,11 @@ int analyze
   }
 
 
-
   delete time_sim;
   delete time_segm;
   delete random;
 
+  delete events;
   delete branch;
 
   std::cout <<std::endl <<std::endl;
@@ -184,8 +184,10 @@ int analyze
 
   // write output
 
-  outFile->WriteTObject(h_segm);
-  outFile->WriteTObject(h_noise);
+  if(segm)
+    outFile->WriteTObject(h_segm);
+  else
+    outFile->WriteTObject(h_noise);
 
   outFile->Close();
 
