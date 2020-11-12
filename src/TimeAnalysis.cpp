@@ -37,8 +37,12 @@ const double thickness = GEO.GetThickness();
 
 int analyze
   (const char*, const char*, const time_segm&, const int&, const bool);
-void analyze_noise(TTree*, TClonesArray*, TimeSim*, TH1F*);
-void analyze_segm(TTree*, TClonesArray*, TimeSegm*, TimeSim*, TH1F*);
+
+void analyze_noise
+  (TTree*, TClonesArray*, TimeSim*, TH1F*, TGraph*, TGraph*);
+
+void analyze_segm
+  (TTree*, TClonesArray*, TimeSegm*, TimeSim*, TH1F*, TGraph*);
 
 
 
@@ -158,6 +162,10 @@ int analyze
 
   h_noise->SetBit(TH1::kAutoBinPTwo);
 
+  //example graphs
+  TGraph *charge_example = new TGraph();
+  TGraph *current_example = new TGraph();
+
 
 
   TRandom3 *random = new TRandom3(9298);
@@ -169,10 +177,17 @@ int analyze
 
 
   if( !segm)
-    analyze_noise(events, branch, time_sim, h_noise);
+    analyze_noise
+    (
+      events, branch, time_sim, h_noise,
+      charge_example, current_example
+    );
+
   else
   {
-    analyze_segm(events, branch, time_segm, time_sim, h_segm);
+    analyze_segm
+      (events, branch, time_segm, time_sim, h_segm, current_example);
+
     time_segm->Clear(); //clear particle traces
   }
 
@@ -194,6 +209,8 @@ int analyze
   else
     outFile->WriteTObject(h_noise);
 
+  outFile->WriteTObject(current_example);
+  outFile->WriteTObject(charge_example);
   outFile->Close();
 
   delete outFile;
@@ -211,7 +228,8 @@ int analyze
 void analyze_noise
 (
   TTree *events, TClonesArray *branch,
-  TimeSim *time_sim, TH1F *h_noise
+  TimeSim *time_sim, TH1F *h_noise,
+  TGraph *charge_example, TGraph *current_example
 )
 {
 
@@ -236,8 +254,20 @@ void analyze_noise
 
       if(cl->ladder >= 0 && cl->strip >= 0) //TEMPORARY FIX
       {
-        TGraph *current = new TGraph();
-        TGraph *charge = new TGraph();
+        TGraph *current;
+        TGraph *charge;
+
+        if(i == 0 && j == 0)
+        { //get example
+          current = current_example;
+          charge = charge_example;
+        }
+
+        else
+        {
+          current = new TGraph();
+          charge = new TGraph();
+        }
 
         time_sim->GetChargeSignal(cl->eDep * 1e+9, charge);
 
@@ -246,11 +276,16 @@ void analyze_noise
         h_noise->Fill
           (time_sim->GetMeas(current, 0.1) - cl->time * 1e-9);
 
-        delete current;
-        delete charge;
-      }
-    }
-  }
+        if(i != 0 || j != 0)
+        {
+          delete current;
+          delete charge;
+        }
+      } //if lad >= 0 strip >= 0
+
+    } //for j
+  } //for i
+
 }
 
 
@@ -258,7 +293,8 @@ void analyze_noise
 void analyze_segm
 (
   TTree *events, TClonesArray *branch,
-  TimeSegm *time_segm, TimeSim *time_sim, TH1F *h_segm
+  TimeSegm *time_segm, TimeSim *time_sim, TH1F *h_segm,
+  TGraph *current_example
 )
 {
 
@@ -297,17 +333,25 @@ void analyze_segm
 
       if(true_time.size() == 0)
         continue;
-        //HERE COULD BE GENERATED NOISE SIGNAL WITHOUT HIT
 
-      TGraph *current = new TGraph();
+      TGraph *current;
+
+      if(k == 0)
+        current = current_example;
+      else
+        current = new TGraph();
+
       time_sim->GetCurrentSignal(k, current);
 
       mytime_t meas_time = time_sim->GetMeas(current, 0.1);
 
-      delete current;
+      if(k!=0)
+        delete current;
 
       for(int m = 0; m < (int) true_time.size(); ++m)
         h_segm->Fill( meas_time - true_time[m] );
     }
-  }
+
+  } //for i
+
 }
