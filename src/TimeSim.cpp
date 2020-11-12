@@ -106,8 +106,22 @@ void TimeSim::AddCurrentSignal
 
 //fill first part of signal
 
+  /* noise could make first point of current signal < 0 => t_first < 0:
+   * slew_rate_ need to be negative */
+
+  double slew;
+
+  if(t_first < 0)
+  {
+    t_first *= -1;
+    slew = -SLEW_RATE_;
+  }
+  else
+    slew = SLEW_RATE_;
+
+
   signal_fun_t *line = new signal_fun_t("line", "[0]*x", 0, t_first);
-  line->SetParameter(0, SLEW_RATE_);
+  line->SetParameter(0, slew);
 
   for
   (
