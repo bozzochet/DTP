@@ -69,7 +69,7 @@ void PosSim::AddNoise()
 
 	for (int ii = 0; ii < (*eDepSegm).size(); ii++) {
 		for (int jj = 0; jj < (*eDepSegm)[ii].size(); jj++) {
-			double fluct = random_->Gaus(0, 9e-6);
+			double fluct = random_->Gaus(0, 9e-6); //9kev
 
 			(*eDepSegm)[ii][jj] += fluct;
 			}
