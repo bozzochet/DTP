@@ -15,7 +15,6 @@
 #include "TH1F.h"
 #include "TRandom3.h"
 #include "TMultiGraph.h"
-#include "TGaxis.h"
 
 #include <iostream>
 #include <ctime>
@@ -73,6 +72,8 @@ int main(int argc, char **argv)
     std::cout <<"\n\t- max threshold to analyze (argument <= 1)"
               <<"\n\t  / start threshold multiplier (argument > 1)";
 
+    std::cout <<"\n\nIf multiplier is specified, maximum threshold is 0.01 (i.e. 1%)";
+
     std::cout <<"\n\nExamples for charge and current signals could be";
     std::cout <<" generated passing \ninput file and option ";
     std::cout <<"\"--example\"";
@@ -122,7 +123,7 @@ int main(int argc, char **argv)
     {
       double threshold = std::stod(argv[2]);
 
-      for(int i=0; threshold * std::stod(argv[3]) < 1; ++i)
+      for(int i=0; threshold * std::stod(argv[3]) < 0.1; ++i)
       {
         threshold = std::stod(argv[2])
           * TMath::Power(std::stod(argv[3]), i);
