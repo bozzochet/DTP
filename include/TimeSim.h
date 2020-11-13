@@ -116,8 +116,11 @@ public:
 
   inline charge_t GetChargeNoise()
   {
-    return random_->Gaus(0, 2*CHARGE_NOISE_)
-      -random_->Gaus(0, CHARGE_NOISE_);
+    return
+      TMath::Floor
+      (
+        (random_->Gaus(0, 2*CHARGE_NOISE_)-random_->Gaus(0, CHARGE_NOISE_)) / FOND_CHARGE
+      ) * FOND_CHARGE;
   }
 
 

@@ -7,9 +7,6 @@ charge_t TimeSim::AddChargeNoise(signal_t *signal)
   //total charge noise
   charge_t Q_NOISE = GetChargeNoise();
 
-  //make Q_NOISE a multiple of fondamental charge
-  Q_NOISE = TMath::Floor(Q_NOISE / FOND_CHARGE) * FOND_CHARGE;
-
   mytime_t T = TMath::MaxElement(signal->GetN(), signal->GetX());
 
   //cumulative noise already added
