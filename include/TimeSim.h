@@ -49,9 +49,6 @@ class TimeSim
 
 // const variables
 
-  //slew rate of line_
-  const double SLEW_RATE_ = 1e+5;
-
   //tau of strip as a capacitor
   const mytime_t T_CAPACITOR_ = 1e-9;
 

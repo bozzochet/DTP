@@ -74,12 +74,7 @@ charge_t TimeSim::GetChargeSignal
 void TimeSim::AddCurrentSignal
   (const mytime_t &hitTime, signal_t *signal, const signal_t *charge)
 {
-
-//fill with charge derivative
-
-  //position of current graph first point
-  current_t I_first;
-  mytime_t t_first;
+  //fill with charge derivative
 
   for(int i=0; i < charge->GetN()-1; ++i)
   {
@@ -90,49 +85,13 @@ void TimeSim::AddCurrentSignal
     charge->GetPoint(i, t1, q1);
     charge->GetPoint(i+1, t2, q2);
 
-    if(i==0)
-    {
-      I_first = (q2 - q1) / (t2 - t1);
-      t_first = I_first / SLEW_RATE_;
-    }
-
     signal->SetPoint(
       signal->GetN(),
-      hitTime + t_first + (t2 + t1)*0.5,
+      hitTime + (t2 + t1)*0.5,
       (q2 - q1) / (t2 - t1)
     );
-
   }
 
-//fill first part of signal
-
-  /* noise could make first point of current signal < 0 => t_first < 0:
-   * slew_rate_ need to be negative */
-
-  double slew;
-
-  if(t_first < 0)
-  {
-    t_first *= -1;
-    slew = -SLEW_RATE_;
-  }
-  else
-    slew = SLEW_RATE_;
-
-
-  signal_fun_t *line = new signal_fun_t("line", "[0]*x", 0, t_first);
-  line->SetParameter(0, slew);
-
-  for
-  (
-    mytime_t t = t_first - 0.5 * T_SAMPLING_;
-    t >= 0;
-    t -= T_SAMPLING_
-  )
-    signal->InsertPointBefore
-      (0 , t + hitTime, line->Eval(t));
-
-  delete line;
 }
 
 
