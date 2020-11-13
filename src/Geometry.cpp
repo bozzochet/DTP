@@ -16,7 +16,7 @@ Geometry::Geometry()
 
   int found = 0; //variables found
 
-  while(found < map_name_.size())
+  while(found < (int) map_name_.size())
   {
     //search line with values and get values
 
