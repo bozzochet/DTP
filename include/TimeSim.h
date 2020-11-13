@@ -93,10 +93,6 @@ class TimeSim
   }
 
 
-  inline charge_t GetChargeFromEnergy(const energy_t &E)
-  { return TMath::Floor(E / ENERGY_COUPLE) * FOND_CHARGE; }
-
-
   bool Trigger(double&, const signal_t*, const int&, const double&);
 
 
@@ -112,6 +108,17 @@ public:
   TimeSim
     (TimeSegm *segm, random_gen_t *random)
   { segm_ = segm; random_ = random; }
+
+
+  inline charge_t GetChargeFromEnergy(const energy_t &E)
+  { return TMath::Floor(E / ENERGY_COUPLE) * FOND_CHARGE; }
+
+
+  inline charge_t GetChargeNoise()
+  {
+    return random_->Gaus(0, 2*CHARGE_NOISE_)
+      -random_->Gaus(0, CHARGE_NOISE_);
+  }
 
 
   /* add noise to signal passed and return total charge noise

@@ -5,8 +5,7 @@
 charge_t TimeSim::AddChargeNoise(signal_t *signal)
 {
   //total charge noise
-  charge_t Q_NOISE =
-    random_->Gaus(0, 2*CHARGE_NOISE_) -random_->Gaus(0, CHARGE_NOISE_);
+  charge_t Q_NOISE = GetChargeNoise();
 
   //make Q_NOISE a multiple of fondamental charge
   Q_NOISE = TMath::Floor(Q_NOISE / FOND_CHARGE) * FOND_CHARGE;
