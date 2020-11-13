@@ -206,18 +206,22 @@ void TimeSim::SumCurrentSignal
 
 
 mytime_t TimeSim::GetMeas
-  (const signal_t *current, const double threshold)
+  (const signal_t *signal, const double threshold)
 {
-  const current_t I_max = current->GetMaximum();
+  /* signal could be charge of current; anyway charge_t and current_t
+   * are both double => it is used logical type double directly */
 
-  for(int i = 0; i < current->GetN(); ++i)
+  const double peak =
+    TMath::MaxElement(signal->GetN(), signal->GetY());
+
+  for(int i = 0; i < signal->GetN(); ++i)
   {
     mytime_t t;
-    current_t I;
+    double y;
 
-    current->GetPoint(i, t, I);
+    signal->GetPoint(i, t, y);
 
-    if(I > threshold * I_max)
+    if(y > threshold * peak)
       return t;
   }
 

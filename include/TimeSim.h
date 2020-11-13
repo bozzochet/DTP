@@ -146,10 +146,10 @@ public:
    void GetCurrentSignal(const int &i, signal_t *signal);
 
 
-   /* get time when current becomes > threshold_fraction * peak
-    * IMPORTANT: current MUST be sorted */
+   /* get time when signal becomes > threshold_fraction * peak
+    * IMPORTANT: charge MUST be sorted */
    mytime_t GetMeas
-    (const signal_t *current, const double threshold_fraction = 0.1);
+    (const signal_t *signal, const double threshold_fraction = 0.1);
 
 };
 
