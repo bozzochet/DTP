@@ -211,18 +211,18 @@ void charge_meas
   TH1F *h_meas = new TH1F("h_meas", " ", 1e+3, -0, 0);
 
   //time measures without noise
-  TH1F *h_ideal = new TH1F("h_ideal", " ", 1e+3, -0, 0);
+  //TH1F *h_ideal = new TH1F("h_ideal", " ", 1e+3, -0, 0);
 
-  h_ideal->SetTitle
-    ("time measures without noise; t_meas - t_true [s]; entries");
+  //h_ideal->SetTitle
+    //("time measures without noise; t_meas - t_true [s]; entries");
 
   h_meas->SetTitle
     ("time measures with noise; t_meas - t_true [s]; entries");
 
-  h_ideal->SetCanExtend(TH1::kAllAxes);
+  //h_ideal->SetCanExtend(TH1::kAllAxes);
   h_meas->SetCanExtend(TH1::kAllAxes);
 
-  h_ideal->SetLineColor(kRed);
+  //h_ideal->SetLineColor(kRed);
 
 
   TRandom3 *random = new TRandom3(9298);
@@ -252,31 +252,34 @@ void charge_meas
         for(int k = 0; k < 2; ++k)
         {
           TGraph *charge = new TGraph();
-          TGraph *charge_ideal = new TGraph();
+          //TGraph *charge_ideal = new TGraph();
 
           time_sim->GetChargeSignal
-              (cl->clust[k] * 1e+9, charge_ideal, false);
+              (cl->clust[k] * 1e+9, charge /*_ideal, false*/);
 
+/*
           for(int m=0; m < charge_ideal->GetN(); ++m)
             charge->SetPoint
               (m, charge_ideal->GetX()[m], charge_ideal->GetY()[m]);
 
           time_sim->AddChargeNoise(charge);
+*/
 
-
-          mytime_t t_true = time_sim->GetMeas(charge_ideal, threshold);
+          //mytime_t t_true = time_sim->GetMeas(charge_ideal, threshold);
 
           mytime_t t_meas = time_sim->GetMeas(charge, threshold);
 
+/*
           if(t_true != -9999)
             h_ideal->Fill(t_true);
+*/
 
           if(t_meas != -9999)
             h_meas->Fill(t_meas);
 
 
           delete charge;
-          delete charge_ideal;
+          //delete charge_ideal;
 
         }//for k
       } //if lad >= 0 strip >= 0
@@ -300,7 +303,7 @@ void charge_meas
   // write output
 
   outFile->WriteTObject(h_meas);
-  outFile->WriteTObject(h_ideal);
+  //outFile->WriteTObject(h_ideal);
 
   outFile->Close();
 
