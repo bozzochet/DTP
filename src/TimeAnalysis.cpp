@@ -49,7 +49,7 @@ void get_example(const char *input, const char *output);
 
 int main(int argc, char **argv)
 {
-  if(argc < 3)
+  if(argc < 2)
   {
     std::cerr <<"\nfatal error: missing arguments\n";
     return 1;
@@ -59,13 +59,27 @@ int main(int argc, char **argv)
   std::clock_t start = std::clock();
 
 
-  if(std::strcmp(argv[2], "example") == 0)
+  if(argc == 2 && std::strcmp(argv[1], "help") == 0)
+  {
+    std::cout <<"\nTimeAnalysis analyze time measures and timing performance.";
+
+    std::cout <<"\n\nRequested arguments:";
+
+    std::cout <<"\n\t- input file with TrCluster objects "
+              <<"\n\t  (i.e. SimpleAnalysis or digitization output)";
+    std::cout <<"\n\t- signal to measure (e.g. charge)";
+    std::cout <<"\n\t- threshold step";
+    std::cout <<"\n\t- max threshold to analyze\n\n";
+  }
+
+
+  else if(argc == 3 && std::strcmp(argv[2], "example") == 0)
   {
     get_example(argv[1], "time--example.root");
   }
 
 
-  else if(std::strcmp(argv[2], "charge") == 0)
+  else if(argc == 5 && std::strcmp(argv[2], "charge") == 0)
   {
     for(int i=1; i <= std::stod(argv[4]) / std::stod(argv[3]); ++i)
     {
@@ -84,20 +98,29 @@ int main(int argc, char **argv)
   }
 
 
-  std::cout <<"\nexecution completed in ";
-
-  int sec = (std::clock() - start) / CLOCKS_PER_SEC;
-
-  if(sec / 60 >= 60)
-    std::cout << sec / 3600 << "h " << sec % 3600 / 60 << "min "
-      << (sec % 3600) % 60 <<"s\n";
-
-  else if(sec >= 60)
-    std::cout << sec / 60 << "min " << sec % 60 <<"s\n";
-
   else
-    std::cout << sec <<"s\n";
+  {
+    std::cout <<"\nfatal error: unable to execute\n\n";
+    return 1;
+  }
 
+
+  if(argc > 2)
+  {
+    std::cout <<"\nexecution completed in ";
+
+    int sec = (std::clock() - start) / CLOCKS_PER_SEC;
+
+    if(sec / 60 >= 60)
+      std::cout << sec / 3600 << "h " << sec % 3600 / 60 << "min "
+        << (sec % 3600) % 60 <<"s\n";
+
+    else if(sec >= 60)
+      std::cout << sec / 60 << "min " << sec % 60 <<"s\n";
+
+    else
+      std::cout << sec <<"s\n";
+  }
 
   return 0;
 }
