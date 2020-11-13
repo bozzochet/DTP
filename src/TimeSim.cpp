@@ -133,30 +133,39 @@ void TimeSim::SumCurrentSignal
 
   // get max and min and bin length (t_sample)
 
-  mytime_t t_sum_sample=0, t_sum_min=0, t_sum_max=0;
-  mytime_t t_add_sample=0, t_add_min=0, t_add_max=0;
+  mytime_t t_sample=0;
+
+  mytime_t t_sum_min=0, t_sum_max=0;
+  mytime_t t_add_min=0, t_add_max=0;
+
   current_t tmp;
 
   sum->GetPoint(0, t_sum_min, tmp);
   sum->GetPoint(sum->GetN()-1, t_sum_max, tmp);
 
   add->GetPoint(0, t_add_min, tmp);
-  add->GetPoint(1, t_add_sample, tmp);
   add->GetPoint(add->GetN()-1, t_add_max, tmp);
 
-  //when sum is void set its t_sample = t_add_sample
 
-  if(sum->GetN() == 0)
-    t_sum_sample = t_add_sample;
-  else
-    sum->GetPoint(1, t_sum_sample, tmp);
+  if(sum->GetN() == 0) //copy add in sum
+  {
+    for(int i = 0; i < add->GetN(); ++i)
+    {
+      mytime_t t;
+      current_t I;
 
-  if(t_add_sample != t_sum_sample)
+      add->GetPoint(i, t, I);
+      sum->GetPoint(i, t, I);
+    }
+
     return;
+  }
 
-  mytime_t t_sample = t_sum_sample;
+  else //get sampling time
+    sum->GetPoint(1, t_sample, tmp);
 
-  //sum
+
+  //"sum" is not void => add points
 
   for(int i=0; i < add->GetN(); ++i)
   {
@@ -165,17 +174,28 @@ void TimeSim::SumCurrentSignal
 
     add->GetPoint(i, t_add, I_add);
 
-    int i_sum = (t_add - t_sum_min) / t_sample;
+    double i_sum = (t_add - t_sum_min) / t_sample;
 
-    /* "add" signal point is < of every "sum" signal point: add zeros
-     * at the begin of "sum" signal */
+    /* "add" points are not in general on the same t of "sum" ;
+     * they need to be aligned to "sum" samples */
+
+     i_sum =
+      i_sum - TMath::FloorNint(i_sum) < 0.5 ?
+      TMath::FloorNint(i_sum) : TMath::CeilNint(i_sum);
+
+
+
+    /* if "add" signal point is < of every "sum" signal point
+     * (i.e. i_sum < 0): add zeros at the begin of "sum" signal */
 
     for(mytime_t t = t_sum_min - t_sample; i_sum < 0; t -= t_sample)
     {
-      sum->InsertPointBefore(1, t, 0);
+      sum->InsertPointBefore(0, t, 0);
       t_sum_min = t;
       i_sum = (t_add - t_sum_min) / t_sample;
     }
+
+
 
     // evaluate if "add" signal point is inside "sum" range or above
 
@@ -194,10 +214,15 @@ void TimeSim::SumCurrentSignal
       )
       {
         sum->SetPoint(sum->GetN(), t, 0);
-        t_sum_max = t; //this does not affect t in the next iterations
+
+        t_sum_max = t;
+        //this does not affect next iterations of this cycle
       }
 
-    //if "add" point was above, i_sum should be equal to sum->GetN()
+
+
+    /* if "add" point was above "sum" range, i_sum should be equal
+     * to sum->GetN() now, otherwise it is < sum->GetN() */
 
     sum->SetPoint(i_sum, t_add + t_sum, I_add + I_sum);
   }
