@@ -8,12 +8,10 @@ charge_t TimeSim::AddChargeNoise(signal_t *signal)
   charge_t Q_NOISE =
     random_->Gaus(0, 2*CHARGE_NOISE_) -random_->Gaus(0, CHARGE_NOISE_);
 
-  mytime_t T;
-  charge_t tmp;
   //make Q_NOISE a multiple of fondamental charge
   Q_NOISE = TMath::Floor(Q_NOISE / FOND_CHARGE) * FOND_CHARGE;
 
-  signal->GetPoint(signal->GetN()-1, T, tmp);
+  mytime_t T = TMath::MaxElement(signal->GetN(), signal->GetX());
 
   //cumulative noise already added
   charge_t q_noise = 0;
