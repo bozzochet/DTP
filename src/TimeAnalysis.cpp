@@ -45,6 +45,8 @@ void charge_meas
 
 void get_example(const char *input, const char *output);
 
+void get_charge(const char *input, const char *output);
+
 
 
 int main(int argc, char **argv)
@@ -59,7 +61,7 @@ int main(int argc, char **argv)
   std::clock_t start = std::clock();
 
 
-  if(argc == 2 && std::strcmp(argv[1], "help") == 0)
+  if(argc == 2 && std::strcmp(argv[1], "--help") == 0)
   {
     std::cout <<"\nTimeAnalysis analyze time measures and timing performance.";
 
@@ -67,34 +69,76 @@ int main(int argc, char **argv)
 
     std::cout <<"\n\t- input file with TrCluster objects "
               <<"\n\t  (i.e. SimpleAnalysis or digitization output)";
-    std::cout <<"\n\t- signal to measure (e.g. charge)";
-    std::cout <<"\n\t- threshold step";
-    std::cout <<"\n\t- max threshold to analyze\n\n";
+    std::cout <<"\n\t- threshold step / start threshold";
+    std::cout <<"\n\t- max threshold to analyze (argument <= 1)"
+              <<"\n\t  / start threshold multiplier (argument > 1)";
+
+    std::cout <<"\n\nExamples for charge and current signals could be";
+    std::cout <<" generated passing \ninput file and option ";
+    std::cout <<"\"--example\"";
+
+    std::cout <<"\n\nCharge distributions could be generated passing";
+    std::cout <<"\ninput file and option \"--charge\"";
+
+    std::cout <<"\n\nPass options AFTER input file\n\n";
+
+    return 0;
   }
 
 
-  else if(argc == 3 && std::strcmp(argv[2], "example") == 0)
+  else if(argc == 3 && std::strcmp(argv[2], "--example") == 0)
   {
     get_example(argv[1], "time--example.root");
   }
 
 
-  else if(argc == 5 && std::strcmp(argv[2], "charge") == 0)
+  else if(argc == 3 && std::strcmp(argv[2], "--charge") == 0)
   {
-    for(int i=1; i <= std::stod(argv[4]) / std::stod(argv[3]); ++i)
+    get_charge(argv[1], "time--charge.root");
+  }
+
+
+  else if(argc == 4)
+  {
+    if(std::stod(argv[3]) <= 1)
     {
-      double threshold = std::stod(argv[3]) * i;
+      for(int i=1; i <= std::stod(argv[3]) / std::stod(argv[2]); ++i)
+      {
+        double threshold = std::stod(argv[2]) * i;
 
-      std::string output = "time--charge--thresh.root";
+        std::string output = "time--thresh.root";
 
-      output.insert
-        (output.length()-5, std::to_string((int) (threshold*100)) );
+        output.insert
+          (output.length()-5, std::to_string(threshold));
 
-      std::cout <<"\n\nCONSTANT FRACTION OF CHARGE WITH THRESHOLD "
-        << threshold <<"\n";
+        std::cout <<"\n\nCONSTANT FRACTION OF CHARGE WITH THRESHOLD "
+          << threshold <<"\n";
 
-      charge_meas(argv[1], output.c_str(), threshold);
+        charge_meas(argv[1], output.c_str(), threshold);
+      }
     }
+
+    else
+    {
+      double threshold = std::stod(argv[2]);
+
+      for(int i=0; threshold * std::stod(argv[3]) < 1; ++i)
+      {
+        threshold = std::stod(argv[2])
+          * TMath::Power(std::stod(argv[3]), i);
+
+        std::string output = "time--thresh.root";
+
+        output.insert
+          (output.length()-5, std::to_string(threshold));
+
+        std::cout <<"\n\nCONSTANT FRACTION OF CHARGE WITH THRESHOLD "
+          << threshold <<"\n";
+
+        charge_meas(argv[1], output.c_str(), threshold);
+      }
+    }
+
   }
 
 
@@ -168,31 +212,16 @@ void charge_meas
   //time measures without noise
   TH1F *h_ideal = new TH1F("h_ideal", " ", 1e+3, -0, 0);
 
-  //ideal charge collected
-  TH1F *h_charge_ideal = new TH1F("h_charge_ideal", " ", 1e+3, -0, 0);
-
-  //charge collected without noise
-  TH1F *h_charge = new TH1F("h_charge", " ", 1e+3, -0, 0);
-
   h_ideal->SetTitle
     ("time measures without noise; t_meas - t_true [s]; entries");
 
   h_meas->SetTitle
     ("time measures with noise; t_meas - t_true [s]; entries");
 
-  h_charge_ideal->SetTitle
-    ("ideal charge collected;charge [C];entries");
-
-  h_charge->SetTitle
-    ("charge collected with noise;charge [C];entries");
-
   h_ideal->SetCanExtend(TH1::kAllAxes);
   h_meas->SetCanExtend(TH1::kAllAxes);
-  h_charge_ideal->SetCanExtend(TH1::kAllAxes);
-  h_charge->SetCanExtend(TH1::kAllAxes);
 
   h_ideal->SetLineColor(kRed);
-  h_charge_ideal->SetLineColor(kRed);
 
 
   TRandom3 *random = new TRandom3(9298);
@@ -224,19 +253,14 @@ void charge_meas
           TGraph *charge = new TGraph();
           TGraph *charge_ideal = new TGraph();
 
-          charge_t q;
-
-          h_charge_ideal->Fill
-          (
-            q = time_sim->GetChargeSignal
-              (cl->clust[k] * 1e+9, charge_ideal, false)
-          );
+          time_sim->GetChargeSignal
+              (cl->clust[k] * 1e+9, charge_ideal, false);
 
           for(int m=0; m < charge_ideal->GetN(); ++m)
             charge->SetPoint
               (m, charge_ideal->GetX()[m], charge_ideal->GetY()[m]);
 
-          h_charge->Fill(q + time_sim->AddChargeNoise(charge));
+          time_sim->AddChargeNoise(charge);
 
 
           mytime_t t_true = time_sim->GetMeas(charge_ideal, threshold);
@@ -276,6 +300,112 @@ void charge_meas
 
   outFile->WriteTObject(h_meas);
   outFile->WriteTObject(h_ideal);
+
+  outFile->Close();
+
+  delete outFile;
+
+  std::cout <<"\nResults written in " <<output;
+}
+
+
+
+void get_charge(const char *input, const char *output)
+{
+  TFile *inFile = TFile::Open(input);
+
+  if(inFile->IsZombie())
+  {
+    std::cerr <<"\nfatal error: unable to open " <<input <<std::endl;
+    exit(1);
+  }
+
+
+  //output file
+
+  TFile *outFile = new TFile(output, "recreate");
+
+  if(outFile->IsZombie())
+  {
+    std::cerr <<"\nfatal error: unable to open output file\n";
+    exit(1);
+  }
+
+
+  TTree *events;
+	inFile->GetObject("Tree", events);
+	//events->Print();
+
+  TClonesArray *branch = new TClonesArray("TrCluster", 200);
+	events->SetBranchAddress("Events", &branch);
+
+  //ideal charge collected
+  TH1F *h_charge_ideal = new TH1F("h_charge_ideal", " ", 1e+3, -0, 0);
+
+  //charge collected without noise
+  TH1F *h_charge = new TH1F("h_charge", " ", 1e+3, -0, 0);
+
+  h_charge_ideal->SetTitle
+    ("ideal charge collected;charge [C];entries");
+
+  h_charge->SetTitle
+    ("charge collected with noise;charge [C];entries");
+
+  h_charge_ideal->SetCanExtend(TH1::kAllAxes);
+  h_charge->SetCanExtend(TH1::kAllAxes);
+
+  h_charge_ideal->SetLineColor(kRed);
+
+
+  TRandom3 *random = new TRandom3(9298);
+
+  TimeSim *time_sim = new TimeSim(NULL, random);
+
+
+  std::cout <<"Analysis of " <<events->GetEntries() <<" events...\n";
+
+  for (int i = 0; i < events->GetEntries(); i++)
+  {
+    events->GetEntry(i); //get one particle trace
+
+    for(int j = 0; j < branch->GetEntries(); ++j)
+    {
+      TrCluster *cl = (TrCluster*) branch->At(j);
+
+      /****************************************
+      * BUG: strip < 0 from TrCluster object *
+      ****************************************/
+
+      if(cl->ladder >= 0 && cl->strip >= 0) //TEMPORARY FIX
+      {
+        for(int k = 0; k < 2; ++k)
+        {
+          charge_t q;
+
+          h_charge_ideal->Fill
+          (
+            q = time_sim->GetChargeFromEnergy(cl->clust[k] * 1e+9)
+          );
+
+          h_charge->Fill(q + time_sim->GetChargeNoise());
+
+        }//for k
+      } //if lad >= 0 strip >= 0
+
+    } //for j
+  } //for i
+
+
+  delete time_sim;
+  delete random;
+
+  delete events;
+  delete branch;
+
+  std::cout <<std::endl <<std::endl;
+
+
+  // write output
 
   outFile->WriteTObject(h_charge);
   outFile->WriteTObject(h_charge_ideal);
