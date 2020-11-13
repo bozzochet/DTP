@@ -62,26 +62,15 @@ int main(int argc, char **argv)
 
   if(argc == 2 && std::strcmp(argv[1], "--help") == 0)
   {
-    std::cout <<"\nTimeAnalysis analyze time measures and timing performance.";
+    std::cout <<"\nFor time measures resolution, based on charge collected in time";
+    std::cout <<"\npass input file (i.e. output file of SimpleAnalysis)";
+    std::cout <<"\nand measure threshold";
 
-    std::cout <<"\n\nRequested arguments:";
+    std::cout <<"\n\nTo save charge signal and current of one hit as example";
+    std::cout <<"\npass input file and \"--example\" option";
 
-    std::cout <<"\n\t- input file with TrCluster objects "
-              <<"\n\t  (i.e. SimpleAnalysis or digitization output)";
-    std::cout <<"\n\t- threshold step / start threshold";
-    std::cout <<"\n\t- max threshold to analyze (argument <= 1)"
-              <<"\n\t  / start threshold multiplier (argument > 1)";
-
-    std::cout <<"\n\nIf multiplier is specified, maximum threshold is 0.01 (i.e. 1%)";
-
-    std::cout <<"\n\nExamples for charge and current signals could be";
-    std::cout <<" generated passing \ninput file and option ";
-    std::cout <<"\"--example\"";
-
-    std::cout <<"\n\nCharge distributions could be generated passing";
-    std::cout <<"\ninput file and option \"--charge\"";
-
-    std::cout <<"\n\nPass options AFTER input file\n\n";
+    std::cout <<"\n\nTo get charge distribution pass input file and";
+    std::cout <<"\"--charge\" option.";
 
     return 0;
   }
@@ -99,47 +88,22 @@ int main(int argc, char **argv)
   }
 
 
-  else if(argc == 4)
+  else if(argc == 3)
   {
-    if(std::stod(argv[3]) <= 1)
-    {
-      for(int i=1; i <= std::stod(argv[3]) / std::stod(argv[2]); ++i)
-      {
-        double threshold = std::stod(argv[2]) * i;
+    double threshold = std::stod(argv[2]);
 
-        std::string output = "time--thresh.root";
+    std::string output = "time--thresh.root";
 
-        output.insert
-          (output.length()-5, std::to_string(threshold));
+    output.insert
+    (
+      output.length()-5,
+      std::to_string( (int)(threshold*100) )
+    );
 
-        std::cout <<"\n\nCONSTANT FRACTION OF CHARGE WITH THRESHOLD "
-          << threshold <<"\n";
+    std::cout <<"\n\nCONSTANT FRACTION OF CHARGE WITH THRESHOLD "
+      << threshold*100 <<"%\n";
 
-        charge_meas(argv[1], output.c_str(), threshold);
-      }
-    }
-
-    else
-    {
-      double threshold = std::stod(argv[2]);
-
-      for(int i=0; threshold * std::stod(argv[3]) < 0.1; ++i)
-      {
-        threshold = std::stod(argv[2])
-          * TMath::Power(std::stod(argv[3]), i);
-
-        std::string output = "time--thresh.root";
-
-        output.insert
-          (output.length()-5, std::to_string(threshold));
-
-        std::cout <<"\n\nCONSTANT FRACTION OF CHARGE WITH THRESHOLD "
-          << threshold <<"\n";
-
-        charge_meas(argv[1], output.c_str(), threshold);
-      }
-    }
-
+    charge_meas(argv[1], output.c_str(), threshold);
   }
 
 
