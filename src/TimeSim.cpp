@@ -10,6 +10,8 @@ charge_t TimeSim::AddChargeNoise(signal_t *signal)
 
   mytime_t T;
   charge_t tmp;
+  //make Q_NOISE a multiple of fondamental charge
+  Q_NOISE = TMath::Floor(Q_NOISE / FOND_CHARGE) * FOND_CHARGE;
 
   signal->GetPoint(signal->GetN()-1, T, tmp);
 
@@ -18,9 +20,6 @@ charge_t TimeSim::AddChargeNoise(signal_t *signal)
 
   //charge to add every t_sample
   charge_t dq =  Q_NOISE / T * T_SAMPLING_;
-
-  //make dq a multiple of fondamental charge
-  dq = TMath::Floor(dq / FOND_CHARGE) * FOND_CHARGE;
 
   //charge collected is 0 at t=0 => no noise at t=0 => start from i=1
   for(int i = 1; i < signal->GetN(); ++i)

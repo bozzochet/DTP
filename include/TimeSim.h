@@ -94,7 +94,7 @@ class TimeSim
 
 
   inline charge_t GetChargeFromEnergy(const energy_t &E)
-  { return E / ENERGY_COUPLE * FOND_CHARGE; }
+  { return TMath::Floor(E / ENERGY_COUPLE) * FOND_CHARGE; }
 
 
   bool Trigger(double&, const signal_t*, const int&, const double&);
