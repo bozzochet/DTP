@@ -14,6 +14,8 @@
 #include "TClonesArray.h"
 #include "TH1F.h"
 #include "TRandom3.h"
+#include "TMultiGraph.h"
+#include "TGaxis.h"
 
 #include <iostream>
 #include <ctime>
@@ -35,78 +37,77 @@ const double thickness = GEO.GetThickness();
 
 
 
-int analyze
-  (const char*, const char*, const time_segm&, const int&, const bool);
+void charge_meas
+(
+  const char *input, const char *output,
+  const double &threshold
+);
 
-void analyze_noise
-  (TTree*, TClonesArray*, TimeSim*, TH1F*, TGraph*, TGraph*);
-
-void analyze_segm
-  (TTree*, TClonesArray*, TimeSegm*, TimeSim*, TH1F*, TGraph*);
+void get_example(const char *input, const char *output);
 
 
 
 int main(int argc, char **argv)
 {
-  if(argc < 2)
+  if(argc < 3)
   {
-    std::cerr <<"\nfatal error: input file not specified\n";
+    std::cerr <<"\nfatal error: missing arguments\n";
     return 1;
   }
 
-  time_segm S[2] = {A,B};
-  int J[2] = {10,10};
 
-  const char* output[2] = {"time--A10.root", "time--B10.root"};
+  std::clock_t start = std::clock();
 
-  for(int i = -1; i < 0; ++i)
+
+  if(std::strcmp(argv[2], "example") == 0)
   {
-
-    std::clock_t start = std::clock();
-
-
-    if(i == -1)
-    {
-      std::cout <<"\nANALYSIS WITHOUT SEGM:\n\n";
-      analyze(argv[1], "time--nosegm.root", A, 1, false);
-    }
-
-    else
-    {
-      std::cout <<"\nANALYSIS WITH SEGM "
-        <<(char) S[i] <<std::to_string(J[i]) <<":\n\n";
-
-      analyze(argv[1], output[i], S[i], J[i], true);
-    }
-
-
-    int sec = (std::clock() - start) / CLOCKS_PER_SEC;
-
-    if(sec < 1) continue;
-
-    std::cout <<"task completed in ";
-
-    if(sec / 60 >= 60)
-      std::cout << sec / 3600 << ":" << sec % 3600 / 60 << ":"
-        << (sec % 3600) % 60 ;
-
-    else if(sec >= 60)
-      std::cout << sec / 60 << ":" << sec % 60 <<" min\n";
-
-    else
-      std::cout << sec <<" secondi\n";
-
+    get_example(argv[1], "time--example.root");
   }
+
+
+  else if(std::strcmp(argv[2], "charge") == 0)
+  {
+    for(int i=1; i <= std::stod(argv[4]) / std::stod(argv[3]); ++i)
+    {
+      double threshold = std::stod(argv[3]) * i;
+
+      std::string output = "time--charge--thresh.root";
+
+      output.insert
+        (output.length()-5, std::to_string((int) (threshold*100)) );
+
+      std::cout <<"\n\nCONSTANT FRACTION OF CHARGE WITH THRESHOLD "
+        << threshold <<"\n";
+
+      charge_meas(argv[1], output.c_str(), threshold);
+    }
+  }
+
+
+  std::cout <<"\nexecution completed in ";
+
+  int sec = (std::clock() - start) / CLOCKS_PER_SEC;
+
+  if(sec / 60 >= 60)
+    std::cout << sec / 3600 << "h " << sec % 3600 / 60 << "min "
+      << (sec % 3600) % 60 <<"s\n";
+
+  else if(sec >= 60)
+    std::cout << sec / 60 << "min " << sec % 60 <<"s\n";
+
+  else
+    std::cout << sec <<"s\n";
+
 
   return 0;
 }
 
 
 
-int analyze
+void charge_meas
 (
   const char *input, const char *output,
-  const time_segm &S, const int &J, const bool segm
+  const double &threshold
 )
 {
 
@@ -115,9 +116,8 @@ int analyze
   if(inFile->IsZombie())
   {
     std::cerr <<"\nfatal error: unable to open " <<input <<std::endl;
-    return 1;
+    exit(1);
   }
-
 
 
   //output file
@@ -127,9 +127,8 @@ int analyze
   if(outFile->IsZombie())
   {
     std::cerr <<"\nfatal error: unable to open output file\n";
-    return 1;
+    exit(1);
   }
-
 
 
   TTree *events;
@@ -140,105 +139,48 @@ int analyze
 	events->SetBranchAddress("Events", &branch);
 
 
+  //time measures with noise
+  TH1F *h_meas = new TH1F("h_meas", " ", 1e+3, -0, 0);
 
-  //time measures with segm and noise
-  TH1F *h_segm = new TH1F
-  (
-    "h_segm",
-    "time measures with noise and segm; t_meas - t_true [s]; entries",
-    10000, -1e-10, 1e-10
-  );
+  //time measures without noise
+  TH1F *h_ideal = new TH1F("h_ideal", " ", 1e+3, -0, 0);
 
-  h_segm->SetBit(TH1::kAutoBinPTwo);
+  //ideal charge collected
+  TH1F *h_charge_ideal = new TH1F("h_charge_ideal", " ", 1e+3, -0, 0);
 
+  //charge collected without noise
+  TH1F *h_charge = new TH1F("h_charge", " ", 1e+3, -0, 0);
 
-  //time measures with noise only
-  TH1F *h_noise = new TH1F
-  (
-    "h_noise",
-    "time measures with noise; t_meas - t_true [s]; entries",
-    10000, -3e-12, 3e-12
-  );
+  h_ideal->SetTitle
+    ("time measures without noise; t_meas - t_true [s]; entries");
 
-  h_noise->SetBit(TH1::kAutoBinPTwo);
+  h_meas->SetTitle
+    ("time measures with noise; t_meas - t_true [s]; entries");
 
-  //example graphs
-  TGraph *charge_example = new TGraph();
-  TGraph *current_example = new TGraph();
+  h_charge_ideal->SetTitle
+    ("ideal charge collected;charge [C];entries");
 
+  h_charge->SetTitle
+    ("charge collected with noise;charge [C];entries");
+
+  h_ideal->SetCanExtend(TH1::kAllAxes);
+  h_meas->SetCanExtend(TH1::kAllAxes);
+  h_charge_ideal->SetCanExtend(TH1::kAllAxes);
+  h_charge->SetCanExtend(TH1::kAllAxes);
+
+  h_ideal->SetLineColor(kRed);
+  h_charge_ideal->SetLineColor(kRed);
 
 
   TRandom3 *random = new TRandom3(9298);
 
-  TimeSegm *time_segm = new TimeSegm(&GEO, S, J);
-
-  TimeSim *time_sim = new TimeSim(time_segm, random);
+  TimeSim *time_sim = new TimeSim(NULL, random);
 
 
-
-  if( !segm)
-    analyze_noise
-    (
-      events, branch, time_sim, h_noise,
-      charge_example, current_example
-    );
-
-  else
-  {
-    analyze_segm
-      (events, branch, time_segm, time_sim, h_segm, current_example);
-
-    time_segm->Clear(); //clear particle traces
-  }
-
-
-  delete time_sim;
-  delete time_segm;
-  delete random;
-
-  delete events;
-  delete branch;
-
-  std::cout <<std::endl <<std::endl;
-
-
-  // write output
-
-  if(segm)
-    outFile->WriteTObject(h_segm);
-  else
-    outFile->WriteTObject(h_noise);
-
-  outFile->WriteTObject(current_example);
-  outFile->WriteTObject(charge_example);
-  outFile->Close();
-
-  delete outFile;
-
-  //delete h_segm;  //cause program crash
-  //delete h_noise;  //cause program crash
-
-  std::cout <<"Results written in:\t" <<output <<"\n\n";
-
-  return 0;
-}
-
-
-//constant fraction with noise
-void analyze_noise
-(
-  TTree *events, TClonesArray *branch,
-  TimeSim *time_sim, TH1F *h_noise,
-  TGraph *charge_example, TGraph *current_example
-)
-{
-
-  std::cout <<"\nAnalysis of " <<events->GetEntries() <<" events...\n";
-
+  std::cout <<"Analysis of " <<events->GetEntries() <<" events...\n";
 
   for (int i = 0; i < events->GetEntries(); i++)
   {
-
     //print and update progress bar
     progress(i, events->GetEntries());
 
@@ -254,104 +196,185 @@ void analyze_noise
 
       if(cl->ladder >= 0 && cl->strip >= 0) //TEMPORARY FIX
       {
-        TGraph *current;
-        TGraph *charge;
-
-        if(i == 0 && j == 0)
-        { //get example
-          current = current_example;
-          charge = charge_example;
-        }
-
-        else
+        for(int k = 0; k < 2; ++k)
         {
-          current = new TGraph();
-          charge = new TGraph();
-        }
+          TGraph *charge = new TGraph();
+          TGraph *charge_ideal = new TGraph();
 
-        time_sim->GetChargeSignal(cl->eDep * 1e+9, charge);
+          charge_t q;
 
-        time_sim->GetCurrentSignal(cl->time * 1e-9, current, charge);
+          h_charge_ideal->Fill
+          (
+            q = time_sim->GetChargeSignal
+              (cl->clust[k] * 1e+9, charge_ideal, false)
+          );
 
-        h_noise->Fill
-          (time_sim->GetMeas(current, 0.1) - cl->time * 1e-9);
+          for(int m=0; m < charge_ideal->GetN(); ++m)
+            charge->SetPoint
+              (m, charge_ideal->GetX()[m], charge_ideal->GetY()[m]);
 
-        if(i != 0 || j != 0)
-        {
-          delete current;
+          h_charge->Fill(q + time_sim->AddChargeNoise(charge));
+
+
+          mytime_t t_true = time_sim->GetMeas(charge_ideal, threshold);
+
+          mytime_t t_meas = time_sim->GetMeas(charge, threshold);
+
+          if(t_true != -9999)
+            h_ideal->Fill(t_true);
+
+          if(t_meas != -9999)
+            h_meas->Fill(t_meas);
+
+
           delete charge;
-        }
+          delete charge_ideal;
+
+        }//for k
       } //if lad >= 0 strip >= 0
 
     } //for j
   } //for i
 
+
+  delete time_sim;
+  delete random;
+
+  delete events;
+  delete branch;
+
+  std::cout <<std::endl <<std::endl;
+
+  std::cout <<"Mean: " <<h_meas->GetMean();
+  std::cout <<"\nStd Dev: " <<h_meas->GetStdDev() <<std::endl;
+
+
+  // write output
+
+  outFile->WriteTObject(h_meas);
+  outFile->WriteTObject(h_ideal);
+
+  outFile->WriteTObject(h_charge);
+  outFile->WriteTObject(h_charge_ideal);
+
+  outFile->Close();
+
+  delete outFile;
+
+  std::cout <<"\nResults written in " <<output;
 }
 
 
-//constant fraction with segm and noise
-void analyze_segm
-(
-  TTree *events, TClonesArray *branch,
-  TimeSegm *time_segm, TimeSim *time_sim, TH1F *h_segm,
-  TGraph *current_example
-)
+
+void get_example(const char *input, const char *output)
 {
+  TFile *inFile = TFile::Open(input);
 
-  std::cout <<"\nAnalysis of " <<events->GetEntries() <<" events...\n";
-
-
-  for (int i = 0; i < events->GetEntries(); i++)
+  if(inFile->IsZombie())
   {
+    std::cerr <<"\nfatal error: unable to open " <<input <<std::endl;
+    exit(1);
+  }
 
-    //print and update progress bar
-    progress(i, events->GetEntries());
 
-    events->GetEntry(i); //get one particle trace
+  //output file
 
-    for(int j = 0; j < branch->GetEntries(); ++j)
+  TFile *outFile = new TFile(output, "recreate");
+
+  if(outFile->IsZombie())
+  {
+    std::cerr <<"\nfatal error: unable to open output file\n";
+    exit(1);
+  }
+
+
+  TTree *events;
+  inFile->GetObject("Tree", events);
+  //events->Print();
+
+  TClonesArray *branch = new TClonesArray("TrCluster", 200);
+  events->SetBranchAddress("Events", &branch);
+
+
+  TRandom3 *random = new TRandom3(9298);
+
+  TimeSim *time_sim = new TimeSim(NULL, random);
+
+  TGraph *charge = new TGraph();
+  TGraph *charge_ideal = new TGraph();
+  TGraph *current = new TGraph();
+  TGraph *current_ideal = new TGraph();
+
+
+  events->GetEntry(0); //get one particle trace
+
+  TrCluster *cl = (TrCluster*) branch->At(1);
+
+      /****************************************
+      * BUG: strip < 0 from TrCluster object *
+      ****************************************/
+
+  if(cl->ladder >= 0 && cl->strip >= 0) //TEMPORARY FIX
+  {
+    time_sim->GetChargeSignal
+      (cl->clust[0] * 1e+9, charge_ideal, false);
+
+    for(int h = 0; h < charge_ideal->GetN(); ++h)
     {
-      TrCluster *cl = (TrCluster*) branch->At(j);
+      mytime_t t;
+      charge_t q;
 
-      if(cl->ladder >= 0 && cl->strip >= 0) //TEMPORARY FIX
-        time_segm->SetHit
-        (
-          cl ->ladder, cl ->strip,
-          cl ->time * 1e-9, //convert ns to s
-          cl ->eDep * 1e+9 //convert GeV to eV
-        );
+      charge_ideal->GetPoint(h, t, q);
+      charge->SetPoint(charge->GetN(), t, q);
     }
 
+    time_sim->AddChargeNoise(charge);
 
-    for(int k=0; k < time_segm->GetNgroups(); ++k)
-    {
-      //print and update progress bar
-      //progress(analyzed_hits, total_hits);
+    time_sim->GetCurrentSignal
+      (cl->time * 1e-9, current_ideal, charge_ideal);
+    time_sim->GetCurrentSignal(cl->time * 1e-9, current, charge);
+  }
 
-      std::vector<mytime_t> true_time;
-      time_segm->GetTimes(k, true_time);
 
-      if(true_time.size() == 0)
-        continue;
+  delete time_sim;
+  delete random;
 
-      TGraph *current;
+  delete events;
+  delete branch;
 
-      if(k == 0)
-        current = current_example;
-      else
-        current = new TGraph();
+  std::cout <<std::endl <<std::endl;
 
-      time_sim->GetCurrentSignal(k, current);
 
-      mytime_t meas_time = time_sim->GetMeas(current, 0.1);
+  charge->SetLineColor(kBlue);
+  charge->SetLineWidth(2);
 
-      if(k!=0)
-        delete current;
+  charge_ideal->SetLineColor(kRed);
+  charge_ideal->SetLineWidth(2);
 
-      for(int m = 0; m < (int) true_time.size(); ++m)
-        h_segm->Fill( meas_time - true_time[m] );
-    }
+  current->SetLineColor(kBlue);
+  current->SetLineWidth(2);
 
-  } //for i
+  current_ideal->SetLineColor(kRed);
+  current_ideal->SetLineWidth(2);
 
+  TMultiGraph *mg_current = new TMultiGraph();
+  TMultiGraph *mg_charge = new TMultiGraph();
+
+  mg_current->Add(current);
+  mg_current->Add(current_ideal);
+
+  mg_charge->Add(charge);
+  mg_charge->Add(charge_ideal);
+
+
+  // write output
+
+  outFile->WriteTObject(mg_current);
+  outFile->WriteTObject(mg_charge);
+
+  outFile->Close();
+
+  delete outFile;
+
+  std::cout <<"examples written in:\t" <<output <<"\n";
 }
