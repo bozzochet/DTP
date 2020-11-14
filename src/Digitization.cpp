@@ -103,7 +103,7 @@ int main(int argc, char **argv)
   COUT(INFO) <<"implant pitch:          " <<geo->pitch  <<ENDL;
   COUT(INFO) <<"layers thickness:       " <<geo->thickness <<ENDL;
   COUT(INFO) <<"squares side:           " <<geo->squareSide <<ENDL;
-  COUT(INFO) <<"ladders per layer:      " <<geo->Nladders <<ENDL;
+  COUT(INFO) <<"ladders:                " <<geo->Nladders <<ENDL;
 
   COUT(INFO) <<ENDL;
 
@@ -364,7 +364,8 @@ int digitization(TTree *tree, Geometry *geo)
 
         //position simulation
 
-        pos_sim->SetHitPos(cl->layer, cl->pos[cl->xy]);
+        if(k==0) pos_sim->SetHitPos(cl->layer, cl->pos[cl->xy]);
+
         pos_sim->DepositEnergy(ladder, strip, meas.energy[k]);
 
 		  } //for k

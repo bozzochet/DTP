@@ -66,37 +66,15 @@ endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 
 ######################### EXTRA LIBS #########################
 
-set(TIME_SIM_SRC TimeSim.cpp)
-add_library(TimeSim SHARED ${TIME_SIM_SRC})
-set_target_properties(TimeSim PROPERTIES
+set(DIGIT_SRC TimeSim.cpp PosSim.cpp TimeSegm.cpp)
+add_library(Digit SHARED ${DIGIT_SRC})
+set_target_properties(Digit PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
 )
-install(TARGETS TimeSim DESTINATION "${INSTALL_LIB_DIR}")
+install(TARGETS Digit DESTINATION "${INSTALL_LIB_DIR}")
 
-#################
 
-set(POS_SIM_SRC PosSim.cpp)
-add_library(PosSim SHARED ${POS_SIM_SRC})
-set_target_properties(PosSim PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
-)
-install(TARGETS PosSim DESTINATION "${INSTALL_LIB_DIR}")
-
-#################
-
-set(TIME_SEGM_SRC TimeSegm.cpp)
-add_library(TimeSegm SHARED ${TIME_SEGM_SRC})
-set_target_properties(TimeSegm PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
-)
-install(TARGETS TimeSegm DESTINATION "${INSTALL_LIB_DIR}")
-
-#################
-
-set(TIME_LIBRARIES TimeSim TimeSegm)
-set(POS_LIBRARIES PosSim)
-
-#################
+######################## EXECUTABLES ########################
 
 set(Digitization_SRC
 	Digitization.cpp
@@ -108,8 +86,7 @@ add_executable(Digitization ${Digitization_SRC})
 target_link_libraries(Digitization
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}
-  ${TIME_LIBRARIES}
-  ${POS_LIBRARIES}
+  Digit
 )
 
 set_target_properties(Digitization PROPERTIES

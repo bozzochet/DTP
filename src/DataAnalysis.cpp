@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
   COUT(INFO) <<"implant pitch:          " <<geo->pitch  <<ENDL;
   COUT(INFO) <<"layers thickness:       " <<geo->thickness <<ENDL;
   COUT(INFO) <<"squares side:           " <<geo->squareSide <<ENDL;
-  COUT(INFO) <<"ladders per layer:      " <<geo->Nladders <<ENDL;
+  COUT(INFO) <<"ladders:                " <<geo->Nladders <<ENDL;
 
   COUT(INFO) <<ENDL;
 

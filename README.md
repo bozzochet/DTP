@@ -73,3 +73,5 @@ GGSWolowitz -g lib/libTestGeometry.so -gd macros/geo.mac -t vgm -o lib/TestGeome
 ./exe/DataAnalysis GGSOutput.root DigitOut.root
 ```
 `DataAnalysis` output will be `histos.root`
+
+A working example can be found in `useful_command/digit_analyze.sh`
