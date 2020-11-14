@@ -7,7 +7,7 @@ GGS Simulation of a simple detector with the silicon detectors with timing capab
 Ingredients:
 
 - macros/run.mac: datacard, a la Geant, to set the simulation parameters
-<!-- - macros/geo.mac: datacard for the parametric geometry -->
+- macros/geo.mac: datacard for the parametric geometry
 - {src,include}/DetectorConstruction.{cc,hh}: definition, a la Geant, of the geometry
 <!-- - Analysis/Analysis.C: ROOT macro to read the GGS output file -->
 
@@ -15,7 +15,7 @@ Typical commands:
 
 ##### - compilation and installation:
 ```
-cd <build_path> 
+cd <build_path>
 cmake -DCMAKE_INSTALL_PREFIX=<installation_path> <source_path> -DGGS_DIR=$GGS_SYS/
 make
 make install
@@ -37,7 +37,7 @@ and then, everytime the source code or the scripts are changed, is enough to lau
 
 ##### - simulation:
 ```
-GGSPenny -g lib/libTestGeometry.so -d macros/run.mac -ro test.root
+GGSPenny -g lib/libTestGeometry.so -gd macros/geo.mac -d macros/run.mac -ro test.root
 ```
 
 A working example can be found in `useful_commands/run.sh`
@@ -54,17 +54,22 @@ Working examples can be found in `useful_commands/show_geometry.sh` and  `useful
 
 ##### - conversion from parametric geometry to GDML
 ```
-GGSWolowitz -g lib/libTestGeometry.so -o lib/TestGeometry.gdml -t gdml
+GGSWolowitz -g lib/libTestGeometry.so -o lib/TestGeometry.gdml -t gdml -gd macros/geo.mac
 ```
 
 ##### - conversion from parametric geometry to VGM (http://ivana.home.cern.ch/ivana/VGM.html)
 ```
-GGSWolowitz -g lib/libTestGeometry.so -t vgm -o lib/TestGeometry.vgm.root
+GGSWolowitz -g lib/libTestGeometry.so -gd macros/geo.mac -t vgm -o lib/TestGeometry.vgm.root
 ```
 
-## Analysis (to be written correctly)
+## Analysis
 
 - conversion from GGS output to plain ROOT file:
 ```
-./exe/SimpleAnalysis GGSOutput.root anaOut.root
-./exe/DataAnalysis anaOut.root
+./exe/Digitization GGSOutput.root DigitOut.root
+```
+- create analysis histos:
+```
+./exe/DataAnalysis GGSOutput.root DigitOut.root
+```
+`DataAnalysis` output will be `histos.root`
