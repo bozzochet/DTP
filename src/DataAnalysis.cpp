@@ -5,6 +5,7 @@
 #include "PosSim.h"
 #include "TrCluster.hh"
 #include "Geometry.h"
+#include "measure.h"
 
 #include "TCanvas.h"
 #include "TClonesArray.h"
@@ -17,8 +18,10 @@
 #include "TTree.h"
 #include "TTreeReader.h"
 #include "TMultiGraph.h"
+#include "TString.h"
 
 #include "utils/GGSSmartLog.h"
+#include "montecarlo/readers/GGSTRootReader.h"
 
 #include <iostream>
 #include <vector>
@@ -26,33 +29,58 @@
 using namespace std;
 
 
-//global geometric parameters
-
-Geometry GEO;
-
-const int Nlayers = GEO.GetNlayers();
-const int Nstrips = GEO.GetNstrips();
-const int Nrows = GEO.GetNrows();
-const int Nsquares = GEO.GetNsquares();
-const int pitch = GEO.GetPitch();
-const int squareSide = GEO.GetSquareSide();
-const int Nladders = GEO.GetNladders();
-const double thickness = GEO.GetThickness();
-
-
 
 int main(int argc, char **argv) {
 
-	const int nLayer = 26;
-	auto inFile = TFile::Open(argv[1]);
+  static const string routineName("analysis");
+  GGSSmartLog::verboseLevel = GGSSmartLog::INFO; // Print only INFO messages or more important
 
-	TTree *events;
-	inFile->GetObject("Tree", events);
-	events->Print();
-	TClonesArray *a = new TClonesArray("TrCluster", 200);
-	events->SetBranchAddress("Events", &a);
 
-	TFile *outFile = new TFile("histos.root", "recreate");
+  //geometry
+
+  GGSTRootReader reader;
+  if (!(reader.Open(argv[1]))) {
+    std::cerr << "Cannot open input file " << argv[1] <<std::endl;
+    return 1;
+  }
+
+  const GGSTGeoParams *GEO = reader.GetGeoParams();
+  Geometry *geo = new Geometry;
+
+  geo->Nlayers = GEO->GetIntGeoParam("Nlayers");
+  geo->Nstrips = GEO->GetIntGeoParam("Nstrips");
+  geo->Nrows = GEO->GetIntGeoParam("Nrows");
+  geo->Nsquares = GEO->GetIntGeoParam("Nsquares");
+  geo->pitch = 1e-2 * GEO->GetRealGeoParam("pitch");
+  geo->thickness = 1e-3 * GEO->GetRealGeoParam("thickness");
+
+  geo->squareSide = geo->pitch * ((double) geo->Nstrips);
+  geo->Nladders = geo->Nsquares * geo->Nrows * geo->Nlayers;
+
+  COUT(INFO) <<"Geometric parameters:" <<ENDL;
+  COUT(INFO) <<"layers:                 " <<geo->Nlayers <<ENDL;
+  COUT(INFO) <<"strips per ladder:      " <<geo->Nstrips <<ENDL;
+  COUT(INFO) <<"ladders rows per layer: " <<geo->Nrows  <<ENDL;
+  COUT(INFO) <<"squares per side:       " <<geo->Nsquares  <<ENDL;
+  COUT(INFO) <<"implant pitch:          " <<geo->pitch  <<ENDL;
+  COUT(INFO) <<"layers thickness:       " <<geo->thickness <<ENDL;
+  COUT(INFO) <<"squares side:           " <<geo->squareSide <<ENDL;
+  COUT(INFO) <<"ladders per layer:      " <<geo->Nladders <<ENDL;
+
+  COUT(INFO) <<ENDL;
+
+
+  TString inputFileName = argv[2];
+  COUT(INFO) <<"Opening input file " <<inputFileName <<"..." <<ENDL;
+  auto inFile = TFile::Open(inputFileName);
+
+  TString outFileName = "histos.root";
+  COUT(INFO) <<"Recreating output file " <<outFileName <<"..." <<ENDL;
+	TFile *outFile = new TFile(outFileName, "recreate");
+
+
+  COUT(INFO) <<"Creating histos..." <<ENDL;
+
 	TH1F *h = new TH1F("disttemp", "disttemp", 100, -0.5, 0.5);
 	TH1F *h1 = new TH1F("bt", "bt", 1000, 0, 2);
 	TH1F *h2 = new TH1F("btls", "btls", 1000, 0, 2000);
@@ -77,21 +105,18 @@ int main(int argc, char **argv) {
 	TH1F *hpi = new TH1F("pi", "pi", 1000, 0, 4);
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
 
-	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
 
-/*
-  TGraph *current_ideal;
-  TGraph *current_noise;
+	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.5, 0.5);
 
-  TGraph *charge_ideal;
-  TGraph *charge_noise;
+  //segmp->SetCanExtend(TH1::kAllAxes);
 
-  TMultiGraph *charge = new TMultiGraph("charge", "charge");
-  TMultiGraph *current = new TMultiGraph("current", "current");
-*/
 
-  TH1F *htime = new TH1F
-    ("htime", "timing; ; entries", 1000, -0.05, 0.05);
+  TH1F *h_time_meas = new TH1F("htime_meas", " ", 1000, -0, 0);
+
+  h_time_meas->SetTitle
+    ("time measures with noise;t_meas - t_true [s];entries");
+  h_time_meas->SetCanExtend(TH1::kAllAxes);
+
 
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
@@ -114,21 +139,29 @@ int main(int argc, char **argv) {
 
 	*/
 
-  PosSim *pos_sim = new PosSim(&GEO, 2, tr);
+  COUT(INFO) <<"Opening TTree object in " <<inputFileName <<"..." <<ENDL;
 
-  cout <<endl <<"Begin analysis of " <<events->GetEntries()
-    <<" events:\n";
+  TTree *events;
+	inFile->GetObject("Data", events);
+	events->Print();
+
+	TClonesArray *a = new TClonesArray("TrCluster", 200);
+	events->SetBranchAddress("Events", &a);
+
+  measure meas;
+  events->SetBranchAddress("Measures", &meas);
+
+
+  COUT(INFO) <<"Begin loop over " <<events->GetEntries() <<ENDL;
 
   for (int i = 0; i < events->GetEntries(); i++) {
 
     //print and update progress bar
     progress(i, events->GetEntries());
 
-    /* IMPORTANT: cout and printf MUST print strings beginning and
-     * ending with a new line (i.e. "\n" or endl) to not overwrite
-     * the bar */
+    COUT(DEBUG) <<ENDL <<"i: " <<i <<ENDL;
 
-		v.resize(nLayer);
+		v.resize(geo->Nlayers);
 		events->GetEntry(i);
 
     /*
@@ -141,40 +174,43 @@ int main(int argc, char **argv) {
 		}
     */
 
-		pos_sim->Reset();
-
 		for (int j = 0; j < a->GetEntries(); j++) {
+
+      COUT(DEBUG) <<"j: " <<j <<ENDL;
 
       //cout<<endl<<"Entry #"<<i+j<<endl;
 			TrCluster *cl = (TrCluster *)a->At(j);
+
 			v[cl->layer].push_back(*cl);
+
 			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
-			if(cl->eDep > 9e-6) hEdep->Fill(cl->eDep); //total
+			if(cl->eDep > 9e+3) hEdep->Fill(cl->eDep); //total
 
-      pos_sim->SetHitPos(cl->layer, cl->pos[cl->segm]);
-      pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[0]);
 
-			if(cl->strip == Nstrips-1 && (cl->ladder+1) % Nsquares == 0)
-        //hit on the last strip of the last ladder of the layer row
-				pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[1]);
+      /* while Events branch work with two indexes (i,j),
+       * Measures branch was filled with one index and contains
+       * a struct instead of an array. Because of this j element of
+       * entry i in Events branch, corresponds to measure on entry
+       * i+j of Measures branch. Look in Digitization.cpp,
+       * digitization function */
 
-			else if(cl->strip==Nstrips-1)
-        pos_sim->DepositEnergy(cl->ladder+1, 0, cl->clust[1]);
-			else
-				pos_sim->DepositEnergy(cl->ladder, cl->strip+1, cl->clust[1]);
-		}
+      COUT(DEBUG) <<"GetEntry i+j..." <<ENDL;
 
-		// Sharing of the energy from non-active strips
+      events->GetEntry(i+j);
 
-    pos_sim->ShareEnergy();
-    pos_sim->AddNoise();
-    pos_sim->Segm(segmp);
-}
+      COUT(DEBUG) <<"Getting t_meas..." <<ENDL;
 
-  delete pos_sim;
+      for(int m=0; m<2; ++m)
+        if(meas.time[m] >= 0)
+          h_time_meas->Fill(meas.time[m]);
 
-  cout <<endl <<endl;
-  
+      COUT (DEBUG) <<"Getting pos_meas..." <<ENDL;
+
+      segmp->Fill(meas.position - cl->pos[cl->xy]);
+
+		} //for j
+  } //for i
+
 
 	// Find tStart and tMean
 
@@ -190,6 +226,9 @@ int main(int argc, char **argv) {
 			}
 		}
 	tMean /= _n;
+
+
+  COUT(INFO) <<"Particle identification..." <<ENDL;
 
 	//Particle identification
 
@@ -231,6 +270,9 @@ int main(int argc, char **argv) {
 		}
 	v.clear();
 
+
+  COUT(INFO) <<"Writing output..." <<ENDL;
+
 	outFile->WriteTObject(h);
 	outFile->WriteTObject(h1);
 	outFile->WriteTObject(h2);
@@ -254,14 +296,9 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(segmp);
-/*
-  outFile->WriteTObject(current_ideal);
-  outFile->WriteTObject(current_noise);
-  outFile->WriteTObject(charge_ideal);
-  outFile->WriteTObject(charge_noise);
-  outFile->WriteTObject(current);
-  outFile->WriteTObject(charge);
-*/
-  outFile->WriteTObject(htime);
+  outFile->WriteTObject(h_time_meas);
+
   outFile->Close();
+
+  COUT(INFO) <<"Output written in " <<outFileName <<ENDL;
 	}
