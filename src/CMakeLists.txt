@@ -5,7 +5,6 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 set(TestGeometry_SOURCE
   DetectorConstruction.cc
-  DetectorMessenger.cc
 )
 
 # Set target TestGeometry and TestGeometry_nocalo
@@ -99,33 +98,31 @@ set(POS_LIBRARIES PosSim)
 
 #################
 
-set(SimpleAnalysis_SRC
-	SimpleAnalysis.cpp
+set(Digitization_SRC
+	Digitization.cpp
   progress.cpp
-  Geometry.cpp
 	G__TrCluster.cxx
 )
 
-add_executable(SimpleAnalysis ${SimpleAnalysis_SRC})
-target_link_libraries(SimpleAnalysis
+add_executable(Digitization ${Digitization_SRC})
+target_link_libraries(Digitization
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}
   ${TIME_LIBRARIES}
   ${POS_LIBRARIES}
 )
 
-set_target_properties(SimpleAnalysis PROPERTIES
+set_target_properties(Digitization PROPERTIES
 				     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
 				     )
 
-install(TARGETS SimpleAnalysis DESTINATION "${INSTALL_BIN_DIR}")
+install(TARGETS Digitization DESTINATION "${INSTALL_BIN_DIR}")
 
 #################
 
 set(DataAnalysis_SRC
 	DataAnalysis.cpp
   progress.cpp
-  Geometry.cpp
 	G__TrCluster.cxx
 )
 
@@ -133,8 +130,6 @@ add_executable(DataAnalysis ${DataAnalysis_SRC})
 target_link_libraries(DataAnalysis
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}
-  ${TIME_LIBRARIES}
-  ${POS_LIBRARIES}
 )
 
 set_target_properties(DataAnalysis PROPERTIES
@@ -142,42 +137,5 @@ set_target_properties(DataAnalysis PROPERTIES
 				     )
 
 install(TARGETS DataAnalysis DESTINATION "${INSTALL_BIN_DIR}")
-
-#################
-
-set(TIME_ANALYSIS_SRC
-	TimeAnalysis.cpp
-  progress.cpp
-  Geometry.cpp
-	G__TrCluster.cxx
-)
-
-add_executable(TimeAnalysis ${TIME_ANALYSIS_SRC})
-
-target_link_libraries(TimeAnalysis
-  ${ROOT_LIBRARIES}
-  ${TIME_LIBRARIES}
-)
-
-set_target_properties(TimeAnalysis PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
-)
-
-install(TARGETS TimeAnalysis DESTINATION "${INSTALL_BIN_DIR}")
-
-#################
-
-#set(weightfield2_signal_SRC weightfield2_signal.cpp)
-
-#add_executable(weightfield2_signal ${weightfield2_signal_SRC})
-#target_link_libraries(weightfield2_signal
-#  ${ROOT_LIBRARIES}
-#)
-
-#set_target_properties(weightfield2_signal PROPERTIES
-#				     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
-#				     )
-
-#install(TARGETS weightfield2_signal DESTINATION "${INSTALL_BIN_DIR}")
 
 #################
