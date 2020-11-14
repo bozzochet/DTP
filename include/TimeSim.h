@@ -17,7 +17,6 @@
 
 
 #include "physics.h"
-#include "absStrip.h"
 #include "TrCluster.hh"
 #include "vector2.h"
 #include "TimeSegm.h"

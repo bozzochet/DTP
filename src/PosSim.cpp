@@ -38,7 +38,7 @@ void PosSim::ShareEnergy()
 		  if(j0!=(*eDepSegm).size()-1) {
 			  j0++;
 			}
-  		else if( (i0+1) % geo_->GetNsquares() != 0) {
+  		else if( (i0+1) % geo_->Nsquares != 0) {
 				i0++;
 				j0 = 0;
 			}
@@ -64,34 +64,36 @@ void PosSim::ShareEnergy()
 }
 
 
+/*
 void PosSim::AddNoise()
 {
 
 	for (int ii = 0; ii < (*eDepSegm).size(); ii++) {
 		for (int jj = 0; jj < (*eDepSegm)[ii].size(); jj++) {
-			double fluct = random_->Gaus(0, 9e-6); //9kev
+			double fluct = random_->Gaus(0, 9e+3); //9kev
 
 			(*eDepSegm)[ii][jj] += fluct;
 			}
 		}
 }
+*/
 
 
 void PosSim::GetCluster(int &i1, int &j1, int &i2, int &j2)
 {
   bool firstPoint = true;
 
-  int row = i1 / geo_->GetNsquares(); //get number of row which ladder belongs to
+  int row = i1 / geo_->Nsquares; //get number of row which ladder belongs to
 
-  for(int ii = i1; ii / geo_->GetNsquares() == row && ii >= 0; ii--)
-    for(int jj = geo_->GetNstrips()-1; jj>=jump; jj-= jump) {
+  for(int ii = i1; ii / geo_->Nsquares == row && ii >= 0; ii--)
+    for(int jj = geo_->Nstrips-1; jj>=jump; jj-= jump) {
 
       if(firstPoint) {
         jj = j1;
         firstPoint = false;
       }
 
-      if((*eDepSegm)[ii][jj] < 9e-6)
+      if((*eDepSegm)[ii][jj] < 9e+3)
         break;
 
       i1 = ii;
@@ -100,15 +102,15 @@ void PosSim::GetCluster(int &i1, int &j1, int &i2, int &j2)
 
   firstPoint = true;
 
-  for(int ii = i2; ii / geo_->GetNsquares() == row && ii >= 0; ii++)
-    for(int jj = 0; jj<geo_->GetNstrips(); jj+= jump) {
+  for(int ii = i2; ii / geo_->Nsquares == row && ii >= 0; ii++)
+    for(int jj = 0; jj<geo_->Nstrips; jj+= jump) {
 
       if(firstPoint) {
         jj = j2;
         firstPoint = false;
       }
 
-      if((*eDepSegm)[ii][jj] < 9e-6)
+      if((*eDepSegm)[ii][jj] < 9e+3)
         break;
 
       i2 = ii;
@@ -120,16 +122,16 @@ void PosSim::GetCluster(int &i1, int &j1, int &i2, int &j2)
 void PosSim::FillCluster
   (vector_pair<double> &strip, int i1, int j1, int i2, int j2)
 {
-  while((i1*geo_->GetNstrips())+j1 <= (i2*geo_->GetNstrips())+j2) {
+  while((i1*geo_->Nstrips)+j1 <= (i2*geo_->Nstrips)+j2) {
 
-    if(j1>geo_->GetNstrips()-1 && i1 == geo_->GetNladders()-1)
+    if(j1>geo_->Nstrips-1 && i1 == geo_->Nladders-1)
       break;
-    else if(j1>geo_->GetNstrips()-1) {
+    else if(j1>geo_->Nstrips-1) {
       i1++;
       j1 = 0;
     }
 
-    double thisPos = ((i1%geo_->GetNsquares())*geo_->GetSquareSide()) + (j1*geo_->GetPitch()) - (geo_->GetNsquares()*geo_->GetSquareSide()*0.5);
+    double thisPos = ((i1%geo_->Nsquares)*geo_->squareSide) + (j1*geo_->pitch) - (geo_->Nsquares*geo_->squareSide*0.5);
     strip.push_back(make_pair(thisPos,(*eDepSegm)[i1][j1]));
 
     j1+=jump;
@@ -137,12 +139,12 @@ void PosSim::FillCluster
 }
 
 
-void PosSim::FillHist
-  (TH1F *segmp, const vector_pair<double> &strip, const int layer)
+double PosSim::GetSimPos
+  (const vector_pair<double> &strip, const int layer)
 {
   for(int k = 0; k < strip.size(); k++) {
 
-    if(strip[k].second < 27e-6)
+    if(strip[k].second < 27e+3)
       continue;
 
     //Finding the boundaries of the peak
@@ -150,9 +152,9 @@ void PosSim::FillHist
     int k1 = k-1;
     int k2 = k+1;
 
-    while(k1>0 && strip[k1].second >= 27e-6)
+    while(k1>0 && strip[k1].second >= 27e+3)
       k1--;
-    while(k2<(strip.size()-1) && strip[k2].second >= 27e-6)
+    while(k2<(strip.size()-1) && strip[k2].second >= 27e+3)
       k2++;
 
     //Finding the peak
@@ -181,13 +183,19 @@ void PosSim::FillHist
 
     //Finding simulated position
 
+    /* Andrea S.: in Digitization this lib is used one hit at a time.
+     * Because of this I expect this method will find just one simPos.
+     * Below I return for this reason. */
+
     double simPos = ((strip[kMax].first*strip[kMax].second) + (strip[kNext].first*strip[kNext].second)) / (strip[kMax].second + strip[kNext].second);
 
-    //Comparing the simulated hit positions with the real ones on the same layer
+    return simPos;
 
+    //Comparing the simulated hit positions with the real ones on the same layer
+/*
     for(int m = 0 ; m < (*hitPos)[layer].size(); m++)
       segmp->Fill(simPos-(*hitPos)[layer][m]);
-
+*/
     //cout<<"Simulated position: "<<simPos<<endl;
 
     //Advancing within the current cluster
@@ -196,14 +204,14 @@ void PosSim::FillHist
 }
 
 
-void PosSim::Segm(TH1F *segmp)
+double PosSim::GetMeas()
 {
-  for (int ix = 0; ix < geo_->GetNladders(); ix++)
-    for (int jx = 0; jx < geo_->GetNstrips(); jx+=jump) {
+  for (int ix = 0; ix < geo_->Nladders; ix++)
+    for (int jx = 0; jx < geo_->Nstrips; jx+=jump) {
 
       //Find the boundaries of the clusters
 
-      if((*eDepSegm)[ix][jx] < 27e-6)
+      if((*eDepSegm)[ix][jx] < 27e+3)
         continue;
 
       //cout<<"Analysing cluster\n";
@@ -221,7 +229,7 @@ void PosSim::Segm(TH1F *segmp)
       vector_pair<double> strip;
       FillCluster(strip, i1, j1, i2, j2);
 
-      FillHist(segmp, strip, ix/(geo_->GetNsquares()*geo_->GetNrows()));
+      return GetSimPos(strip, ix/(geo_->Nsquares*geo_->Nrows));
 
       //Advancing and looking for other clusters
       ix = i2;

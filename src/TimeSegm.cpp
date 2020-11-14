@@ -16,9 +16,9 @@ TimeSegm::TimeSegm
     jump_ = jump;
 
     //compute groups on a single ladder
-    Ngroups_lad_ = S == A ? geo_->GetNstrips() / jump : jump;
+    Ngroups_lad_ = S == A ? geo_->Nstrips / jump : jump;
 
-    if(geo_->GetNstrips() % jump != 0 && S == A)
+    if(geo_->Nstrips % jump != 0 && S == A)
       ++Ngroups_lad_; //add one group for module division
 
 
@@ -45,7 +45,7 @@ TimeSegm::TimeSegm
     side_ = side;
 
     //compute groups on a single ladder
-    Ngroups_lad_ = geo_->GetSquareSide() / side_ ;
+    Ngroups_lad_ = geo_->squareSide / side_ ;
   }
 
   else
@@ -59,7 +59,7 @@ TimeSegm::TimeSegm
   //create groups
 
   //number of total groups
-  const int N = Ngroups_lad_ * geo_->GetNladders();
+  const int N = Ngroups_lad_ * geo_->Nladders;
 
   for(int i=0; i < N; ++i)
   {
@@ -79,8 +79,8 @@ length_t TimeSegm::GetVoidSpace()
   return
   (
     //total ladder side along strip direction
-    ((double) geo_->GetNsquares()) * geo_->GetSquareSide()
-    / ((double) geo_->GetNrows())
+    ((double) geo_->Nsquares) * geo_->squareSide
+      / ((double) geo_->Nrows)
 
     //pads sides
     - Ngroups_lad_ * side_
@@ -106,7 +106,7 @@ void TimeSegm::SetHit(TrCluster *cl)
 
     length_t pos; //WHICH UNIT USED FOR LENGTH BY TRCLUSTER ?
 
-    if(cl->segm == 0)
+    if(cl->xy == 0)
       pos = cl->pos[1];
     else
       pos = cl->pos[0];
@@ -140,7 +140,7 @@ void TimeSegm::SetHit(TrCluster *cl)
       <<group_.size();
 
     std::cerr <<"\nlad: " <<cl->ladder <<" Nsquares: "
-      <<geo_->GetNsquares();
+      <<geo_->Nsquares;
 
     std::cerr <<"\nNgroups per row: " <<Ngroups_lad_ <<" strip: "
       <<cl->strip;
@@ -151,7 +151,7 @@ void TimeSegm::SetHit(TrCluster *cl)
   }
 
 
-  group_[i]->SetHit(cl->time * 1e-9, cl->eDep * 1e+9);
+  group_[i]->SetHit(cl->time, cl->eDep);
 }
 
 
