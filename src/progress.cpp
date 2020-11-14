@@ -25,4 +25,6 @@ void progress(const int &n, const int &N) {
     bar += "]  " + to_string((int)(frac*100)) + "%";
 
     cout <<"\r" <<bar;
+
+    if(n+1 == N) std::cout <<std::endl;
 }
