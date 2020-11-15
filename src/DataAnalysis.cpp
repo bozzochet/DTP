@@ -91,10 +91,18 @@ int main(int argc, char **argv) {
 	TH1F *h5cut = new TH1F("btls_sim_cut", "btls_sim_cut", 1500, 0, 15);
 	TH1F *h5nopri = new TH1F("btls_sim_nopri", "btls_sim_nopri", 1500, 0, 15);
 	TH1F *h5nomip = new TH1F("btls_sim_nomip", "btls_sim_nomip", 1500, 0, 15);
-	TH1F *hPrimEdep = new TH1F("PrimaryEdep", "edep", 500, 0, 0.001);
-	TH1F *hPrimEdep0 = new TH1F("PrimaryEdep0", "edep0", 500, 0, 0.001);
-	TH1F *hEdep = new TH1F("Edep", "edep", 500, 0, 0.001);
-	TH1F *hEdep0 = new TH1F("Edep0", "edep0", 500, 0, 0.001);
+
+  TH1F *hPrimEdep = new TH1F
+  (
+    "PrimaryEdep", "energy deposited on primary hits;[eV];entries",
+    1000, -0, 0
+  );
+  hPrimEdep->SetCanExtend(TH1::kAllAxes);
+
+	TH1F *hEdep = new TH1F
+    ("Edep", "energy deposited on hits;[eV];entries", 1000, -0, 0);
+  hEdep->SetCanExtend(TH1::kAllAxes);
+
 	TH1F *hprotons = new TH1F("protoni", "protoni", 1000, 0, 4);
 	TH1F *hantip = new TH1F("antiprotoni", "antiprotoni", 1000, 0, 4);
 	TH1F *hneutrons = new TH1F("neutroni", "neutroni", 1000, 0, 4);
@@ -107,16 +115,32 @@ int main(int argc, char **argv) {
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
 
 
-	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.5, 0.5);
+	TH1F *segmp = new TH1F
+    ("segmpositions", "segmpositions", 1000, -0, 0);
+  segmp->SetCanExtend(TH1::kAllAxes);
 
-  //segmp->SetCanExtend(TH1::kAllAxes);
 
-
-  TH1F *h_time_meas = new TH1F("htime_meas", " ", 1000, -0, 0);
-
-  h_time_meas->SetTitle
-    ("time measures with noise;t_meas - t_true [s];entries");
+  TH1F *h_time_meas = new TH1F
+  (
+    "h_time_meas",
+    "time measures with threshold at 15%;t_meas [s];entries",
+    1000, -0, 0
+  );
   h_time_meas->SetCanExtend(TH1::kAllAxes);
+
+
+  TH1F *h_time_hit = new TH1F
+    ("h_time_hit", "hit time;[s];entries", 1000, -0, 0);
+  h_time_hit->SetCanExtend(TH1::kAllAxes);
+
+
+  TH1F *h_time_res = new TH1F
+  (
+    "h_time_res",
+    "time resolution with threshold at 15%;[s];entries",
+    1000, -0, 0
+  );
+  h_time_res->SetCanExtend(TH1::kAllAxes);
 
 
 	TRandom3 *tr = new TRandom3();
@@ -164,8 +188,6 @@ int main(int argc, char **argv) {
     //print and update progress bar
     progress(i, events->GetEntries());
 
-    COUT(DEBUG) <<ENDL <<"i: " <<i <<ENDL;
-
 		v.resize(geo->Nlayers);
 
     branch_ev->GetEntry(i);
@@ -182,15 +204,16 @@ int main(int argc, char **argv) {
 
 		for (int j = 0; j < a->GetEntries(); j++) {
 
-      COUT(DEBUG) <<"j: " <<j <<ENDL;
-
       //cout<<endl<<"Entry #"<<i+j<<endl;
 			TrCluster *cl = (TrCluster *)a->At(j);
 
 			v[cl->layer].push_back(*cl);
 
 			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
-			if(cl->eDep > 9e+3) hEdep->Fill(cl->eDep); //total
+
+      hEdep->Fill(cl->eDep); //total
+
+      h_time_hit->Fill(cl->time);
 
 
       /* while Events branch work with two indexes (i,j),
@@ -200,18 +223,16 @@ int main(int argc, char **argv) {
        * iMeas of Measures branch. Look in Digitization.cpp,
        * digitization function */
 
-      COUT(DEBUG) <<"GetEntry on Measure: " <<iMeas <<ENDL;
-
       branch_meas->GetEntry(iMeas);
       ++iMeas;
 
-      COUT(DEBUG) <<"Getting t_meas..." <<ENDL;
-
       for(int m=0; m<2; ++m)
         if(meas.time[m] >= 0)
-          h_time_meas->Fill(meas.time[m] - cl->time);
+        {
+          h_time_meas->Fill(meas.time[m]);
+          h_time_res->Fill(meas.time[m] - cl->time);
+        }
 
-      COUT (DEBUG) <<"Getting pos_meas..." <<ENDL;
 
       segmp->Fill(meas.position - cl->pos[cl->xy]);
 
@@ -291,8 +312,6 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(h5nomip);
 	outFile->WriteTObject(hPrimEdep);
 	outFile->WriteTObject(hEdep);
-	outFile->WriteTObject(hPrimEdep0);
-	outFile->WriteTObject(hEdep0);
 	outFile->WriteTObject(hprotons);
 	outFile->WriteTObject(hneutrons);
 	outFile->WriteTObject(hgamma);
@@ -303,8 +322,9 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 	outFile->WriteTObject(segmp);
+  outFile->WriteTObject(h_time_hit);
   outFile->WriteTObject(h_time_meas);
-
+  outFile->WriteTObject(h_time_res);
   outFile->Close();
 
   COUT(INFO) <<"Output written in " <<outFileName <<ENDL;
