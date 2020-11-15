@@ -59,7 +59,7 @@ int digitization(TTree*, Geometry*);
 int main(int argc, char **argv)
 {
 
-  static const string routineName("digitization");
+  static const string routineName("Digitization::main");
   GGSSmartLog::verboseLevel = GGSSmartLog::INFO; // Print only INFO messages or more important
 
   TString inputFileName = argv[1];
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 
 int fillTree(GGSTRootReader &reader, TTree *tree, Geometry *geo)
 {
-  static const string routineName("digitization");
+  static const string routineName("Digitization::fillTree");
 
   COUT(INFO) <<ENDL;
   COUT(INFO) <<"Saving MC truth..." <<ENDL;
@@ -272,7 +272,7 @@ int fillTree(GGSTRootReader &reader, TTree *tree, Geometry *geo)
 
 int digitization(TTree *tree, Geometry *geo)
 {
-  static const string routineName("digitization");
+  static const string routineName("Digitization::digitization");
 
   COUT(INFO) <<ENDL;
   COUT(INFO) <<"Digitization..." <<ENDL;
