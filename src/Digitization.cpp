@@ -300,6 +300,8 @@ int digitization(TTree *tree, Geometry *geo)
 
   COUT(INFO) << "Begin loop over " << tree->GetEntries() << " events" << ENDL;
 
+  std::clock_t start = std::clock();
+
 
   for (int i = 0; i < tree->GetEntries(); i++)
   {
@@ -383,6 +385,29 @@ int digitization(TTree *tree, Geometry *geo)
 
     } //for j
   } //for i
+
+
+  //digitization execution time
+  
+  int sec = (start - std::clock()) / CLOCKS_PER_SEC;
+
+  if(sec != 0)
+    COUT(INFO) <<"Digitization took ";
+
+  if(sec >= 3600)
+  {
+    COUT(INFO) <<sec/3600 <<"h ";
+    sec %= 3600;
+  }
+
+  if(sec >= 60)
+  {
+    COUT(INFO) <<sec/60 <<"min ";
+    sec %= 60;
+  }
+
+  if(sec > 0)
+    COUT(INFO) <<sec <<"s " <<ENDL;
 
 
   delete pos_sim;
