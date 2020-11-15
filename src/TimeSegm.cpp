@@ -90,7 +90,7 @@ length_t TimeSegm::GetVoidSpace()
 
 
 
-void TimeSegm::SetHit(TrCluster *cl)
+int TimeSegm::SetHit(TrCluster *cl)
 {
   int i = -1;
 
@@ -110,6 +110,16 @@ void TimeSegm::SetHit(TrCluster *cl)
       pos = cl->pos[1];
     else
       pos = cl->pos[0];
+
+    //in GGS coordinates, 0 is in the middle of the layer
+    pos += geo_->GetNsquares() * geo_->GetSquareSide() * 0.5;
+    //now pos belongs to [0, Nsquares * squareSide]
+
+
+    //possible bugs: check if pos is in [0, Nsquares * squareSide]
+    if(pos > geo_->GetNsquares() * geo_->GetSquareSide())
+      pos = geo_->GetNsquares() * geo_->GetSquareSide();
+
 
     i = TMath::FloorNint(pos / side_void);
 
@@ -152,6 +162,8 @@ void TimeSegm::SetHit(TrCluster *cl)
 
 
   group_[i]->SetHit(cl->time * 1e-9, cl->eDep * 1e+9);
+
+  return i;
 }
 
 

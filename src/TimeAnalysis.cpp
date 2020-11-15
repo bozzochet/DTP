@@ -36,15 +36,21 @@ const double thickness = GEO.GetThickness();
 
 
 
+//time measures on charge signal
 void charge_meas
 (
   const char *input, const char *output,
   const double &threshold
 );
 
+//current and charge signals
 void get_example(const char *input, const char *output);
 
+//charge distributions
 void get_charge(const char *input, const char *output);
+
+//hit time distribution
+void get_time(const char *input, const char *output);
 
 
 
@@ -87,6 +93,11 @@ int main(int argc, char **argv)
     get_charge(argv[1], "time--charge.root");
   }
 
+
+  else if(argc == 3 && std::strcmp(argv[2], "--time") == 0)
+  {
+    get_time(argv[1], "time.root");
+  }
 
   else if(argc == 3)
   {
@@ -191,7 +202,8 @@ void charge_meas
 
   TRandom3 *random = new TRandom3(9298);
 
-  TimeSim *time_sim = new TimeSim(NULL, random);
+  TimeSegm *time_segm = new TimeSegm(&GEO, A, 1);
+  TimeSim *time_sim = new TimeSim(time_segm, random);
 
 
   std::cout <<"Analysis of " <<events->GetEntries() <<" events...\n";
@@ -202,6 +214,8 @@ void charge_meas
     progress(i, events->GetEntries());
 
     events->GetEntry(i); //get one particle trace
+
+    std::vector<int> group;
 
     for(int j = 0; j < branch->GetEntries(); ++j)
     {
@@ -215,40 +229,34 @@ void charge_meas
       {
         for(int k = 0; k < 2; ++k)
         {
-          TGraph *charge = new TGraph();
-          //TGraph *charge_ideal = new TGraph();
-
-          time_sim->GetChargeSignal
-              (cl->clust[k] * 1e+9, charge /*_ideal, false*/);
-
-/*
-          for(int m=0; m < charge_ideal->GetN(); ++m)
-            charge->SetPoint
-              (m, charge_ideal->GetX()[m], charge_ideal->GetY()[m]);
-
-          time_sim->AddChargeNoise(charge);
-*/
-
-          //mytime_t t_true = time_sim->GetMeas(charge_ideal, threshold);
-
-          mytime_t t_meas = time_sim->GetMeas(charge, threshold);
-
-/*
-          if(t_true != -9999)
-            h_ideal->Fill(t_true);
-*/
-
-          if(t_meas != -9999)
-            h_meas->Fill(t_meas);
-
-
-          delete charge;
-          //delete charge_ideal;
-
+          group.push_back(time_segm->SetHit(cl));
         }//for k
       } //if lad >= 0 strip >= 0
 
     } //for j
+
+
+    for(int gr = 0; gr < group.size(); ++gr)
+    {
+      std::vector<mytime_t> hitTime;
+      time_segm->GetTimes(group[gr], hitTime);
+
+      TGraph *charge = new TGraph();
+
+      time_sim->GetChargeSignal(group[gr], charge);
+
+      mytime_t t_meas = time_sim->GetMeas(charge, threshold)
+        - hitTime[0];
+
+      delete charge;
+
+      if(t_meas < 0)
+        continue;
+
+      h_meas->Fill(t_meas);
+
+    } //for gr
+
   } //for i
 
 
@@ -386,6 +394,73 @@ void get_charge(const char *input, const char *output)
 }
 
 
+void get_time(const char *input, const char *output)
+{
+  TFile *inFile = TFile::Open(input);
+
+  if(inFile->IsZombie())
+  {
+    std::cerr <<"\nfatal error: unable to open " <<input <<std::endl;
+    exit(1);
+  }
+
+
+  //output file
+
+  TFile *outFile = new TFile(output, "recreate");
+
+  if(outFile->IsZombie())
+  {
+    std::cerr <<"\nfatal error: unable to open output file\n";
+    exit(1);
+  }
+
+
+  TTree *events;
+	inFile->GetObject("Tree", events);
+	//events->Print();
+
+  TClonesArray *branch = new TClonesArray("TrCluster", 200);
+	events->SetBranchAddress("Events", &branch);
+
+  //charge collected without noise
+  TH1F *h_time = new TH1F("h_time", " ", 1e+3, -0, 0);
+  h_time->SetTitle("hit times;time [ns];entries");
+  h_time->SetCanExtend(TH1::kAllAxes);
+
+
+  std::cout <<"Analysis of " <<events->GetEntries() <<" events...\n";
+
+  for (int i = 0; i < events->GetEntries(); i++)
+  {
+    events->GetEntry(i); //get one particle trace
+
+    for(int j = 0; j < branch->GetEntries(); ++j)
+    {
+      TrCluster *cl = (TrCluster*) branch->At(j);
+      h_time->Fill(cl->time * 1e-9);
+    } //for j
+  } //for i
+
+
+  delete events;
+  delete branch;
+
+  std::cout <<std::endl <<std::endl;
+
+
+  // write output
+
+  outFile->WriteTObject(h_time);
+
+  outFile->Close();
+
+  delete outFile;
+
+  std::cout <<"\nResults written in " <<output;
+}
+
+
 
 void get_example(const char *input, const char *output)
 {
@@ -438,7 +513,7 @@ void get_example(const char *input, const char *output)
   if(cl->ladder >= 0 && cl->strip >= 0) //TEMPORARY FIX
   {
     time_sim->GetChargeSignal
-      (cl->clust[0] * 1e+9, charge_ideal, false);
+      (cl->time * 1e-9, cl->clust[0] * 1e+9, charge_ideal, false);
 
     for(int h = 0; h < charge_ideal->GetN(); ++h)
     {
@@ -451,9 +526,8 @@ void get_example(const char *input, const char *output)
 
     time_sim->AddChargeNoise(charge);
 
-    time_sim->GetCurrentSignal
-      (cl->time * 1e-9, current_ideal, charge_ideal);
-    time_sim->GetCurrentSignal(cl->time * 1e-9, current, charge);
+    time_sim->GetCurrentSignal(current_ideal, charge_ideal);
+    time_sim->GetCurrentSignal(current, charge);
   }
 
 

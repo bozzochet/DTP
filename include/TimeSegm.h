@@ -188,8 +188,8 @@ public:
   }
 
 
-  //individuates right group and call Group::SetHit
-  void SetHit(TrCluster *cl);
+  //individuates right group and call Group::SetHit; return group ID
+  int SetHit(TrCluster *cl);
 
 };
 
