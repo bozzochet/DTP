@@ -348,14 +348,15 @@ int digitization(TTree *tree, Geometry *geo)
 
         TGraph *charge = new TGraph();
 
-        time_sim->GetChargeSignal(cl->clust[k], charge, false);
+        time_sim->GetChargeSignal
+          (cl->time, cl->clust[k], charge, false);
 
         //eDep + noise
         meas.energy[k] = cl->clust[k]
           + time_sim->AddChargeNoise(charge) / FOND_CHARGE
             * ENERGY_COUPLE ;
 
-        meas.time[k] = cl->time + time_sim->GetMeas(charge, 0.15);
+        meas.time[k] = time_sim->GetMeas(charge, 0.15);
 
         /* if GetMeas returns -9999 => unable to measure time because
          * of noise */
@@ -390,7 +391,7 @@ int digitization(TTree *tree, Geometry *geo)
 
 
   //digitization execution time
-  
+
   int sec = (start - std::clock()) / CLOCKS_PER_SEC;
 
   if(sec != 0)
