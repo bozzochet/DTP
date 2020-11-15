@@ -8,6 +8,7 @@ charge_t TimeSim::AddChargeNoise(signal_t *signal)
   charge_t Q_NOISE = GetChargeNoise();
 
   mytime_t T = TMath::MaxElement(signal->GetN(), signal->GetX());
+  T -= TMath::MinElement(signal->GetN(), signal->GetX());
 
   //cumulative noise already added
   charge_t q_noise = 0;
@@ -15,7 +16,8 @@ charge_t TimeSim::AddChargeNoise(signal_t *signal)
   //charge to add every t_sample
   charge_t dq =  Q_NOISE / T * T_SAMPLING_;
 
-  //charge collected is 0 at t=0 => no noise at t=0 => start from i=1
+  //charge collected is 0 at t=hitTime => no noise at t=hitTime
+  // => start from i=1
   for(int i = 1; i < signal->GetN(); ++i)
   {
     charge_t q;
@@ -31,28 +33,39 @@ charge_t TimeSim::AddChargeNoise(signal_t *signal)
 }
 
 
+TimeSim::signal_fun_t* TimeSim::GetIdealChargeFun
+  (const mytime_t &hitTime, const charge_t &Q)
+{
+  signal_fun_t *charge = new signal_fun_t(
+    "charge",
+    "[0] * (1 - TMath::Exp( -[1]*(x-[2]) ) )",
+    hitTime, hitTime - T_CAPACITOR_*TMath::Log(1-STOP_CHARGE_FRACTION_)
+  );
+
+  charge->SetParameter(0, Q);
+  charge->SetParameter(1, 1.0 / T_CAPACITOR_);
+  charge->SetParameter(2, hitTime);
+
+  return charge;
+}
+
+
 charge_t TimeSim::GetChargeSignal
-  (const energy_t &energy, signal_t *signal, const bool noise)
+(
+  const mytime_t &hitTime, const energy_t &energy,
+  signal_t *signal, const bool noise
+)
 {
   if(signal->GetN() != 0)
     return 0;
 
   signal->SetNameTitle("charge", "charge collected");
-  signal->GetXaxis()->SetTitle("time from hit [s]");
+  signal->GetXaxis()->SetTitle("time [s]");
   signal->GetYaxis()->SetTitle("charge collected [C]");
 
   charge_t Q = GetChargeFromEnergy(energy);
 
-  //cumulative function of ideal charge collected
-
-  signal_fun_t *charge = new signal_fun_t(
-    "charge",
-    "[0] * (1 - TMath::Exp(-[1]*x) )",
-    0, - T_CAPACITOR_ * TMath::Log(1 - STOP_CHARGE_FRACTION_)
-  );
-
-  charge->SetParameter(0, Q);
-  charge->SetParameter(1, 1.0 / T_CAPACITOR_);
+  signal_fun_t *charge = GetIdealChargeFun(hitTime, Q);
 
   AddChargeSignal(signal, charge);
 
@@ -65,7 +78,7 @@ charge_t TimeSim::GetChargeSignal
 
 
 void TimeSim::AddCurrentSignal
-  (const mytime_t &hitTime, signal_t *signal, const signal_t *charge)
+  (signal_t *signal, const signal_t *charge)
 {
   //fill with charge derivative
 
@@ -78,18 +91,15 @@ void TimeSim::AddCurrentSignal
     charge->GetPoint(i, t1, q1);
     charge->GetPoint(i+1, t2, q2);
 
-    signal->SetPoint(
-      signal->GetN(),
-      hitTime + (t2 + t1)*0.5,
-      (q2 - q1) / (t2 - t1)
-    );
+    signal->SetPoint
+      (signal->GetN(), (t2 + t1)*0.5, (q2 - q1) / (t2 - t1) );
   }
 
 }
 
 
 void TimeSim::GetCurrentSignal
-  (const mytime_t &hitTime, signal_t *signal, const signal_t *charge)
+  (signal_t *signal, const signal_t *charge)
 {
   if(signal->GetN() != 0)
     return;
@@ -98,31 +108,64 @@ void TimeSim::GetCurrentSignal
   signal->GetXaxis()->SetTitle("run time [s]");
   signal->GetYaxis()->SetTitle("current [A]");
 
-  AddCurrentSignal(hitTime, signal, charge);
+  AddCurrentSignal(signal, charge);
 }
 
 
-void TimeSim::GetCurrentSignal(const int &gr, signal_t *signal)
+int TimeSim::GetChargeSignal(const int &gr, signal_t *signal)
 {
   std::map <mytime_t, energy_t> time_energy;
   segm_->GetHits(gr, time_energy);
 
+  if( (int) time_energy.size() == 0)
+    return 0; //no hit on this group
+
+
+  std::vector<signal_fun_t*> charge;
+  std::vector<mytime_t> hit_time;
+
+  //get ideal charge functions and store them and hit times in vecs
+
   for(auto it = time_energy.begin(); it != time_energy.end(); ++it)
   {
-    signal_t *charge = new signal_t();
-    GetChargeSignal(it->second, charge);
+    charge.push_back
+    (
+      GetIdealChargeFun(it->first, GetChargeFromEnergy(it->second))
+    );
 
-    signal_t *current = new signal_t();
-    GetCurrentSignal(it->first, current, charge);
-
-    SumCurrentSignal(signal, current);
-
-    delete charge;
-    delete current;
+    hit_time.push_back(it->first);
   }
+
+
+  //sample group charge signal and fill signal parameter
+
+  for
+  (
+    mytime_t t = hit_time[0];
+    t <= charge.back()->GetXmax();
+    t += T_SAMPLING_
+  )
+  {
+    charge_t q = 0; //q(t)
+
+
+    //sum single hit contributions to q(t)
+
+    for(int i=0; i < (int) charge.size(); ++i)
+      if(t >= charge[i]->GetXmin() && t <= charge[i]->GetXmax())
+        //t is in charge[i] range
+        q += charge[i]->Eval(t);
+
+
+    signal->SetPoint(signal->GetN(), t, q);
+
+  } //for t
+
+  return (int) time_energy.size();
 }
 
 
+/*
 void TimeSim::SumCurrentSignal
   (signal_t *sum, const signal_t *add)
 {
@@ -172,8 +215,8 @@ void TimeSim::SumCurrentSignal
 
     double i_sum = (t_add - t_sum_min) / t_sample;
 
-    /* "add" points are not in general on the same t of "sum" ;
-     * they need to be aligned to "sum" samples */
+    //"add" points are not in general on the same t of "sum" ;
+    // they need to be aligned to "sum" samples
 
      i_sum =
       i_sum - TMath::FloorNint(i_sum) < 0.5 ?
@@ -181,8 +224,8 @@ void TimeSim::SumCurrentSignal
 
 
 
-    /* if "add" signal point is < of every "sum" signal point
-     * (i.e. i_sum < 0): add zeros at the begin of "sum" signal */
+    // if "add" signal point is < of every "sum" signal point
+    // (i.e. i_sum < 0): add zeros at the begin of "sum" signal
 
     for(mytime_t t = t_sum_min - t_sample; i_sum < 0; t -= t_sample)
     {
@@ -198,8 +241,8 @@ void TimeSim::SumCurrentSignal
     if(i_sum < sum->GetN())
       sum->GetPoint(i_sum, t_sum, I_sum);
 
-    /* append 0 to "sum" signal until "sum" range reaches "add" signal
-     * point */
+    // append 0 to "sum" signal until "sum" range reaches "add" signal
+    // point
 
     else
       for
@@ -217,30 +260,28 @@ void TimeSim::SumCurrentSignal
 
 
 
-    /* if "add" point was above "sum" range, i_sum should be equal
-     * to sum->GetN() now, otherwise it is < sum->GetN() */
+    // if "add" point was above "sum" range, i_sum should be equal
+    // to sum->GetN() now, otherwise it is < sum->GetN()
 
     sum->SetPoint(i_sum, t_add + t_sum, I_add + I_sum);
   }
 
 }
+*/
 
 
 mytime_t TimeSim::GetMeas
-  (const signal_t *signal, const double threshold)
+  (const signal_t *charge, const double threshold)
 {
-  /* signal could be charge of current; anyway charge_t and current_t
-   * are both double => it is used logical type double directly */
+  const charge_t peak =
+    TMath::MaxElement(charge->GetN(), charge->GetY());
 
-  const double peak =
-    TMath::MaxElement(signal->GetN(), signal->GetY());
-
-  for(int i = 0; i < signal->GetN(); ++i)
+  for(int i = 0; i < charge->GetN(); ++i)
   {
     mytime_t t;
     double y;
 
-    signal->GetPoint(i, t, y);
+    charge->GetPoint(i, t, y);
 
     if(y > threshold * peak)
       return t;

@@ -55,7 +55,7 @@ class TimeSim
   const double STOP_CHARGE_FRACTION_ = 0.999;
 
   //signal parameters
-  const mytime_t T_SAMPLING_ = 1e-13;
+  const mytime_t T_SAMPLING_ = 1e-12;
 
   /* noise deviation:
    *   pair/um * thickness * fond_charge */
@@ -77,28 +77,31 @@ class TimeSim
   /* add to signal a single hit current generated using up_ and
    * charge signal obtained by GetChargeSignal; signal points are
    * sorted after this method execution*/
-  void AddCurrentSignal
-  (
-    const mytime_t &hitTime, signal_t *signal, const signal_t *charge
-  );
+  void AddCurrentSignal(signal_t *signal, const signal_t *charge);
 
 
   // signal points are sorted after this method execution
   inline void AddChargeSignal
     (signal_t *signal, const signal_fun_t *ideal)
   {
-    for(mytime_t t = 0; t < ideal->GetXmax(); t += T_SAMPLING_ )
+    for
+    (
+      mytime_t t = ideal->GetXmin();
+      t <= ideal->GetXmax();
+      t += T_SAMPLING_
+    )
       signal->SetPoint(signal->GetN(), t, ideal->Eval(t));
   }
 
 
-  bool Trigger(double&, const signal_t*, const int&, const double&);
+  //cumulative function of ideal charge collected
+  signal_fun_t* GetIdealChargeFun(const mytime_t&, const charge_t&);
 
 
   /* add second signal to first one passed;
    * signals passed MUST BE sorted and sampled with same time;
    * first signal is sorted after this method execution */
-  void SumCurrentSignal(signal_t*, const signal_t*);
+  //void SumCurrentSignal(signal_t*, const signal_t*);
 
 
 
@@ -130,12 +133,13 @@ public:
 
 
   /* generate charge signal in time with noise;
-   * return charge created by hit;
+   * return total charge collected;
    * signal passed MUST BE VOID;
    * signal points are sorted after this method execution */
   charge_t GetChargeSignal
   (
-    const energy_t&, signal_t *signal, const bool noise = true
+    const mytime_t &hitTime, const energy_t&,
+    signal_t *signal, const bool noise = true
   );
 
 
@@ -143,22 +147,20 @@ public:
    * collected;
    * signal passed MUST BE VOID;
    * signal points are sorted after this method execution */
-  void GetCurrentSignal
-  (
-    const mytime_t &hitTime, signal_t *signal, const signal_t *charge
-  );
+  void GetCurrentSignal(signal_t *signal, const signal_t *charge);
 
 
-  /* get current signal i-th group of strips;
+  /* get charge signal of i-th group of strips;
    * signal passed MUST BE VOID;
-   * signal points are sorted after this method execution */
-   void GetCurrentSignal(const int &i, signal_t *signal);
+   * signal points are sorted after this method execution;
+   * return number of hits for this group */
+   int GetChargeSignal(const int &i, signal_t *signal);
 
 
-   /* get time when signal becomes > threshold_fraction * peak
+   /* get time when charge becomes > threshold_fraction * peak
     * IMPORTANT: charge MUST be sorted */
    mytime_t GetMeas
-    (const signal_t *signal, const double threshold_fraction = 0.1);
+    (const signal_t *charge, const double threshold_fraction = 0.15);
 
 };
 
