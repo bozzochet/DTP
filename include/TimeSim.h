@@ -95,7 +95,14 @@ class TimeSim
 
 
   //cumulative function of ideal charge collected
-  signal_fun_t* GetIdealChargeFun(const mytime_t&, const charge_t&);
+  signal_fun_t* GetChargeIdealFun(const mytime_t&, const charge_t&);
+
+
+  signal_fun_t* GetChargeNoiseFun
+  (
+    const mytime_t &t_min, const mytime_t &t_max,
+    const charge_t &noise
+  );
 
 
   /* add second signal to first one passed;

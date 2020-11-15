@@ -372,6 +372,7 @@ int digitization(TTree *tree, Geometry *geo)
 
         //position simulation
 
+        //set hit pos one time for clust (clust refers to same pos)
         if(k==0) pos_sim->SetHitPos(cl->layer, cl->pos[cl->xy]);
 
         pos_sim->DepositEnergy(ladder, strip, meas.energy[k]);
