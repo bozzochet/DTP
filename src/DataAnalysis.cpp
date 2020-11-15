@@ -19,6 +19,7 @@
 #include "TTreeReader.h"
 #include "TMultiGraph.h"
 #include "TString.h"
+#include "TBranch.h"
 
 #include "utils/GGSSmartLog.h"
 #include "montecarlo/readers/GGSTRootReader.h"
@@ -147,12 +148,16 @@ int main(int argc, char **argv) {
 
 	TClonesArray *a = new TClonesArray("TrCluster", 200);
 	events->SetBranchAddress("Events", &a);
+  TBranch *branch_ev = events->GetBranch("Events");
 
   measure meas;
   events->SetBranchAddress("Measures", &meas);
+  TBranch *branch_meas = events->GetBranch("Measures");
 
 
   COUT(INFO) <<"Begin loop over " <<events->GetEntries() <<ENDL;
+
+  int iMeas = 0; //iterator for branch_meas
 
   for (int i = 0; i < events->GetEntries(); i++) {
 
@@ -162,7 +167,8 @@ int main(int argc, char **argv) {
     COUT(DEBUG) <<ENDL <<"i: " <<i <<ENDL;
 
 		v.resize(geo->Nlayers);
-		events->GetEntry(i);
+
+    branch_ev->GetEntry(i);
 
     /*
 		if (a->GetEntries()>10) {
@@ -191,18 +197,19 @@ int main(int argc, char **argv) {
        * Measures branch was filled with one index and contains
        * a struct instead of an array. Because of this j element of
        * entry i in Events branch, corresponds to measure on entry
-       * i+j of Measures branch. Look in Digitization.cpp,
+       * iMeas of Measures branch. Look in Digitization.cpp,
        * digitization function */
 
-      COUT(DEBUG) <<"GetEntry i+j..." <<ENDL;
+      COUT(DEBUG) <<"GetEntry on Measure: " <<iMeas <<ENDL;
 
-      events->GetEntry(i+j);
+      branch_meas->GetEntry(iMeas);
+      ++iMeas;
 
       COUT(DEBUG) <<"Getting t_meas..." <<ENDL;
 
       for(int m=0; m<2; ++m)
         if(meas.time[m] >= 0)
-          h_time_meas->Fill(meas.time[m]);
+          h_time_meas->Fill(meas.time[m] - cl->time);
 
       COUT (DEBUG) <<"Getting pos_meas..." <<ENDL;
 
