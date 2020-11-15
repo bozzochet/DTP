@@ -356,6 +356,9 @@ int digitization(TTree *tree, Geometry *geo)
           + time_sim->AddChargeNoise(charge) / FOND_CHARGE
             * ENERGY_COUPLE ;
 
+        if(meas.energy[k] < 0) //signal lost due to noise
+          meas.energy[k] = 0;
+
         meas.time[k] = time_sim->GetMeas(charge, 0.15);
 
         /* if GetMeas returns -9999 => unable to measure time because
