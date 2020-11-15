@@ -217,6 +217,8 @@ void charge_meas
 
     std::vector<int> group;
 
+    time_segm->Clear();
+
     for(int j = 0; j < branch->GetEntries(); ++j)
     {
       TrCluster *cl = (TrCluster*) branch->At(j);
