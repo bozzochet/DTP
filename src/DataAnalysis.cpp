@@ -92,17 +92,6 @@ int main(int argc, char **argv) {
 	TH1F *h5nopri = new TH1F("btls_sim_nopri", "btls_sim_nopri", 1500, 0, 15);
 	TH1F *h5nomip = new TH1F("btls_sim_nomip", "btls_sim_nomip", 1500, 0, 15);
 
-  TH1F *hPrimEdep = new TH1F
-  (
-    "PrimaryEdep", "energy deposited on primary hits;[eV];entries",
-    1000, -0, 0
-  );
-  hPrimEdep->SetCanExtend(TH1::kAllAxes);
-
-	TH1F *hEdep = new TH1F
-    ("Edep", "energy deposited on hits;[eV];entries", 1000, -0, 0);
-  hEdep->SetCanExtend(TH1::kAllAxes);
-
 	TH1F *hprotons = new TH1F("protoni", "protoni", 1000, 0, 4);
 	TH1F *hantip = new TH1F("antiprotoni", "antiprotoni", 1000, 0, 4);
 	TH1F *hneutrons = new TH1F("neutroni", "neutroni", 1000, 0, 4);
@@ -115,32 +104,56 @@ int main(int argc, char **argv) {
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
 
 
-	TH1F *segmp = new TH1F
-    ("segmpositions", "segmpositions", 1000, -0, 0);
-  segmp->SetCanExtend(TH1::kAllAxes);
+  //energy
 
-
-  TH1F *h_time_meas = new TH1F
+  TH1F *hPrimEdep= new TH1F
   (
-    "h_time_meas",
-    "time measures with threshold at 15%;t_meas [s];entries",
+    "hPrimEdep", "energy deposited on primary hits;[eV];",1000, -0, 0
+  );
+  hPrimEdep->SetCanExtend(TH1::kAllAxes);
+
+  TH1F *hEdep = new TH1F
+    ("hEdep", "energy deposited on hits;[eV];", 1000, -0, 0);
+  hEdep->SetCanExtend(TH1::kAllAxes);
+
+  TH1F *hEdepMeas = new TH1F
+    ("hEdepMeas", "energy deposited measures;[eV];", 1000, -0, 0);
+  hEdepMeas->SetCanExtend(TH1::kAllAxes);
+
+  TH1F *hEdepRes = new TH1F
+  (
+    "hEdepRes", "energy deposited measurement resolution;[eV];",
     1000, -0, 0
   );
-  h_time_meas->SetCanExtend(TH1::kAllAxes);
+  hEdepRes->SetCanExtend(TH1::kAllAxes);
 
 
-  TH1F *h_time_hit = new TH1F
-    ("h_time_hit", "hit time;[s];entries", 1000, -0, 0);
-  h_time_hit->SetCanExtend(TH1::kAllAxes);
+  //position
+
+	TH1F *hPosRes = new TH1F
+    ("hPosRes", "position measurement resolution;[m];", 1000, -0, 0);
+  hPosRes->SetCanExtend(TH1::kAllAxes);
 
 
-  TH1F *h_time_res = new TH1F
+  //time
+  
+  TH1F *hTimeMeas15= new TH1F
   (
-    "h_time_res",
-    "time resolution with threshold at 15%;[s];entries",
+    "hTimeMeas15", "time measures with threshold at 15%;[s];",
     1000, -0, 0
   );
-  h_time_res->SetCanExtend(TH1::kAllAxes);
+  hTimeMeas15->SetCanExtend(TH1::kAllAxes);
+
+  TH1F *hTimeHit = new TH1F("hTimeHit", "hit times;[s];", 1000, -0, 0);
+  hTimeHit->SetCanExtend(TH1::kAllAxes);
+
+  TH1F *hTimeRes15 = new TH1F
+  (
+    "hTimeRes15",
+    "time measurement resolution with threshold at 15%;[s];",
+    1000, -0, 0
+  );
+  hTimeRes15->SetCanExtend(TH1::kAllAxes);
 
 
 	TRandom3 *tr = new TRandom3();
@@ -213,7 +226,7 @@ int main(int argc, char **argv) {
 
       hEdep->Fill(cl->eDep); //total
 
-      h_time_hit->Fill(cl->time);
+      hTimeHit->Fill(cl->time);
 
 
       /* while Events branch work with two indexes (i,j),
@@ -229,12 +242,12 @@ int main(int argc, char **argv) {
       for(int m=0; m<2; ++m)
         if(meas.time[m] >= 0)
         {
-          h_time_meas->Fill(meas.time[m]);
-          h_time_res->Fill(meas.time[m] - cl->time);
+          hTimeMeas15->Fill(meas.time[m]);
+          hTimeRes15->Fill(meas.time[m] - cl->time);
         }
 
 
-      segmp->Fill(meas.position - cl->pos[cl->xy]);
+      hPosRes->Fill(meas.position - cl->pos[cl->xy]);
 
 		} //for j
   } //for i
@@ -310,9 +323,8 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(h5cut);
 	outFile->WriteTObject(h5nopri);
 	outFile->WriteTObject(h5nomip);
-	outFile->WriteTObject(hPrimEdep);
-	outFile->WriteTObject(hEdep);
-	outFile->WriteTObject(hprotons);
+
+  outFile->WriteTObject(hprotons);
 	outFile->WriteTObject(hneutrons);
 	outFile->WriteTObject(hgamma);
 	outFile->WriteTObject(hisotopes);
@@ -321,10 +333,18 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(helectronmu);
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
-	outFile->WriteTObject(segmp);
-  outFile->WriteTObject(h_time_hit);
-  outFile->WriteTObject(h_time_meas);
-  outFile->WriteTObject(h_time_res);
+
+  outFile->WriteTObject(hPrimEdep);
+  outFile->WriteTObject(hEdep);
+  outFile->WriteTObject(hEdepMeas);
+  outFile->WriteTObject(hEdepRes);
+
+  outFile->WriteTObject(hPosRes);
+
+  outFile->WriteTObject(hTimeHit);
+  outFile->WriteTObject(hTimeMeas15);
+  outFile->WriteTObject(hTimeRes15);
+
   outFile->Close();
 
   COUT(INFO) <<"Output written in " <<outFileName <<ENDL;
