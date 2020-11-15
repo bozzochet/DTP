@@ -5,10 +5,15 @@
 
 #include <iostream>
 #include <string>
-using namespace std;
+#include <ctime>
+
 
 //print a progress bar
-void progress(const int &partial, const int &tot);
+void progress
+(
+  const std::clock_t &time_from_start,
+  const int &partial, const int &tot
+);
 
 
 #endif

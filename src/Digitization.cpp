@@ -159,13 +159,6 @@ int fillTree(GGSTRootReader &reader, TTree *tree, Geometry *geo)
 
   for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
 
-    //print and update progress bar;
-    progress(iEv, reader.GetEntries());
-
-    /* IMPORTANT: cout and printf MUST print strings beginning and
-     * ending with a new line (i.e. "\n" or endl) to not overwrite
-     * the bar */
-
     reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
     GGSTPartHit *phit;
     GGSTIntHit *inthit;
@@ -302,12 +295,11 @@ int digitization(TTree *tree, Geometry *geo)
 
   std::clock_t start = std::clock();
 
-
   for (int i = 0; i < tree->GetEntries(); i++)
   {
 
     //print and update progress bar
-    progress(i, tree->GetEntries());
+    progress(std::clock() - start, i, tree->GetEntries());
 
 		tree->GetEntry(i);
 

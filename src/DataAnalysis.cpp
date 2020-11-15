@@ -106,23 +106,29 @@ int main(int argc, char **argv) {
 
   //energy
 
+/*
   TH1F *hPrimEdep= new TH1F
   (
     "hPrimEdep", "energy deposited on primary hits;[eV];",1000, -0, 0
   );
   hPrimEdep->SetCanExtend(TH1::kAllAxes);
+*/
 
   TH1F *hEdep = new TH1F
-    ("hEdep", "energy deposited on hits;[eV];", 1000, -0, 0);
+    ("hEdep", "energy deposited on a strip;energy [eV];", 1000, -0, 0);
   hEdep->SetCanExtend(TH1::kAllAxes);
 
   TH1F *hEdepMeas = new TH1F
-    ("hEdepMeas", "energy deposited measures;[eV];", 1000, -0, 0);
+  (
+    "hEdepMeas", "energy deposited on a strip measures;energy [eV];",
+    1000, -0, 0
+  );
   hEdepMeas->SetCanExtend(TH1::kAllAxes);
 
   TH1F *hEdepRes = new TH1F
   (
-    "hEdepRes", "energy deposited measurement resolution;[eV];",
+    "hEdepRes",
+    "energy deposited on a strip measurement resolution;[eV];",
     1000, -0, 0
   );
   hEdepRes->SetCanExtend(TH1::kAllAxes);
@@ -136,7 +142,7 @@ int main(int argc, char **argv) {
 
 
   //time
-  
+
   TH1F *hTimeMeas15= new TH1F
   (
     "hTimeMeas15", "time measures with threshold at 15%;[s];",
@@ -198,9 +204,6 @@ int main(int argc, char **argv) {
 
   for (int i = 0; i < events->GetEntries(); i++) {
 
-    //print and update progress bar
-    progress(i, events->GetEntries());
-
 		v.resize(geo->Nlayers);
 
     branch_ev->GetEntry(i);
@@ -222,9 +225,7 @@ int main(int argc, char **argv) {
 
 			v[cl->layer].push_back(*cl);
 
-			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
-
-      hEdep->Fill(cl->eDep); //total
+			//if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
 
       hTimeHit->Fill(cl->time);
 
@@ -240,12 +241,17 @@ int main(int argc, char **argv) {
       ++iMeas;
 
       for(int m=0; m<2; ++m)
+      {
         if(meas.time[m] >= 0)
         {
           hTimeMeas15->Fill(meas.time[m]);
           hTimeRes15->Fill(meas.time[m] - cl->time);
         }
 
+        hEdep->Fill(cl->clust[m]);
+        hEdepMeas->Fill(meas.energy[m]);
+        hEdepRes->Fill(meas.energy[m] - cl->clust[m]);
+      }
 
       hPosRes->Fill(meas.position - cl->pos[cl->xy]);
 
@@ -334,7 +340,7 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 
-  outFile->WriteTObject(hPrimEdep);
+  //outFile->WriteTObject(hPrimEdep);
   outFile->WriteTObject(hEdep);
   outFile->WriteTObject(hEdepMeas);
   outFile->WriteTObject(hEdepRes);
