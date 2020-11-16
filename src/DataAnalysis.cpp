@@ -33,7 +33,7 @@ using namespace std;
 
 int main(int argc, char **argv) {
 
-  static const string routineName("analysis");
+  static const string routineName("DataAnalysis::main");
   GGSSmartLog::verboseLevel = GGSSmartLog::INFO; // Print only INFO messages or more important
 
 
