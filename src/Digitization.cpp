@@ -421,6 +421,22 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
 
       meas.xy = cl->xy;
 
+      /*********************
+      * DEBUG:
+      * data calculated here does not correspond with the ones
+      * read in DataAnalysis. This happens not regularly it seems and
+      * only for sme parameters; now it seems to affect position
+      * measures pos_meas read in analysis is inf while in
+      * Digitization was good (also well reconstructed);
+      * probably there is some unexpected behaviuour in the use
+      * of TTree object meas_tree
+      **********************/
+
+/*
+      if(i==2 && j==4)
+        COUT(INFO) <<ENDL <<"\n\tE: " <<cl->clust[0] <<" " <<cl->clust[1] <<"\n\tE + noise: " <<meas.energy[0] <<" " <<meas.energy[1] <<"\n\tt: " <<cl->time <<"\n\tt meas: " <<meas.time[0] <<" " <<meas.time[1] <<"\n\tpos: " <<cl->pos[cl->xy] <<"\n\tpos meas: " <<meas.position <<ENDL;
+*/
+
       meas_tree->Fill();
 
     } //for j

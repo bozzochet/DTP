@@ -1,4 +1,5 @@
 
+//#include "DEBUG.h"
 #include "physics.h"
 #include "vector2.h"
 #include "progress.h"
@@ -32,6 +33,8 @@ using namespace std;
 
 
 int main(int argc, char **argv) {
+
+  //debug::start_debug(); //DEBUG.h
 
   static const string routineName("DataAnalysis::main");
   GGSSmartLog::verboseLevel = GGSSmartLog::INFO; // Print only INFO messages or more important
@@ -276,6 +279,18 @@ int main(int argc, char **argv) {
       {
         hEdep->Fill(cl->clust[m]);
 
+/* DEBUG.h
+        debug::out <<"\ni: " <<i <<" j: " <<j <<" m: " <<m;
+
+        debug::out <<"\n\tE: " <<cl->clust[m];
+        debug::out <<"\n\tE + noise: " <<meas.energy[m];
+        debug::out <<"\n\tt: " <<cl->time;
+        debug::out <<"\n\tt meas: " <<meas.time[m];
+        debug::out <<"\n\tpos: " <<cl->pos[cl->xy];
+        debug::out <<"\n\tpos meas: " <<meas.position;
+
+        debug::out <<std::endl;
+*/
 
         //analyze valid measures
 
@@ -308,7 +323,13 @@ int main(int argc, char **argv) {
 
       //read only valid measures without lost ones
 
-      if(meas.position != -9999)
+      if
+      (
+        meas.position != -9999
+
+        // temporary fix for Digitization bug
+        &&  !isinf(meas.position)
+      )
         hPosRes->Fill(meas.position - cl->pos[cl->xy]);
       else
         ++position_lost;
@@ -427,6 +448,7 @@ int main(int argc, char **argv) {
   outFile->Close();
 
   COUT(INFO) <<"Output written in " <<outFileName <<ENDL;
+  //debug::end_debug();
 
   return 0;
 }
