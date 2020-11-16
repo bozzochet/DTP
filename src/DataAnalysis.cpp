@@ -144,6 +144,22 @@ int main(int argc, char **argv) {
   hTimeRes15->SetCanExtend(TH1::kAllAxes);
 
 
+  TH1F *hTimeMeasHigh15= new TH1F
+  (
+    "hTimeMeasHigh15", "time measures with threshold at 15%;[s];",
+    1000, -0, 0
+  );
+  hTimeMeasHigh15->SetCanExtend(TH1::kAllAxes);
+
+  TH1F *hTimeResHigh15 = new TH1F
+  (
+    "hTimeResHigh15",
+    "time measurement resolution with threshold at 15%;[s];",
+    1000, -0, 0
+  );
+  hTimeResHigh15->SetCanExtend(TH1::kAllAxes);
+
+
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
 	vector2<TrCluster> v;
@@ -209,6 +225,12 @@ int main(int argc, char **argv) {
 
   int iMeas = 0; //iterator for meas_tree
 
+  int clust_lost = 0; //fraction of energies lost on a single strip
+  int lost = 0; //energy deposited on hit completely lost
+
+  bool example = false;
+  //TGraph *charge_example = new TGraph();
+
   for (int i = 0; i < events_tree->GetEntries(); i++) {
 
 		v.resize(geo.Nlayers);
@@ -249,21 +271,52 @@ int main(int argc, char **argv) {
 
       for(int m=0; m<2; ++m)
       {
+        hEdep->Fill(cl->clust[m]);
+
+
+        //read only valid measures excluding lost ones
+
+        if(meas.energy[m] > 0)
+        {
+          hEdepMeas->Fill(meas.energy[m]);
+          hEdepRes->Fill(meas.energy[m] - cl->clust[m]);
+        }
+        else
+          ++clust_lost;
+
         if(meas.time[m] >= 0)
         {
           hTimeMeas15->Fill(meas.time[m]);
           hTimeRes15->Fill(meas.time[m] - cl->time);
         }
 
-        hEdep->Fill(cl->clust[m]);
-        hEdepMeas->Fill(meas.energy[m]);
-        hEdepRes->Fill(meas.energy[m] - cl->clust[m]);
-      }
+        if(meas.time[m] >= 0 && meas.energy[m] > 0)
+        {
+          hTimeMeasHigh15->Fill(meas.time[m]);
+          hTimeResHigh15->Fill(meas.time[m] - cl->time);
+        }
 
-      hPosRes->Fill(meas.position - cl->pos[cl->xy]);
+      } //for m
+
+
+      //read only valid measures without lost ones
+
+      if(meas.position != -9999)
+        hPosRes->Fill(meas.position - cl->pos[cl->xy]);
+      else
+        ++lost;
 
 		} //for j
   } //for i
+
+
+  COUT(INFO) <<ENDL;
+
+  COUT(INFO) <<"Lost signals:   " <<clust_lost <<" on " <<iMeas*2
+    <<ENDL;
+
+  COUT(INFO) <<"Lost hits:      " <<lost <<" on " <<iMeas
+    <<ENDL;
 
 
 	// Find tStart and tMean
@@ -358,6 +411,8 @@ int main(int argc, char **argv) {
   outFile->WriteTObject(hTimeHit);
   outFile->WriteTObject(hTimeMeas15);
   outFile->WriteTObject(hTimeRes15);
+  outFile->WriteTObject(hTimeMeasHigh15);
+  outFile->WriteTObject(hTimeResHigh15);
 
   outFile->Close();
 

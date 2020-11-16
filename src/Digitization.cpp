@@ -389,33 +389,33 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
           + time_sim->AddChargeNoise(charge) / FOND_CHARGE
             * ENERGY_COUPLE ;
 
-        if(meas.energy[k] < 0) //signal lost due to noise
-          meas.energy[k] = 0;
+
+        if(meas.energy[k] > 0)
+          pos_sim->DepositEnergy(ladder, strip, meas.energy[k]);
+
+        else
+        //deposit 0: a negative energy could affect pos calculation
+          pos_sim->DepositEnergy(ladder, strip, 0);
+
 
         meas.time[k] = time_sim->GetMeas(charge, 0.15);
 
-        /* if GetMeas returns -9999 => unable to measure time because
-         * of noise */
-
-        /* if t_meas = -9999 it is saved anyway: in an analysis of time
-         * measures they will be excluded */
-
         delete charge;
-
-
-
-        pos_sim->DepositEnergy(ladder, strip, meas.energy[k]);
 
 		  } //for k
 
-      pos_sim->ShareEnergy();
-      /* must share energy between active strips stored in pos_sim
-       * before calling PosSim::GetMeas */
 
-      length_t simPos = pos_sim->GetMeas();
+      //signal lost completely => unable to measure pos
+      if(meas.energy[0] <= 0 && meas.energy[1] <= 0)
+        meas.position = -9999;
+
+      else
+      {
+        pos_sim->ShareEnergy(); //share energies between active strips
+        meas.position = pos_sim->GetMeas();
+      }
 
       meas.xy = cl->xy;
-      meas.position = simPos;
 
       meas_tree->Fill();
 
