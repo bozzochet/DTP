@@ -139,7 +139,8 @@ public:
   charge_t AddChargeNoise(signal_t *signal);
 
 
-  /* generate charge signal in time with noise;
+  /* generate charge signal in time with noise; if bool noise = false
+   * signal is ideal and noise can be added later with AddChargeNoise
    * return total charge collected;
    * signal passed MUST BE VOID;
    * signal points are sorted after this method execution */
