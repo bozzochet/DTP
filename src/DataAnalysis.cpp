@@ -124,15 +124,16 @@ int main(int argc, char **argv) {
 
   //time
 
+  TH1F *hTimeHit = new TH1F("hTimeHit", "hit times;[s];", 1000, -0, 0);
+  hTimeHit->SetCanExtend(TH1::kAllAxes);
+
+
   TH1F *hTimeMeas15= new TH1F
   (
     "hTimeMeas15", "time measures with threshold at 15%;[s];",
     1000, -0, 0
   );
   hTimeMeas15->SetCanExtend(TH1::kAllAxes);
-
-  TH1F *hTimeHit = new TH1F("hTimeHit", "hit times;[s];", 1000, -0, 0);
-  hTimeHit->SetCanExtend(TH1::kAllAxes);
 
   TH1F *hTimeRes15 = new TH1F
   (
@@ -201,9 +202,9 @@ int main(int argc, char **argv) {
   COUT(INFO) <<"  squares side:           " <<geo.squareSide <<ENDL;
   COUT(INFO) <<"  ladders:                " <<geo.Nladders <<ENDL;
   COUT(INFO) <<"=================================" <<ENDL;
+
+
   COUT(INFO) <<ENDL;
-
-
   COUT(INFO) <<"Begin loop over " <<events_tree->GetEntries() <<ENDL;
 
   int iMeas = 0; //iterator for meas_tree
@@ -281,6 +282,7 @@ int main(int argc, char **argv) {
 	tMean /= _n;
 
 
+  COUT(INFO) <<ENDL;
   COUT(INFO) <<"Particle identification..." <<ENDL;
 
 	//Particle identification

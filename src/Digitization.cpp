@@ -109,7 +109,6 @@ int main(int argc, char **argv)
   COUT(INFO) <<"  squares side:           " <<geo->squareSide <<ENDL;
   COUT(INFO) <<"  ladders:                " <<geo->Nladders <<ENDL;
   COUT(INFO) <<"=================================" <<ENDL;
-  COUT(INFO) <<ENDL;
 
 
   //trees
@@ -149,6 +148,7 @@ int fillGeoTree(TTree *geo_tree, Geometry *geo)
   static const string routineName("Digitization::fillGeoTree");
 
 
+  COUT(INFO) <<ENDL;
   COUT(INFO) <<"Saving geometric parameters..." <<ENDL;
 
   geo_tree->Branch
@@ -168,6 +168,7 @@ int fillEvTree(GGSTRootReader &reader, TTree *events_tree, Geometry *geo)
   static const string routineName("Digitization::fillEvTree");
 
 
+  COUT(INFO) <<ENDL;
   COUT(INFO) <<"Saving MC truth..." <<ENDL;
 
   TClonesArray a("TrCluster", 200);
@@ -343,35 +344,47 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
         int strip = cl->strip;
         int ladder = cl->ladder;
 
-        if(k==1) //go to next strip or stay?
+
+        //go to next strip or stay?
+
+        //hit on the last strip of the last ladder of the layer row
+        if
+        (
+          k==1
+          && cl->strip == geo->Nstrips-1
+          && (cl->ladder+1) % geo->Nsquares == 0
+        )
         {
-          //hit on the last strip of the last ladder of the layer row
-          if(cl->strip == geo->Nstrips-1 && (cl->ladder+1) % geo->Nsquares == 0)
-          {
-            // do nothing
-            // => deposit energy on the same strip of clust[0]
-          }
+          //other fraction of energy is lost: no strip on right
+          meas.energy[k] = 0;
+          meas.time[k] = -9999;
+          continue;
+        }
 
-    			else if(cl->strip==geo->Nstrips-1)
-          {
-            strip = 0;
-            ++ladder;
-          }
+    		else if(k==1 && cl->strip==geo->Nstrips-1)
+        {
+          strip = 0;
+          ++ladder;
+        }
 
-    			else
-            ++strip;
-
-        } //if k==1
+    		else if(k==1)
+          ++strip;
 
 
-        //time detection simulation
+        //set hit pos one time for clust (clust refers to same pos)
+
+        if(k==0) pos_sim->SetHitPos(cl->layer, cl->pos[cl->xy]);
+
+
+        //time measure and energy
 
         TGraph *charge = new TGraph();
 
+        //ideal charge signal
         time_sim->GetChargeSignal
           (cl->time, cl->clust[k], charge, false);
 
-        //eDep + noise
+        //add noise to charge signal and to energy
         meas.energy[k] = cl->clust[k]
           + time_sim->AddChargeNoise(charge) / FOND_CHARGE
             * ENERGY_COUPLE ;
@@ -390,10 +403,6 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
         delete charge;
 
 
-        //position simulation
-
-        //set hit pos one time for clust (clust refers to same pos)
-        if(k==0) pos_sim->SetHitPos(cl->layer, cl->pos[cl->xy]);
 
         pos_sim->DepositEnergy(ladder, strip, meas.energy[k]);
 
