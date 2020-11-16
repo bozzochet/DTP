@@ -37,6 +37,15 @@ int main(int argc, char **argv) {
   GGSSmartLog::verboseLevel = GGSSmartLog::INFO; // Print only INFO messages or more important
 
 
+  TString inputFileName = argv[1];
+  COUT(INFO) <<"Opening input file " <<inputFileName <<"..." <<ENDL;
+  auto inFile = TFile::Open(inputFileName);
+
+  TString outFileName = "histos.root";
+  COUT(INFO) <<"Recreating output file " <<outFileName <<"..." <<ENDL;
+  TFile *outFile = new TFile(outFileName, "recreate");
+
+/*
   //geometry
 
   GGSTRootReader reader;
@@ -57,27 +66,7 @@ int main(int argc, char **argv) {
 
   geo->squareSide = geo->pitch * ((double) geo->Nstrips);
   geo->Nladders = geo->Nsquares * geo->Nrows * geo->Nlayers;
-
-  COUT(INFO) <<"Geometric parameters:" <<ENDL;
-  COUT(INFO) <<"layers:                 " <<geo->Nlayers <<ENDL;
-  COUT(INFO) <<"strips per ladder:      " <<geo->Nstrips <<ENDL;
-  COUT(INFO) <<"ladders rows per layer: " <<geo->Nrows  <<ENDL;
-  COUT(INFO) <<"squares per side:       " <<geo->Nsquares  <<ENDL;
-  COUT(INFO) <<"implant pitch:          " <<geo->pitch  <<ENDL;
-  COUT(INFO) <<"layers thickness:       " <<geo->thickness <<ENDL;
-  COUT(INFO) <<"squares side:           " <<geo->squareSide <<ENDL;
-  COUT(INFO) <<"ladders:                " <<geo->Nladders <<ENDL;
-
-  COUT(INFO) <<ENDL;
-
-
-  TString inputFileName = argv[2];
-  COUT(INFO) <<"Opening input file " <<inputFileName <<"..." <<ENDL;
-  auto inFile = TFile::Open(inputFileName);
-
-  TString outFileName = "histos.root";
-  COUT(INFO) <<"Recreating output file " <<outFileName <<"..." <<ENDL;
-	TFile *outFile = new TFile(outFileName, "recreate");
+*/
 
 
   COUT(INFO) <<"Creating histos..." <<ENDL;
@@ -105,14 +94,6 @@ int main(int argc, char **argv) {
 
 
   //energy
-
-/*
-  TH1F *hPrimEdep= new TH1F
-  (
-    "hPrimEdep", "energy deposited on primary hits;[eV];",1000, -0, 0
-  );
-  hPrimEdep->SetCanExtend(TH1::kAllAxes);
-*/
 
   TH1F *hEdep = new TH1F
     ("hEdep", "energy deposited on a strip;energy [eV];", 1000, -0, 0);
@@ -183,30 +164,55 @@ int main(int argc, char **argv) {
 
 	*/
 
-  COUT(INFO) <<"Opening TTree object in " <<inputFileName <<"..." <<ENDL;
 
-  TTree *events;
-	inFile->GetObject("Data", events);
-	events->Print();
+  COUT(INFO) <<"Opening TTree objects in " <<inputFileName <<"..." <<ENDL;
 
-	TClonesArray *a = new TClonesArray("TrCluster", 200);
-	events->SetBranchAddress("Events", &a);
-  TBranch *branch_ev = events->GetBranch("Events");
+  TTree *events_tree;
+  inFile->GetObject("events", events_tree);
+  events_tree->Print();
+
+  TClonesArray *a = new TClonesArray("TrCluster", 200);
+  events_tree->SetBranchAddress("Events", &a);
+
+
+  TTree *meas_tree;
+  inFile->GetObject("measures", meas_tree);
 
   measure meas;
-  events->SetBranchAddress("Measures", &meas);
-  TBranch *branch_meas = events->GetBranch("Measures");
+  meas_tree->SetBranchAddress("Measures", &meas);
 
 
-  COUT(INFO) <<"Begin loop over " <<events->GetEntries() <<ENDL;
+  TTree *geo_tree;
+  inFile->GetObject("geometry", geo_tree);
 
-  int iMeas = 0; //iterator for branch_meas
+  Geometry geo;
+  geo_tree->SetBranchAddress("Geometry", &geo);
+  geo_tree->GetEntry(0);
 
-  for (int i = 0; i < events->GetEntries(); i++) {
+  COUT(INFO) <<ENDL;
+  COUT(INFO) <<"=================================" <<ENDL;
+  COUT(INFO) <<"Geometric parameters:     " <<ENDL;
+  COUT(INFO) <<"  layers:                 " <<geo.Nlayers <<ENDL;
+  COUT(INFO) <<"  strips per ladder:      " <<geo.Nstrips <<ENDL;
+  COUT(INFO) <<"  ladders rows per layer: " <<geo.Nrows  <<ENDL;
+  COUT(INFO) <<"  squares per side:       " <<geo.Nsquares  <<ENDL;
+  COUT(INFO) <<"  implant pitch:          " <<geo.pitch  <<ENDL;
+  COUT(INFO) <<"  layers thickness:       " <<geo.thickness <<ENDL;
+  COUT(INFO) <<"  squares side:           " <<geo.squareSide <<ENDL;
+  COUT(INFO) <<"  ladders:                " <<geo.Nladders <<ENDL;
+  COUT(INFO) <<"=================================" <<ENDL;
+  COUT(INFO) <<ENDL;
 
-		v.resize(geo->Nlayers);
 
-    branch_ev->GetEntry(i);
+  COUT(INFO) <<"Begin loop over " <<events_tree->GetEntries() <<ENDL;
+
+  int iMeas = 0; //iterator for meas_tree
+
+  for (int i = 0; i < events_tree->GetEntries(); i++) {
+
+		v.resize(geo.Nlayers);
+
+    events_tree->GetEntry(i);
 
     /*
 		if (a->GetEntries()>10) {
@@ -237,7 +243,7 @@ int main(int argc, char **argv) {
        * iMeas of Measures branch. Look in Digitization.cpp,
        * digitization function */
 
-      branch_meas->GetEntry(iMeas);
+      meas_tree->GetEntry(iMeas);
       ++iMeas;
 
       for(int m=0; m<2; ++m)

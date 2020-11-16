@@ -70,7 +70,7 @@ GGSWolowitz -g lib/libTestGeometry.so -gd macros/geo.mac -t vgm -o lib/TestGeome
 ```
 - create analysis histos:
 ```
-./exe/DataAnalysis GGSOutput.root DigitOut.root
+./exe/DataAnalysis DigitOut.root
 ```
 `DataAnalysis` output will be `histos.root`
 

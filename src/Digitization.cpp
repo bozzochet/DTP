@@ -50,9 +50,11 @@ int findLadder
 }
 
 
-int fillTree(GGSTRootReader&, TTree*, Geometry*);
+int fillGeoTree(TTree*, Geometry*);
 
-int digitization(TTree*, Geometry*);
+int fillEvTree(GGSTRootReader&, TTree*, Geometry*);
+
+int fillMeasTree(TTree*, TTree*, Geometry*);
 
 
 
@@ -95,29 +97,41 @@ int main(int argc, char **argv)
   geo->squareSide = geo->pitch * ((double) geo->Nstrips);
   geo->Nladders = geo->Nsquares * geo->Nrows * geo->Nlayers;
 
-  COUT(INFO) <<"Geometric parameters:" <<ENDL;
-  COUT(INFO) <<"layers:                 " <<geo->Nlayers <<ENDL;
-  COUT(INFO) <<"strips per ladder:      " <<geo->Nstrips <<ENDL;
-  COUT(INFO) <<"ladders rows per layer: " <<geo->Nrows  <<ENDL;
-  COUT(INFO) <<"squares per side:       " <<geo->Nsquares  <<ENDL;
-  COUT(INFO) <<"implant pitch:          " <<geo->pitch  <<ENDL;
-  COUT(INFO) <<"layers thickness:       " <<geo->thickness <<ENDL;
-  COUT(INFO) <<"squares side:           " <<geo->squareSide <<ENDL;
-  COUT(INFO) <<"ladders:                " <<geo->Nladders <<ENDL;
-
+  COUT(INFO) <<ENDL;
+  COUT(INFO) <<"=================================" <<ENDL;
+  COUT(INFO) <<"Geometric parameters:     " <<ENDL;
+  COUT(INFO) <<"  layers:                 " <<geo->Nlayers <<ENDL;
+  COUT(INFO) <<"  strips per ladder:      " <<geo->Nstrips <<ENDL;
+  COUT(INFO) <<"  ladders rows per layer: " <<geo->Nrows  <<ENDL;
+  COUT(INFO) <<"  squares per side:       " <<geo->Nsquares  <<ENDL;
+  COUT(INFO) <<"  implant pitch:          " <<geo->pitch  <<ENDL;
+  COUT(INFO) <<"  layers thickness:       " <<geo->thickness <<ENDL;
+  COUT(INFO) <<"  squares side:           " <<geo->squareSide <<ENDL;
+  COUT(INFO) <<"  ladders:                " <<geo->Nladders <<ENDL;
+  COUT(INFO) <<"=================================" <<ENDL;
   COUT(INFO) <<ENDL;
 
 
-  //save data
+  //trees
 
-  TTree *data = new TTree("Data", "siSensorHits");
+  TTree *geo_tree = new TTree("geometry", "siSensorGeoParams");
+  TTree *events_tree = new TTree("events", "siSensorHits");
+  TTree *meas_tree = new TTree("measures", "siSensorMeasures");
 
-  if(fillTree(reader, data, geo) != 0 || digitization(data, geo) != 0)
+  if
+  (
+    fillGeoTree(geo_tree, geo) != 0
+    || fillEvTree(reader, events_tree, geo) != 0
+    || fillMeasTree(events_tree, meas_tree, geo) != 0
+  )
     return 1;
 
   // Save histograms
   outFile->cd();
-  data->Write();
+
+  geo_tree->Write();
+  events_tree->Write();
+  meas_tree->Write();
 
   outFile->Close();
   delete outFile;
@@ -130,16 +144,35 @@ int main(int argc, char **argv)
 }
 
 
-
-int fillTree(GGSTRootReader &reader, TTree *tree, Geometry *geo)
+int fillGeoTree(TTree *geo_tree, Geometry *geo)
 {
-  static const string routineName("Digitization::fillTree");
+  static const string routineName("Digitization::fillGeoTree");
 
-  COUT(INFO) <<ENDL;
+
+  COUT(INFO) <<"Saving geometric parameters..." <<ENDL;
+
+  geo_tree->Branch
+  (
+    "Geometry", &(geo->Nlayers),
+    "Nlayers:Nstrips:Nrows:Nsquares:pitch/D:thickness/D:squareSide/D:Nladders"
+  );
+
+  geo_tree->Fill();
+
+  return 0;
+}
+
+
+int fillEvTree(GGSTRootReader &reader, TTree *events_tree, Geometry *geo)
+{
+  static const string routineName("Digitization::fillEvTree");
+
+
   COUT(INFO) <<"Saving MC truth..." <<ENDL;
 
   TClonesArray a("TrCluster", 200);
-  tree->Branch("Events", &a);
+  events_tree->Branch("Events", &a);
+
 
   // Create and retrieve the hits sub-reader
   GGSTHitsReader *hReader = reader.GetReader<GGSTHitsReader>();
@@ -255,32 +288,27 @@ int fillTree(GGSTRootReader &reader, TTree *tree, Geometry *geo)
       } //for i
     } //for iHit
 
-    tree->Fill();
+    events_tree->Fill();
   } //for iEv
 
   return 0;
 }
 
 
-
-int digitization(TTree *tree, Geometry *geo)
+int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
 {
-  static const string routineName("Digitization::digitization");
+  static const string routineName("Digitization::fillMeasTree");
 
   COUT(INFO) <<ENDL;
-  COUT(INFO) <<"Digitization..." <<ENDL;
+  COUT(INFO) <<"Saving measures..." <<ENDL;
 
   //set branch in which write measures
   measure meas;
-  TBranch *branch = tree->Branch
-  (
-    "Measures", &(meas.time),
-    "time[2]/D:xy/I:position/D:energy[2]/D"
-  );
+  meas_tree->Branch("Measures", &(meas.time),"time[2]/D:xy/I:position/D:energy[2]/D");
 
   //get MC truth
   TClonesArray *a = new TClonesArray("TrCluster", 200);
-	tree->SetBranchAddress("Events", &a);
+	events_tree->SetBranchAddress("Events", &a);
 
 
   TRandom3 *tr = new TRandom3(9298);
@@ -291,17 +319,17 @@ int digitization(TTree *tree, Geometry *geo)
   PosSim *pos_sim = new PosSim(geo,1);
 
 
-  COUT(INFO) << "Begin loop over " << tree->GetEntries() << " events" << ENDL;
+  COUT(INFO) << "Begin loop over " << events_tree->GetEntries() << " events" << ENDL;
 
   std::clock_t start = std::clock();
 
-  for (int i = 0; i < tree->GetEntries(); i++)
+  for (int i = 0; i < events_tree->GetEntries(); i++)
   {
 
     //print and update progress bar
-    progress(std::clock() - start, i, tree->GetEntries());
+    progress(std::clock() - start, i, events_tree->GetEntries());
 
-		tree->GetEntry(i);
+		events_tree->GetEntry(i);
 
 		for (int j = 0; j < a->GetEntries(); j++)
     {
@@ -380,7 +408,7 @@ int digitization(TTree *tree, Geometry *geo)
       meas.xy = cl->xy;
       meas.position = simPos;
 
-      branch->Fill();
+      meas_tree->Fill();
 
     } //for j
   } //for i
