@@ -105,6 +105,8 @@ class TimeSim
   );
 
 
+  // DEPRECATED
+  
   /* add second signal to first one passed;
    * signals passed MUST BE sorted and sampled with same time;
    * first signal is sorted after this method execution */
@@ -157,13 +159,15 @@ public:
    * signal points are sorted after this method execution */
   void GetCurrentSignal(signal_t *signal, const signal_t *charge);
 
+/*******************
 
   /* get charge signal of i-th group of strips;
    * signal passed MUST BE VOID;
    * signal points are sorted after this method execution;
-   * return number of hits for this group */
-   int GetChargeSignal(const int &i, signal_t *signal);
+   * return number of hits for this group
+   //int GetChargeSignal(const int &i, signal_t *signal);
 
+********************/
 
    /* get time when charge becomes > threshold_fraction * peak
     * IMPORTANT: charge MUST be sorted */

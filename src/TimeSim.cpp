@@ -122,7 +122,9 @@ void TimeSim::GetCurrentSignal
   AddCurrentSignal(signal, charge);
 }
 
-
+/* THIS METHOD NEEDS TO BE REVISITED: signal generated has non noise;
+ * how to collect noise ?
+ *
 int TimeSim::GetChargeSignal(const int &gr, signal_t *signal)
 {
   std::map <mytime_t, energy_t> time_energy;
@@ -174,9 +176,13 @@ int TimeSim::GetChargeSignal(const int &gr, signal_t *signal)
 
   return (int) time_energy.size();
 }
+*/
 
 
-/*
+/* DEPRECATED : look at GetChargeSignal(gr,signal) above; it is
+ * commented but it has a better approach
+ *
+ *
 void TimeSim::SumCurrentSignal
   (signal_t *sum, const signal_t *add)
 {
