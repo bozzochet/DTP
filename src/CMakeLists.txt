@@ -5,6 +5,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 set(TestGeometry_SOURCE
   DetectorConstruction.cc
+  DetectorMessenger.cc
 )
 
 # Set target TestGeometry and TestGeometry_nocalo

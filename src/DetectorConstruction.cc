@@ -1,5 +1,5 @@
 #include "DetectorConstruction.hh"
-//#include "DetectorMessenger.hh"
+#include "DetectorMessenger.hh"
 
 // GGS headers
 #include "geometry/pluginmanagers/GGSGeoPluginMacros.h"
@@ -38,7 +38,7 @@ GeometryPlugin(DetectorConstruction)
 DetectorConstruction::DetectorConstruction()
     : GGSVGeometryConstruction(), fCheckOverlaps(false), fPhysicalWorld(NULL) {
   DefineMaterials();
-  //detMessenger = new DetectorMessenger(this);
+  detMessenger = new DetectorMessenger(this);
 
   messenger_ = new G4GenericMessenger(this, "/Detector/");
   messenger_->DeclareProperty("Nlayers", Nlayers, "layers number");
@@ -52,7 +52,7 @@ DetectorConstruction::DetectorConstruction()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-//DetectorConstruction::~DetectorConstruction() { delete detMessenger; }
+DetectorConstruction::~DetectorConstruction() { delete detMessenger; }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

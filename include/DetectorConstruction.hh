@@ -19,14 +19,14 @@
 
 class G4VPhysicalVolume;
 class G4LogicalVolume;
-//class DetectorMessenger;
+class DetectorMessenger;
 
 class G4GenericMessenger;
 
 class DetectorConstruction: public GGSVGeometryConstruction {
 public:
   DetectorConstruction();
-  //virtual ~DetectorConstruction();
+  virtual ~DetectorConstruction();
 
   //bool ExportParameters();
   //const std::string GetVersion();
@@ -48,7 +48,7 @@ private:
 
   G4bool fCheckOverlaps;
 
-  //DetectorMessenger* detMessenger;
+  DetectorMessenger* detMessenger;
 
   G4VPhysicalVolume* fPhysicalWorld;
 
