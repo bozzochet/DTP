@@ -416,7 +416,7 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
 
   //digitization execution time
 
-  int sec = (start - std::clock()) / CLOCKS_PER_SEC;
+  int sec = (std::clock() - start) / CLOCKS_PER_SEC;
 
   if(sec != 0)
     COUT(INFO) <<"Digitization took ";
