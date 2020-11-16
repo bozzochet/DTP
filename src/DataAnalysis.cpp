@@ -21,6 +21,7 @@
 #include "TMultiGraph.h"
 #include "TString.h"
 #include "TBranch.h"
+#include "TMath.h"
 
 #include "utils/GGSSmartLog.h"
 #include "montecarlo/readers/GGSTRootReader.h"
@@ -98,69 +99,82 @@ int main(int argc, char **argv) {
 
   //energy
 
-  TH1F *hEdep = new TH1F
-    ("hEdep", "energy deposited on a strip;energy [eV];", 1000, -0, 0);
-  hEdep->SetCanExtend(TH1::kAllAxes);
+  TH1F *h_energy = new TH1F
+    ("h_energy", "MC energy;energy [eV];", 1000, -0, 0);
+  h_energy->SetCanExtend(TH1::kAllAxes);
 
-  TH1F *hEdepMeas = new TH1F
+  TH1F *h_energy_meas = new TH1F
+    ("h_energy_meas", "energy measures;energy [eV];", 1000, -0, 0);
+  h_energy_meas->SetCanExtend(TH1::kAllAxes);
+
+  TH1F *h_energy_res = new TH1F
   (
-    "hEdepMeas", "energy deposited on a strip measures;energy [eV];",
+    "h_energy_res",
+    "resolution of energy measurement;E_meas - E_true [eV];",
     1000, -0, 0
   );
-  hEdepMeas->SetCanExtend(TH1::kAllAxes);
-
-  TH1F *hEdepRes = new TH1F
-  (
-    "hEdepRes",
-    "energy deposited on a strip measurement resolution;[eV];",
-    1000, -0, 0
-  );
-  hEdepRes->SetCanExtend(TH1::kAllAxes);
+  h_energy_res->SetCanExtend(TH1::kAllAxes);
 
 
   //position
 
-	TH1F *hPosRes = new TH1F
-    ("hPosRes", "position measurement resolution;[m];", 1000, -0, 0);
-  hPosRes->SetCanExtend(TH1::kAllAxes);
+	TH1F *h_pos_res = new TH1F
+  (
+    "h_pos_res", "resolution position measurement;x_meas - x_true[m];",
+    1000, -0, 0
+  );
+  h_pos_res->SetCanExtend(TH1::kAllAxes);
 
 
   //time
 
-  TH1F *hTimeHit = new TH1F("hTimeHit", "hit times;[s];", 1000, -0, 0);
-  hTimeHit->SetCanExtend(TH1::kAllAxes);
+  TH1F *h_time = new TH1F
+    ("h_time", "hit times;time [s];", 1000, -0, 0);
+  h_time->SetCanExtend(TH1::kAllAxes);
 
 
-  TH1F *hTimeMeas15= new TH1F
+  TH1F *h_time_meas15= new TH1F
   (
-    "hTimeMeas15", "time measures with threshold at 15%;[s];",
+    "h_time_meas15", "time measures (threshold 15%);time [s];",
     1000, -0, 0
   );
-  hTimeMeas15->SetCanExtend(TH1::kAllAxes);
+  h_time_meas15->SetCanExtend(TH1::kAllAxes);
 
-  TH1F *hTimeRes15 = new TH1F
+  TH1F *h_time_res15 = new TH1F
   (
-    "hTimeRes15",
-    "time measurement resolution with threshold at 15%;[s];",
+    "h_time_res15",
+    "resolution of time measurement (threshold 15%);t_meas - t_true [s];",
     1000, -0, 0
   );
-  hTimeRes15->SetCanExtend(TH1::kAllAxes);
+  h_time_res15->SetCanExtend(TH1::kAllAxes);
 
 
-  TH1F *hTimeMeasHigh15= new TH1F
+  TH1F *h_time_HIGH_meas15= new TH1F
   (
-    "hTimeMeasHigh15", "time measures with threshold at 15%;[s];",
+    "h_time_HIGH_meas15",
+    "time measures (E > 0, threshold 15%);time [s];",
     1000, -0, 0
   );
-  hTimeMeasHigh15->SetCanExtend(TH1::kAllAxes);
+  h_time_meas15->SetCanExtend(TH1::kAllAxes);
 
-  TH1F *hTimeResHigh15 = new TH1F
+  TH1F *h_time_HIGH_res15 = new TH1F
   (
-    "hTimeResHigh15",
-    "time measurement resolution with threshold at 15%;[s];",
+    "h_time_HIGH_res15",
+    "resolution of time measurement (E > 0, threshold 15%);t_meas - t_true [s];",
     1000, -0, 0
   );
-  hTimeResHigh15->SetCanExtend(TH1::kAllAxes);
+  h_time_res15->SetCanExtend(TH1::kAllAxes);
+
+
+  //hit time backscattered particles (electrons and protons)
+
+  TH1F *h_time_slow = new TH1F
+  (
+    "h_time_slow",
+    "slowest hit times;time [s];",
+    1000, -0, 0
+  );
+  h_time_slow->SetCanExtend(TH1::kAllAxes);
 
 
 	TRandom3 *tr = new TRandom3();
@@ -253,6 +267,12 @@ int main(int argc, char **argv) {
 		}
     */
 
+
+    //measured times for particle i;
+    //the slowest is used afterwards to fill h_time_slow
+    std::vector<mytime_t> v_slow;
+
+
 		for (int j = 0; j < a->GetEntries(); j++) {
 
       //cout<<endl<<"Entry #"<<i+j<<endl;
@@ -260,9 +280,7 @@ int main(int argc, char **argv) {
 
 			v[cl->layer].push_back(*cl);
 
-			//if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
-
-      hTimeHit->Fill(cl->time);
+      h_time->Fill(cl->time);
 
 
       /* while Events branch work with two indexes (i,j),
@@ -275,9 +293,11 @@ int main(int argc, char **argv) {
       meas_tree->GetEntry(iMeas);
       ++iMeas;
 
+      //scan energies clust and measures
+
       for(int m=0; m<2; ++m)
       {
-        hEdep->Fill(cl->clust[m]);
+        h_energy->Fill(cl->clust[m]);
 
 /* DEBUG.h
         debug::out <<"\ni: " <<i <<" j: " <<j <<" m: " <<m;
@@ -296,8 +316,8 @@ int main(int argc, char **argv) {
 
         if(meas.energy[m] > 0)
         {
-          hEdepMeas->Fill(meas.energy[m]);
-          hEdepRes->Fill(meas.energy[m] - cl->clust[m]);
+          h_energy_meas->Fill(meas.energy[m]);
+          h_energy_res->Fill(meas.energy[m] - cl->clust[m]);
         }
         else
           ++energy_lost;
@@ -305,8 +325,10 @@ int main(int argc, char **argv) {
 
         if(meas.time[m] >= 0)
         {
-          hTimeMeas15->Fill(meas.time[m]);
-          hTimeRes15->Fill(meas.time[m] - cl->time);
+          h_time_meas15->Fill(meas.time[m]);
+          h_time_res15->Fill(meas.time[m] - cl->time);
+
+          v_slow.push_back(meas.time[m]);
         }
         else
           ++time_lost;
@@ -314,27 +336,28 @@ int main(int argc, char **argv) {
 
         if(meas.time[m] >= 0 && meas.energy[m] > 0)
         {
-          hTimeMeasHigh15->Fill(meas.time[m]);
-          hTimeResHigh15->Fill(meas.time[m] - cl->time);
+          h_time_HIGH_meas15->Fill(meas.time[m]);
+          h_time_HIGH_res15->Fill(meas.time[m] - cl->time);
         }
 
       } //for m
 
 
-      //read only valid measures without lost ones
+      //read only valid position measures without lost ones
 
-      if
-      (
-        meas.position != -9999
-
-        // temporary fix for Digitization bug
-        &&  !isinf(meas.position)
-      )
-        hPosRes->Fill(meas.position - cl->pos[cl->xy]);
+      if(TMath::Abs(meas.position) < 1)
+      // this if is also a temporary fix for Digitization bug:
+      // Digitization.cpp,  line 424
+        h_pos_res->Fill(meas.position - cl->pos[cl->xy]);
       else
         ++position_lost;
 
 		} //for j
+
+
+    //fill slow hit
+    h_time_slow->Fill(TMath::MaxElement(v_slow.size(), &v_slow[0]));
+
   } //for i
 
 
@@ -432,18 +455,19 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
 
-  //outFile->WriteTObject(hPrimEdep);
-  outFile->WriteTObject(hEdep);
-  outFile->WriteTObject(hEdepMeas);
-  outFile->WriteTObject(hEdepRes);
+  outFile->WriteTObject(h_energy);
+  outFile->WriteTObject(h_energy_meas);
+  outFile->WriteTObject(h_energy_res);
 
-  outFile->WriteTObject(hPosRes);
+  outFile->WriteTObject(h_pos_res);
 
-  outFile->WriteTObject(hTimeHit);
-  outFile->WriteTObject(hTimeMeas15);
-  outFile->WriteTObject(hTimeRes15);
-  outFile->WriteTObject(hTimeMeasHigh15);
-  outFile->WriteTObject(hTimeResHigh15);
+  outFile->WriteTObject(h_time);
+  outFile->WriteTObject(h_time_meas15);
+  outFile->WriteTObject(h_time_HIGH_meas15);
+  outFile->WriteTObject(h_time_res15);
+  outFile->WriteTObject(h_time_HIGH_res15);
+
+  outFile->WriteTObject(h_time_slow);
 
   outFile->Close();
 
