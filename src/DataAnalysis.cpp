@@ -223,13 +223,16 @@ int main(int argc, char **argv) {
   COUT(INFO) <<ENDL;
   COUT(INFO) <<"Begin loop over " <<events_tree->GetEntries() <<ENDL;
 
+
   int iMeas = 0; //iterator for meas_tree
 
-  int clust_lost = 0; //fraction of energies lost on a single strip
-  int lost = 0; //energy deposited on hit completely lost
 
-  bool example = false;
-  //TGraph *charge_example = new TGraph();
+  //lost measures counters
+
+  int energy_lost = 0;
+  int time_lost = 0;
+  int position_lost = 0;
+
 
   for (int i = 0; i < events_tree->GetEntries(); i++) {
 
@@ -274,7 +277,7 @@ int main(int argc, char **argv) {
         hEdep->Fill(cl->clust[m]);
 
 
-        //read only valid measures excluding lost ones
+        //analyze valid measures
 
         if(meas.energy[m] > 0)
         {
@@ -282,13 +285,17 @@ int main(int argc, char **argv) {
           hEdepRes->Fill(meas.energy[m] - cl->clust[m]);
         }
         else
-          ++clust_lost;
+          ++energy_lost;
+
 
         if(meas.time[m] >= 0)
         {
           hTimeMeas15->Fill(meas.time[m]);
           hTimeRes15->Fill(meas.time[m] - cl->time);
         }
+        else
+          ++time_lost;
+
 
         if(meas.time[m] >= 0 && meas.energy[m] > 0)
         {
@@ -304,7 +311,7 @@ int main(int argc, char **argv) {
       if(meas.position != -9999)
         hPosRes->Fill(meas.position - cl->pos[cl->xy]);
       else
-        ++lost;
+        ++position_lost;
 
 		} //for j
   } //for i
@@ -312,10 +319,13 @@ int main(int argc, char **argv) {
 
   COUT(INFO) <<ENDL;
 
-  COUT(INFO) <<"Lost signals:   " <<clust_lost <<" on " <<iMeas*2
+  COUT(INFO) <<"Lost energies:  " <<energy_lost <<" on " <<iMeas*2
     <<ENDL;
 
-  COUT(INFO) <<"Lost hits:      " <<lost <<" on " <<iMeas
+  COUT(INFO) <<"Lost times:     " <<time_lost <<" on " <<iMeas*2
+    <<ENDL;
+
+  COUT(INFO) <<"Lost positions: " <<position_lost <<" on " <<iMeas
     <<ENDL;
 
 
@@ -417,4 +427,6 @@ int main(int argc, char **argv) {
   outFile->Close();
 
   COUT(INFO) <<"Output written in " <<outFileName <<ENDL;
-	}
+
+  return 0;
+}

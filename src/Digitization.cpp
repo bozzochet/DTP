@@ -305,7 +305,11 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
 
   //set branch in which write measures
   measure meas;
-  meas_tree->Branch("Measures", &(meas.time),"time[2]/D:xy/I:position/D:energy[2]/D");
+  meas_tree->Branch
+  (
+    "Measures", &(meas.energy),
+    "energy[2]/D:time[2]/D:position/D:xy/I"
+  );
 
   //get MC truth
   TClonesArray *a = new TClonesArray("TrCluster", 200);
