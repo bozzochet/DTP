@@ -452,18 +452,18 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
 
   if(sec >= 3600)
   {
-    COUT(INFO) <<sec/3600 <<"h ";
+    std::cout <<sec/3600 <<"h ";
     sec %= 3600;
   }
 
   if(sec >= 60)
   {
-    COUT(INFO) <<sec/60 <<"min ";
+    std::cout <<sec/60 <<"min ";
     sec %= 60;
   }
 
   if(sec > 0)
-    COUT(INFO) <<sec <<"s " <<ENDL;
+    std::cout <<sec <<"s " <<std::endl;
 
 
   delete pos_sim;
