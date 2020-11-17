@@ -45,7 +45,14 @@ int main(int argc, char **argv) {
   COUT(INFO) <<"Opening input file " <<inputFileName <<"..." <<ENDL;
   auto inFile = TFile::Open(inputFileName);
 
-  TString outFileName = "histos.root";
+
+  TString outFileName;
+
+  if(argc < 3)
+    outFileName = "histos.root";
+  else
+    outFileName = argv[2];
+    
   COUT(INFO) <<"Recreating output file " <<outFileName <<"..." <<ENDL;
   TFile *outFile = new TFile(outFileName, "recreate");
 
