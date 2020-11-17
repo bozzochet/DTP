@@ -1,4 +1,9 @@
 
+//
+// Andrea Serpolla
+//   a.serpolla@icloud.com
+//
+
 /**********************************************************************
 
   TimeSim class simulates signal of current in time
@@ -106,7 +111,7 @@ class TimeSim
 
 
   // DEPRECATED
-  
+
   /* add second signal to first one passed;
    * signals passed MUST BE sorted and sampled with same time;
    * first signal is sorted after this method execution */

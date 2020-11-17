@@ -51,7 +51,7 @@ TimeSegm::TimeSegm
   else
   {
     std::cerr <<"[TIMESEGM] segm passed not acceptable: " <<(char)S
-      <<std::endl;
+      <<" jump: " <<jump <<" side: " <<side <<std::endl;
     exit(1);
   }
 
