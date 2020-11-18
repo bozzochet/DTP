@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     outFileName = "histos.root";
   else
     outFileName = argv[2];
-    
+
   COUT(INFO) <<"Recreating output file " <<outFileName <<"..." <<ENDL;
   TFile *outFile = new TFile(outFileName, "recreate");
 
@@ -136,13 +136,13 @@ int main(int argc, char **argv) {
   //time
 
   TH1F *h_time = new TH1F
-    ("h_time", "hit times;time [s];", 1000, -0, 0);
+    ("h_time", "hit times;log10(t / ns);", 1000, -0, 0);
   h_time->SetCanExtend(TH1::kAllAxes);
 
 
   TH1F *h_time_meas15= new TH1F
   (
-    "h_time_meas15", "time measures (threshold 15%);time [s];",
+    "h_time_meas15", "time measures (threshold 15%);log10(t / ns);",
     1000, -0, 0
   );
   h_time_meas15->SetCanExtend(TH1::kAllAxes);
@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
   TH1F *h_time_res15 = new TH1F
   (
     "h_time_res15",
-    "resolution of time measurement (threshold 15%);t_meas - t_true [s];",
+    "resolution of time measurement (threshold 15%);t_meas - t_true [ns];",
     1000, -0, 0
   );
   h_time_res15->SetCanExtend(TH1::kAllAxes);
@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
   TH1F *h_time_HIGH_meas15= new TH1F
   (
     "h_time_HIGH_meas15",
-    "time measures (E > 0, threshold 15%);time [s];",
+    "time measures (E > 0, threshold 15%);log10(t / ns);",
     1000, -0, 0
   );
   h_time_meas15->SetCanExtend(TH1::kAllAxes);
@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
   TH1F *h_time_HIGH_res15 = new TH1F
   (
     "h_time_HIGH_res15",
-    "resolution of time measurement (E > 0, threshold 15%);t_meas - t_true [s];",
+    "resolution of time measurement (E > 0, threshold 15%);t_meas - t_true [ns];",
     1000, -0, 0
   );
   h_time_res15->SetCanExtend(TH1::kAllAxes);
@@ -178,10 +178,18 @@ int main(int argc, char **argv) {
   TH1F *h_time_slow = new TH1F
   (
     "h_time_slow",
-    "slowest hit times;time [s];",
+    "slowest hit times;log10(t / ns);",
     1000, -0, 0
   );
   h_time_slow->SetCanExtend(TH1::kAllAxes);
+
+  TH1F *h_time_meas15_slow = new TH1F
+  (
+    "h_time_meas15_slow",
+    "slowest hit times;log10(t / ns);",
+    1000, -0, 0
+  );
+  h_time_meas15_slow->SetCanExtend(TH1::kAllAxes);
 
 
 	TRandom3 *tr = new TRandom3();
@@ -276,8 +284,10 @@ int main(int argc, char **argv) {
 
 
     //measured times for particle i;
-    //the slowest is used afterwards to fill h_time_slow
+    //the slowest is used afterwards to fill h_time_meas15_slow
+    //and h_time_slow
     std::vector<mytime_t> v_slow;
+    std::vector<mytime_t> v_slow_meas;
 
 
 		for (int j = 0; j < a->GetEntries(); j++) {
@@ -287,7 +297,9 @@ int main(int argc, char **argv) {
 
 			v[cl->layer].push_back(*cl);
 
-      h_time->Fill(cl->time);
+      h_time->Fill(TMath::Log10(1e+9 * cl->time));
+
+      v_slow.push_back(cl->time);
 
 
       /* while Events branch work with two indexes (i,j),
@@ -332,10 +344,10 @@ int main(int argc, char **argv) {
 
         if(meas.time[m] >= 0)
         {
-          h_time_meas15->Fill(meas.time[m]);
-          h_time_res15->Fill(meas.time[m] - cl->time);
+          h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
+          h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
 
-          v_slow.push_back(meas.time[m]);
+          v_slow_meas.push_back(meas.time[m]);
         }
         else
           ++time_lost;
@@ -343,8 +355,8 @@ int main(int argc, char **argv) {
 
         if(meas.time[m] >= 0 && meas.energy[m] > 0)
         {
-          h_time_HIGH_meas15->Fill(meas.time[m]);
-          h_time_HIGH_res15->Fill(meas.time[m] - cl->time);
+          h_time_HIGH_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
+          h_time_HIGH_res15->Fill(1e+9 * (meas.time[m] - cl->time));
         }
 
       } //for m
@@ -363,7 +375,17 @@ int main(int argc, char **argv) {
 
 
     //fill slow hit
-    h_time_slow->Fill(TMath::MaxElement(v_slow.size(), &v_slow[0]));
+
+    h_time_slow->Fill
+    (
+      TMath::Log10(1e+9 * TMath::MaxElement(v_slow.size(), &v_slow[0]))
+    );
+
+    h_time_meas15_slow->Fill
+    (
+      TMath::Log10
+        (1e+9 * TMath::MaxElement(v_slow_meas.size(), &v_slow_meas[0]))
+    );
 
   } //for i
 
@@ -442,6 +464,7 @@ int main(int argc, char **argv) {
 
   COUT(INFO) <<"Writing output..." <<ENDL;
 
+/*
 	outFile->WriteTObject(h);
 	outFile->WriteTObject(h1);
 	outFile->WriteTObject(h2);
@@ -461,6 +484,7 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(helectronmu);
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
+*/
 
   outFile->WriteTObject(h_energy);
   outFile->WriteTObject(h_energy_meas);
@@ -470,11 +494,13 @@ int main(int argc, char **argv) {
 
   outFile->WriteTObject(h_time);
   outFile->WriteTObject(h_time_meas15);
-  outFile->WriteTObject(h_time_HIGH_meas15);
-  outFile->WriteTObject(h_time_res15);
-  outFile->WriteTObject(h_time_HIGH_res15);
+  //outFile->WriteTObject(h_time_HIGH_meas15);
 
   outFile->WriteTObject(h_time_slow);
+  outFile->WriteTObject(h_time_meas15_slow);
+
+  outFile->WriteTObject(h_time_res15);
+  //outFile->WriteTObject(h_time_HIGH_res15);
 
   outFile->Close();
 
