@@ -107,20 +107,17 @@ int main(int argc, char **argv) {
   //energy
 
   TH1F *h_energy = new TH1F
-    ("h_energy", "MC energy;energy [eV];", 1000, -0, 0);
-  h_energy->SetCanExtend(TH1::kAllAxes);
+    ("h_energy", "MC energy;energy [eV];", 1000, -150e+6, 150e+6);
 
   TH1F *h_energy_meas = new TH1F
-    ("h_energy_meas", "energy measures;energy [eV];", 1000, -0, 0);
-  h_energy_meas->SetCanExtend(TH1::kAllAxes);
+    ("h_energy_meas", "energy measures;energy [eV];", 1000, 0, 150e+6);
 
   TH1F *h_energy_res = new TH1F
   (
     "h_energy_res",
     "resolution of energy measurement;E_meas - E_true [eV];",
-    1000, -0, 0
+    1000, -150e+3, 150e+3
   );
-  h_energy_res->SetCanExtend(TH1::kAllAxes);
 
 
   //position
@@ -128,49 +125,42 @@ int main(int argc, char **argv) {
 	TH1F *h_pos_res = new TH1F
   (
     "h_pos_res", "resolution position measurement;x_meas - x_true[m];",
-    1000, -0, 0
+    1000, -1, 1
   );
-  h_pos_res->SetCanExtend(TH1::kAllAxes);
 
 
   //time
 
   TH1F *h_time = new TH1F
-    ("h_time", "hit times;log10(t / ns);", 1000, -0, 0);
-  h_time->SetCanExtend(TH1::kAllAxes);
-
+    ("h_time", "hit times;log10(t / ns);", 1000, 0, 10);
 
   TH1F *h_time_meas15= new TH1F
   (
     "h_time_meas15", "time measures (threshold 15%);log10(t / ns);",
-    1000, -0, 0
+    1000, 0, 10
   );
-  h_time_meas15->SetCanExtend(TH1::kAllAxes);
 
   TH1F *h_time_res15 = new TH1F
   (
     "h_time_res15",
     "resolution of time measurement (threshold 15%);t_meas - t_true [ns];",
-    1000, -0, 0
+    1000, 0, 2
   );
-  h_time_res15->SetCanExtend(TH1::kAllAxes);
 
 
   TH1F *h_time_HIGH_meas15= new TH1F
   (
     "h_time_HIGH_meas15",
     "time measures (E > 0, threshold 15%);log10(t / ns);",
-    1000, -0, 0
+    1000, 0, 10
   );
-  h_time_meas15->SetCanExtend(TH1::kAllAxes);
 
   TH1F *h_time_HIGH_res15 = new TH1F
   (
     "h_time_HIGH_res15",
     "resolution of time measurement (E > 0, threshold 15%);t_meas - t_true [ns];",
-    1000, -0, 0
+    1000, 0, 2
   );
-  h_time_res15->SetCanExtend(TH1::kAllAxes);
 
 
   //hit time backscattered particles (electrons and protons)
@@ -179,17 +169,15 @@ int main(int argc, char **argv) {
   (
     "h_time_slow",
     "slowest hit times;log10(t / ns);",
-    1000, -0, 0
+    1000, 0, 10
   );
-  h_time_slow->SetCanExtend(TH1::kAllAxes);
 
   TH1F *h_time_meas15_slow = new TH1F
   (
     "h_time_meas15_slow",
     "slowest hit times;log10(t / ns);",
-    1000, -0, 0
+    1000, 0, 10
   );
-  h_time_meas15_slow->SetCanExtend(TH1::kAllAxes);
 
 
 	TRandom3 *tr = new TRandom3();

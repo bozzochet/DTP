@@ -10,19 +10,22 @@ void ElectronProton()
   for(int i=0; i<2; ++i)
     for(int j=0; j<3; ++j)
     {
-      std::string p_file = "histos_proton_";
+      std::string p_file = "simulations/p/";
       p_file += std::to_string(E[j]);
-      p_file += ".root";
+      p_file += "/histos.root";
 
-      std::string e_file = "histos_electron_";
+      std::string e_file = "simulations/e/";
       e_file += std::to_string(E[j]);
-      e_file += ".root";
+      e_file += "/histos.root";
 
       std::string object = "h_time_";
       object += label[i];
 
-      TH1F *h_p = (TH1F*) TFile::Open(p_file.c_str())->Get(object.c_str());
-      TH1F *h_e = (TH1F*) TFile::Open(e_file.c_str())->Get(object.c_str());
+      TH1F *h_p =
+        (TH1F*) TFile::Open(p_file.c_str())->Get(object.c_str());
+
+      TH1F *h_e =
+        (TH1F*) TFile::Open(e_file.c_str())->Get(object.c_str());
 
       h_p->SetTitle("proton");
       h_e->SetTitle("electron");
@@ -41,9 +44,7 @@ void ElectronProton()
       c->SetLogy();
 
       h_p->Draw();
-
-      if(j!=0) //at 10 GeV same graphs for electrons and protons
-        h_e->Draw("same");
+      h_e->Draw("same");
 
     } //for i,j
 }
