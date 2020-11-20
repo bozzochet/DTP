@@ -2,41 +2,52 @@
 #include "TimeSim.h"
 
 
+TimeSim::signal_fun_t* TimeSim::GetChargeNoiseFun
+  (const mytime_t &t_min, const mytime_t &t_max, const charge_t &Q)
+{
+  signal_fun_t *noise = new signal_fun_t
+  (
+    "cumulative noise charge collected;time [s];charge [C]",
+    "[0] * (x - [1])", t_min, t_max
+  );
+
+  noise->SetParameter(0, Q / (t_max - t_min));
+  noise->SetParameter(1, t_min);
+
+  return noise;
+}
+
+
 charge_t TimeSim::AddChargeNoise(signal_t *signal)
 {
   //total charge noise
   charge_t Q_NOISE = GetChargeNoise();
 
-  mytime_t T = TMath::MaxElement(signal->GetN(), signal->GetX());
-  T -= TMath::MinElement(signal->GetN(), signal->GetX());
+  signal_fun_t *noise = GetChargeNoiseFun
+  (
+    TMath::MinElement(signal->GetN(), signal->GetX()),
+    TMath::MaxElement(signal->GetN(), signal->GetX()),
+    Q_NOISE
+  );
 
-  //cumulative noise already added
-  charge_t q_noise = 0;
-
-  //charge to add every t_sample
-  charge_t dq =  Q_NOISE / T * T_SAMPLING_;
-
-  //charge collected is 0 at t=hitTime => no noise at t=hitTime
-  // => start from i=1
-  for(int i = 1; i < signal->GetN(); ++i)
+  for(int i = 0; i < signal->GetN(); ++i)
   {
     charge_t q;
     mytime_t t;
 
     signal->GetPoint(i, t, q);
-    signal->SetPoint(i, t, q + q_noise + dq);
-
-    q_noise += dq;
+    signal->SetPoint(i, t, q + noise->Eval(t));
   }
 
-  return q_noise;
+  return Q_NOISE;
 }
 
 
-TimeSim::signal_fun_t* TimeSim::GetIdealChargeFun
+TimeSim::signal_fun_t* TimeSim::GetChargeIdealFun
   (const mytime_t &hitTime, const charge_t &Q)
 {
-  signal_fun_t *charge = new signal_fun_t(
+  signal_fun_t *charge = new signal_fun_t
+  (
     "charge",
     "[0] * (1 - TMath::Exp( -[1]*(x-[2]) ) )",
     hitTime, hitTime - T_CAPACITOR_*TMath::Log(1-STOP_CHARGE_FRACTION_)
@@ -65,7 +76,7 @@ charge_t TimeSim::GetChargeSignal
 
   charge_t Q = GetChargeFromEnergy(energy);
 
-  signal_fun_t *charge = GetIdealChargeFun(hitTime, Q);
+  signal_fun_t *charge = GetChargeIdealFun(hitTime, Q);
 
   AddChargeSignal(signal, charge);
 
@@ -111,7 +122,9 @@ void TimeSim::GetCurrentSignal
   AddCurrentSignal(signal, charge);
 }
 
-
+/* THIS METHOD NEEDS TO BE REVISITED: signal generated has non noise;
+ * how to collect noise ?
+ *
 int TimeSim::GetChargeSignal(const int &gr, signal_t *signal)
 {
   std::map <mytime_t, energy_t> time_energy;
@@ -130,7 +143,7 @@ int TimeSim::GetChargeSignal(const int &gr, signal_t *signal)
   {
     charge.push_back
     (
-      GetIdealChargeFun(it->first, GetChargeFromEnergy(it->second))
+      GetChargeIdealFun(it->first, GetChargeFromEnergy(it->second))
     );
 
     hit_time.push_back(it->first);
@@ -163,9 +176,13 @@ int TimeSim::GetChargeSignal(const int &gr, signal_t *signal)
 
   return (int) time_energy.size();
 }
+*/
 
 
-/*
+/* DEPRECATED : look at GetChargeSignal(gr,signal) above; it is
+ * commented but it has a better approach
+ *
+ *
 void TimeSim::SumCurrentSignal
   (signal_t *sum, const signal_t *add)
 {

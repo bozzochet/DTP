@@ -1,7 +1,12 @@
 
+//
+// Andrea Serpolla
+//   a.serpolla@icloud.com
+//
+
 /*********************************************************************
 
-  time segmentation functions and variables;
+  Time segmentation functions and variables;
 
   there are implemented three types (A,B,C) of segm:
 
@@ -47,6 +52,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
 
 
 enum time_segm : const char

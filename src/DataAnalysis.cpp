@@ -1,10 +1,12 @@
 
+//#include "DEBUG.h"
 #include "physics.h"
 #include "vector2.h"
 #include "progress.h"
 #include "PosSim.h"
 #include "TrCluster.hh"
 #include "Geometry.h"
+#include "measure.h"
 
 #include "TCanvas.h"
 #include "TClonesArray.h"
@@ -17,8 +19,12 @@
 #include "TTree.h"
 #include "TTreeReader.h"
 #include "TMultiGraph.h"
+#include "TString.h"
+#include "TBranch.h"
+#include "TMath.h"
 
 #include "utils/GGSSmartLog.h"
+#include "montecarlo/readers/GGSTRootReader.h"
 
 #include <iostream>
 #include <vector>
@@ -26,33 +32,56 @@
 using namespace std;
 
 
-//global geometric parameters
-
-Geometry GEO;
-
-const int Nlayers = GEO.GetNlayers();
-const int Nstrips = GEO.GetNstrips();
-const int Nrows = GEO.GetNrows();
-const int Nsquares = GEO.GetNsquares();
-const int pitch = GEO.GetPitch();
-const int squareSide = GEO.GetSquareSide();
-const int Nladders = GEO.GetNladders();
-const double thickness = GEO.GetThickness();
-
-
 
 int main(int argc, char **argv) {
 
-	const int nLayer = 26;
-	auto inFile = TFile::Open(argv[1]);
+  //debug::start_debug(); //DEBUG.h
 
-	TTree *events;
-	inFile->GetObject("Tree", events);
-	events->Print();
-	TClonesArray *a = new TClonesArray("TrCluster", 200);
-	events->SetBranchAddress("Events", &a);
+  static const string routineName("DataAnalysis::main");
+  GGSSmartLog::verboseLevel = GGSSmartLog::INFO; // Print only INFO messages or more important
 
-	TFile *outFile = new TFile("histos.root", "recreate");
+
+  TString inputFileName = argv[1];
+  COUT(INFO) <<"Opening input file " <<inputFileName <<"..." <<ENDL;
+  auto inFile = TFile::Open(inputFileName);
+
+
+  TString outFileName;
+
+  if(argc < 3)
+    outFileName = "histos.root";
+  else
+    outFileName = argv[2];
+
+  COUT(INFO) <<"Recreating output file " <<outFileName <<"..." <<ENDL;
+  TFile *outFile = new TFile(outFileName, "recreate");
+
+/*
+  //geometry
+
+  GGSTRootReader reader;
+  if (!(reader.Open(argv[1]))) {
+    std::cerr << "Cannot open input file " << argv[1] <<std::endl;
+    return 1;
+  }
+
+  const GGSTGeoParams *GEO = reader.GetGeoParams();
+  Geometry *geo = new Geometry;
+
+  geo->Nlayers = GEO->GetIntGeoParam("Nlayers");
+  geo->Nstrips = GEO->GetIntGeoParam("Nstrips");
+  geo->Nrows = GEO->GetIntGeoParam("Nrows");
+  geo->Nsquares = GEO->GetIntGeoParam("Nsquares");
+  geo->pitch = 1e-2 * GEO->GetRealGeoParam("pitch");
+  geo->thickness = 1e-3 * GEO->GetRealGeoParam("thickness");
+
+  geo->squareSide = geo->pitch * ((double) geo->Nstrips);
+  geo->Nladders = geo->Nsquares * geo->Nrows * geo->Nlayers;
+*/
+
+
+  COUT(INFO) <<"Creating histos..." <<ENDL;
+
 	TH1F *h = new TH1F("disttemp", "disttemp", 100, -0.5, 0.5);
 	TH1F *h1 = new TH1F("bt", "bt", 1000, 0, 2);
 	TH1F *h2 = new TH1F("btls", "btls", 1000, 0, 2000);
@@ -62,10 +91,7 @@ int main(int argc, char **argv) {
 	TH1F *h5cut = new TH1F("btls_sim_cut", "btls_sim_cut", 1500, 0, 15);
 	TH1F *h5nopri = new TH1F("btls_sim_nopri", "btls_sim_nopri", 1500, 0, 15);
 	TH1F *h5nomip = new TH1F("btls_sim_nomip", "btls_sim_nomip", 1500, 0, 15);
-	TH1F *hPrimEdep = new TH1F("PrimaryEdep", "edep", 500, 0, 0.001);
-	TH1F *hPrimEdep0 = new TH1F("PrimaryEdep0", "edep0", 500, 0, 0.001);
-	TH1F *hEdep = new TH1F("Edep", "edep", 500, 0, 0.001);
-	TH1F *hEdep0 = new TH1F("Edep0", "edep0", 500, 0, 0.001);
+
 	TH1F *hprotons = new TH1F("protoni", "protoni", 1000, 0, 4);
 	TH1F *hantip = new TH1F("antiprotoni", "antiprotoni", 1000, 0, 4);
 	TH1F *hneutrons = new TH1F("neutroni", "neutroni", 1000, 0, 4);
@@ -77,21 +103,94 @@ int main(int argc, char **argv) {
 	TH1F *hpi = new TH1F("pi", "pi", 1000, 0, 4);
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
 
-	TH1F *segmp = new TH1F("segmpositions", "segmpositions", 1000, -0.05, 0.05);
 
-/*
-  TGraph *current_ideal;
-  TGraph *current_noise;
+  //energy
 
-  TGraph *charge_ideal;
-  TGraph *charge_noise;
+  TH1F *h_energy = new TH1F
+    ("h_energy", "MC energy;energy [eV];", 1000, -0, 0);
+  h_energy->SetCanExtend(TH1::kAllAxes);
 
-  TMultiGraph *charge = new TMultiGraph("charge", "charge");
-  TMultiGraph *current = new TMultiGraph("current", "current");
-*/
+  TH1F *h_energy_meas = new TH1F
+    ("h_energy_meas", "energy measures;energy [eV];", 1000, -0, 0);
+  h_energy_meas->SetCanExtend(TH1::kAllAxes);
 
-  TH1F *htime = new TH1F
-    ("htime", "timing; ; entries", 1000, -0.05, 0.05);
+  TH1F *h_energy_res = new TH1F
+  (
+    "h_energy_res",
+    "resolution of energy measurement;E_meas - E_true [eV];",
+    1000, -0, 0
+  );
+  h_energy_res->SetCanExtend(TH1::kAllAxes);
+
+
+  //position
+
+	TH1F *h_pos_res = new TH1F
+  (
+    "h_pos_res", "resolution position measurement;x_meas - x_true[m];",
+    1000, -0, 0
+  );
+  h_pos_res->SetCanExtend(TH1::kAllAxes);
+
+
+  //time
+
+  TH1F *h_time = new TH1F
+    ("h_time", "hit times;log10(t / ns);", 1000, -0, 0);
+  h_time->SetCanExtend(TH1::kAllAxes);
+
+
+  TH1F *h_time_meas15= new TH1F
+  (
+    "h_time_meas15", "time measures (threshold 15%);log10(t / ns);",
+    1000, -0, 0
+  );
+  h_time_meas15->SetCanExtend(TH1::kAllAxes);
+
+  TH1F *h_time_res15 = new TH1F
+  (
+    "h_time_res15",
+    "resolution of time measurement (threshold 15%);t_meas - t_true [ns];",
+    1000, -0, 0
+  );
+  h_time_res15->SetCanExtend(TH1::kAllAxes);
+
+
+  TH1F *h_time_HIGH_meas15= new TH1F
+  (
+    "h_time_HIGH_meas15",
+    "time measures (E > 0, threshold 15%);log10(t / ns);",
+    1000, -0, 0
+  );
+  h_time_meas15->SetCanExtend(TH1::kAllAxes);
+
+  TH1F *h_time_HIGH_res15 = new TH1F
+  (
+    "h_time_HIGH_res15",
+    "resolution of time measurement (E > 0, threshold 15%);t_meas - t_true [ns];",
+    1000, -0, 0
+  );
+  h_time_res15->SetCanExtend(TH1::kAllAxes);
+
+
+  //hit time backscattered particles (electrons and protons)
+
+  TH1F *h_time_slow = new TH1F
+  (
+    "h_time_slow",
+    "slowest hit times;log10(t / ns);",
+    1000, -0, 0
+  );
+  h_time_slow->SetCanExtend(TH1::kAllAxes);
+
+  TH1F *h_time_meas15_slow = new TH1F
+  (
+    "h_time_meas15_slow",
+    "slowest hit times;log10(t / ns);",
+    1000, -0, 0
+  );
+  h_time_meas15_slow->SetCanExtend(TH1::kAllAxes);
+
 
 	TRandom3 *tr = new TRandom3();
 	tr->SetSeed(time(NULL));
@@ -114,22 +213,64 @@ int main(int argc, char **argv) {
 
 	*/
 
-  PosSim *pos_sim = new PosSim(&GEO, 2, tr);
 
-  cout <<endl <<"Begin analysis of " <<events->GetEntries()
-    <<" events:\n";
+  COUT(INFO) <<"Opening TTree objects in " <<inputFileName <<"..." <<ENDL;
 
-  for (int i = 0; i < events->GetEntries(); i++) {
+  TTree *events_tree;
+  inFile->GetObject("events", events_tree);
+  events_tree->Print();
 
-    //print and update progress bar
-    progress(i, events->GetEntries());
+  TClonesArray *a = new TClonesArray("TrCluster", 200);
+  events_tree->SetBranchAddress("Events", &a);
 
-    /* IMPORTANT: cout and printf MUST print strings beginning and
-     * ending with a new line (i.e. "\n" or endl) to not overwrite
-     * the bar */
 
-		v.resize(nLayer);
-		events->GetEntry(i);
+  TTree *meas_tree;
+  inFile->GetObject("measures", meas_tree);
+
+  measure meas;
+  meas_tree->SetBranchAddress("Measures", &meas);
+
+
+  TTree *geo_tree;
+  inFile->GetObject("geometry", geo_tree);
+
+  Geometry geo;
+  geo_tree->SetBranchAddress("Geometry", &geo);
+  geo_tree->GetEntry(0);
+
+  COUT(INFO) <<ENDL;
+  COUT(INFO) <<"=================================" <<ENDL;
+  COUT(INFO) <<"Geometric parameters:     " <<ENDL;
+  COUT(INFO) <<"  layers:                 " <<geo.Nlayers <<ENDL;
+  COUT(INFO) <<"  strips per ladder:      " <<geo.Nstrips <<ENDL;
+  COUT(INFO) <<"  ladders rows per layer: " <<geo.Nrows  <<ENDL;
+  COUT(INFO) <<"  squares per side:       " <<geo.Nsquares  <<ENDL;
+  COUT(INFO) <<"  implant pitch:          " <<geo.pitch  <<ENDL;
+  COUT(INFO) <<"  layers thickness:       " <<geo.thickness <<ENDL;
+  COUT(INFO) <<"  squares side:           " <<geo.squareSide <<ENDL;
+  COUT(INFO) <<"  ladders:                " <<geo.Nladders <<ENDL;
+  COUT(INFO) <<"=================================" <<ENDL;
+
+
+  COUT(INFO) <<ENDL;
+  COUT(INFO) <<"Begin loop over " <<events_tree->GetEntries() <<ENDL;
+
+
+  int iMeas = 0; //iterator for meas_tree
+
+
+  //lost measures counters
+
+  int energy_lost = 0;
+  int time_lost = 0;
+  int position_lost = 0;
+
+
+  for (int i = 0; i < events_tree->GetEntries(); i++) {
+
+		v.resize(geo.Nlayers);
+
+    events_tree->GetEntry(i);
 
     /*
 		if (a->GetEntries()>10) {
@@ -141,40 +282,125 @@ int main(int argc, char **argv) {
 		}
     */
 
-		pos_sim->Reset();
+
+    //measured times for particle i;
+    //the slowest is used afterwards to fill h_time_meas15_slow
+    //and h_time_slow
+    std::vector<mytime_t> v_slow;
+    std::vector<mytime_t> v_slow_meas;
+
 
 		for (int j = 0; j < a->GetEntries(); j++) {
 
       //cout<<endl<<"Entry #"<<i+j<<endl;
 			TrCluster *cl = (TrCluster *)a->At(j);
+
 			v[cl->layer].push_back(*cl);
-			if(cl->parID == 0) hPrimEdep->Fill(cl->eDep); //primary
-			if(cl->eDep > 9e-6) hEdep->Fill(cl->eDep); //total
 
-      pos_sim->SetHitPos(cl->layer, cl->pos[cl->segm]);
-      pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[0]);
+      h_time->Fill(TMath::Log10(1e+9 * cl->time));
 
-			if(cl->strip == Nstrips-1 && (cl->ladder+1) % Nsquares == 0)
-        //hit on the last strip of the last ladder of the layer row
-				pos_sim->DepositEnergy(cl->ladder, cl->strip, cl->clust[1]);
+      v_slow.push_back(cl->time);
 
-			else if(cl->strip==Nstrips-1)
-        pos_sim->DepositEnergy(cl->ladder+1, 0, cl->clust[1]);
-			else
-				pos_sim->DepositEnergy(cl->ladder, cl->strip+1, cl->clust[1]);
-		}
 
-		// Sharing of the energy from non-active strips
+      /* while Events branch work with two indexes (i,j),
+       * Measures branch was filled with one index and contains
+       * a struct instead of an array. Because of this j element of
+       * entry i in Events branch, corresponds to measure on entry
+       * iMeas of Measures branch. Look in Digitization.cpp,
+       * digitization function */
 
-    pos_sim->ShareEnergy();
-    pos_sim->AddNoise();
-    pos_sim->Segm(segmp);
-}
+      meas_tree->GetEntry(iMeas);
+      ++iMeas;
 
-  delete pos_sim;
+      //scan energies clust and measures
 
-  cout <<endl <<endl;
-  
+      for(int m=0; m<2; ++m)
+      {
+        h_energy->Fill(cl->clust[m]);
+
+/* DEBUG.h
+        debug::out <<"\ni: " <<i <<" j: " <<j <<" m: " <<m;
+
+        debug::out <<"\n\tE: " <<cl->clust[m];
+        debug::out <<"\n\tE + noise: " <<meas.energy[m];
+        debug::out <<"\n\tt: " <<cl->time;
+        debug::out <<"\n\tt meas: " <<meas.time[m];
+        debug::out <<"\n\tpos: " <<cl->pos[cl->xy];
+        debug::out <<"\n\tpos meas: " <<meas.position;
+
+        debug::out <<std::endl;
+*/
+
+        //analyze valid measures
+
+        if(meas.energy[m] > 0)
+        {
+          h_energy_meas->Fill(meas.energy[m]);
+          h_energy_res->Fill(meas.energy[m] - cl->clust[m]);
+        }
+        else
+          ++energy_lost;
+
+
+        if(meas.time[m] >= 0)
+        {
+          h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
+          h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
+
+          v_slow_meas.push_back(meas.time[m]);
+        }
+        else
+          ++time_lost;
+
+
+        if(meas.time[m] >= 0 && meas.energy[m] > 0)
+        {
+          h_time_HIGH_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
+          h_time_HIGH_res15->Fill(1e+9 * (meas.time[m] - cl->time));
+        }
+
+      } //for m
+
+
+      //read only valid position measures without lost ones
+
+      if(TMath::Abs(meas.position) < 1)
+      // this if is also a temporary fix for Digitization bug:
+      // Digitization.cpp,  line 424
+        h_pos_res->Fill(meas.position - cl->pos[cl->xy]);
+      else
+        ++position_lost;
+
+		} //for j
+
+
+    //fill slow hit
+
+    h_time_slow->Fill
+    (
+      TMath::Log10(1e+9 * TMath::MaxElement(v_slow.size(), &v_slow[0]))
+    );
+
+    h_time_meas15_slow->Fill
+    (
+      TMath::Log10
+        (1e+9 * TMath::MaxElement(v_slow_meas.size(), &v_slow_meas[0]))
+    );
+
+  } //for i
+
+
+  COUT(INFO) <<ENDL;
+
+  COUT(INFO) <<"Lost energies:  " <<energy_lost <<" on " <<iMeas*2
+    <<ENDL;
+
+  COUT(INFO) <<"Lost times:     " <<time_lost <<" on " <<iMeas*2
+    <<ENDL;
+
+  COUT(INFO) <<"Lost positions: " <<position_lost <<" on " <<iMeas
+    <<ENDL;
+
 
 	// Find tStart and tMean
 
@@ -190,6 +416,10 @@ int main(int argc, char **argv) {
 			}
 		}
 	tMean /= _n;
+
+
+  COUT(INFO) <<ENDL;
+  COUT(INFO) <<"Particle identification..." <<ENDL;
 
 	//Particle identification
 
@@ -231,6 +461,10 @@ int main(int argc, char **argv) {
 		}
 	v.clear();
 
+
+  COUT(INFO) <<"Writing output..." <<ENDL;
+
+/*
 	outFile->WriteTObject(h);
 	outFile->WriteTObject(h1);
 	outFile->WriteTObject(h2);
@@ -240,11 +474,8 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(h5cut);
 	outFile->WriteTObject(h5nopri);
 	outFile->WriteTObject(h5nomip);
-	outFile->WriteTObject(hPrimEdep);
-	outFile->WriteTObject(hEdep);
-	outFile->WriteTObject(hPrimEdep0);
-	outFile->WriteTObject(hEdep0);
-	outFile->WriteTObject(hprotons);
+
+  outFile->WriteTObject(hprotons);
 	outFile->WriteTObject(hneutrons);
 	outFile->WriteTObject(hgamma);
 	outFile->WriteTObject(hisotopes);
@@ -253,15 +484,28 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(helectronmu);
 	outFile->WriteTObject(hpi);
 	outFile->WriteTObject(hk);
-	outFile->WriteTObject(segmp);
-/*
-  outFile->WriteTObject(current_ideal);
-  outFile->WriteTObject(current_noise);
-  outFile->WriteTObject(charge_ideal);
-  outFile->WriteTObject(charge_noise);
-  outFile->WriteTObject(current);
-  outFile->WriteTObject(charge);
 */
-  outFile->WriteTObject(htime);
+
+  outFile->WriteTObject(h_energy);
+  outFile->WriteTObject(h_energy_meas);
+  outFile->WriteTObject(h_energy_res);
+
+  outFile->WriteTObject(h_pos_res);
+
+  outFile->WriteTObject(h_time);
+  outFile->WriteTObject(h_time_meas15);
+  //outFile->WriteTObject(h_time_HIGH_meas15);
+
+  outFile->WriteTObject(h_time_slow);
+  outFile->WriteTObject(h_time_meas15_slow);
+
+  outFile->WriteTObject(h_time_res15);
+  //outFile->WriteTObject(h_time_HIGH_res15);
+
   outFile->Close();
-	}
+
+  COUT(INFO) <<"Output written in " <<outFileName <<ENDL;
+  //debug::end_debug();
+
+  return 0;
+}

@@ -8,7 +8,7 @@ make
 #make install
 
 rm -fv lib/TestGeometry.gdml
-GGSWolowitz -g lib/libTestGeometry.so -o lib/TestGeometry.gdml -t gdml
+GGSWolowitz -g lib/libTestGeometry.so -gd macros/geo.mac -o lib/TestGeometry.gdml -t gdml
 
 rm -fv lib/TestGeometry_nocalo.gdml
-GGSWolowitz -g lib/libTestGeometry_nocalo.so -o lib/TestGeometry_nocalo.gdml -t gdml
+GGSWolowitz -g lib/libTestGeometry_nocalo.so -gd macros/geo.mac -o lib/TestGeometry_nocalo.gdml -t gdml

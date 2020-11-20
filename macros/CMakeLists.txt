@@ -4,6 +4,8 @@ set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES ${includ
 configure_file(run.mac run.mac COPYONLY)
 configure_file(geo.mac geo.mac COPYONLY)
 configure_file(ToySegmentation.C ToySegmentation.C COPYONLY)
+configure_file(ToyTiming.C ToyTiming.C COPYONLY)
+configure_file(ElectronProton.C ElectronProton.C COPYONLY)
 
 install(DIRECTORY . DESTINATION macros
        USE_SOURCE_PERMISSIONS

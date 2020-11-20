@@ -19,13 +19,14 @@
 #include "G4RunManager.hh"
 #include "G4SDManager.hh"
 #include "G4Sphere.hh"
-#include "G4SystemOfUnits.hh"
 #include "G4Transform3D.hh"
 #include "G4Trap.hh"
 #include "G4Tubs.hh"
 #include "G4UnionSolid.hh"
 #include "G4VPrimitiveScorer.hh"
 #include "G4VisAttributes.hh"
+#include "G4UImanager.hh"
+#include "G4GenericMessenger.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -38,6 +39,15 @@ DetectorConstruction::DetectorConstruction()
     : GGSVGeometryConstruction(), fCheckOverlaps(false), fPhysicalWorld(NULL) {
   DefineMaterials();
   detMessenger = new DetectorMessenger(this);
+
+  messenger_ = new G4GenericMessenger(this, "/Detector/");
+  messenger_->DeclareProperty("Nlayers", Nlayers, "layers number");
+  messenger_->DeclareProperty("Nsquares", Nsquares, "squares per side on layer");
+  messenger_->DeclareProperty("Nrows", Nrows, "rows of ladders on a layer");
+  messenger_->DeclareProperty("Nstrips", Nstrips, "strips per ladder");
+  messenger_->DeclareProperty("pitch", pitch, "strips pitch in cm").SetUnit("cm");
+  messenger_->DeclareProperty("thickness", thickness, "thickness of layers in mm").SetUnit("mm");
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -58,6 +68,17 @@ void DetectorConstruction::DefineMaterials() {
 
 G4VPhysicalVolume *DetectorConstruction::Construct() {
   G4cout << "begin of Detector Construction" << G4endl;
+
+  //Run geometry configuration script before building
+  if (_geoDataCard != "") {
+    G4UImanager::GetUIpointer()->ApplyCommand(G4String("/control/execute " + _geoDataCard));
+  }
+
+  // Delete the messenger so that the commands for configuring the geometry won't be available anymore
+  delete messenger_;
+  messenger_ = NULL;
+
+
   G4double l = 0.0001 * mm;
 
   G4NistManager *nist = G4NistManager::Instance();
@@ -83,12 +104,13 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
                                      false,                  // no boolean operation
                                      0,                      // copy number
                                      fCheckOverlaps);        // checking overlaps
-  G4int N = 8;
-  G4double dim = 0.015 * 640 * cm;
-  G4int strips = 640;
+
+  G4int N = Nsquares;
+  G4double dim = pitch * Nstrips;
+  G4int strips = Nstrips;
   G4double pad_x = N * dim;
   G4double pad_y = N * dim;
-  G4double pad_z = 0.3 * mm;
+  G4double pad_z = thickness;
 
   G4double lp = N * (2 * pad_z + 2 * mm) + 4 * (2 * cm); // lunghezza pacchetto di silicio
   G4Box *padMother = new G4Box("pad", 0.5 * (pad_x + l), 0.5 * (pad_y + l), 0.5 * (lp + l));
@@ -160,3 +182,15 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
 // }
 
 void DetectorConstruction::updateGeometry() { G4RunManager::GetRunManager()->DefineWorldVolume(Construct()); }
+
+
+bool DetectorConstruction::ExportParameters() {
+  bool result = true;
+  result = result && ExportIntParameter("Nlayers", Nlayers);
+  result = result && ExportIntParameter("Nsquares", Nsquares);
+  result = result && ExportIntParameter("Nrows", Nrows);
+  result = result && ExportIntParameter("Nstrips", Nstrips);
+  result = result && ExportRealParameter("pitch", pitch / cm);
+  result = result && ExportRealParameter("thickness", thickness / mm);
+  return result;
+}

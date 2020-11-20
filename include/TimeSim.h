@@ -1,4 +1,9 @@
 
+//
+// Andrea Serpolla
+//   a.serpolla@icloud.com
+//
+
 /**********************************************************************
 
   TimeSim class simulates signal of current in time
@@ -17,7 +22,6 @@
 
 
 #include "physics.h"
-#include "absStrip.h"
 #include "TrCluster.hh"
 #include "vector2.h"
 #include "TimeSegm.h"
@@ -96,8 +100,17 @@ class TimeSim
 
 
   //cumulative function of ideal charge collected
-  signal_fun_t* GetIdealChargeFun(const mytime_t&, const charge_t&);
+  signal_fun_t* GetChargeIdealFun(const mytime_t&, const charge_t&);
 
+
+  signal_fun_t* GetChargeNoiseFun
+  (
+    const mytime_t &t_min, const mytime_t &t_max,
+    const charge_t &noise
+  );
+
+
+  // DEPRECATED
 
   /* add second signal to first one passed;
    * signals passed MUST BE sorted and sampled with same time;
@@ -133,7 +146,8 @@ public:
   charge_t AddChargeNoise(signal_t *signal);
 
 
-  /* generate charge signal in time with noise;
+  /* generate charge signal in time with noise; if bool noise = false
+   * signal is ideal and noise can be added later with AddChargeNoise
    * return total charge collected;
    * signal passed MUST BE VOID;
    * signal points are sorted after this method execution */
@@ -150,13 +164,15 @@ public:
    * signal points are sorted after this method execution */
   void GetCurrentSignal(signal_t *signal, const signal_t *charge);
 
+/*******************
 
   /* get charge signal of i-th group of strips;
    * signal passed MUST BE VOID;
    * signal points are sorted after this method execution;
-   * return number of hits for this group */
-   int GetChargeSignal(const int &i, signal_t *signal);
+   * return number of hits for this group
+   //int GetChargeSignal(const int &i, signal_t *signal);
 
+********************/
 
    /* get time when charge becomes > threshold_fraction * peak
     * IMPORTANT: charge MUST be sorted */
