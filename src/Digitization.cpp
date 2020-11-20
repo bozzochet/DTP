@@ -54,6 +54,8 @@ int fillGeoTree(TTree*, Geometry*);
 
 int fillEvTree(GGSTRootReader&, TTree*, Geometry*);
 
+int fillCaloTree(GGSTRootReader&, TTree*);
+
 int fillMeasTree(TTree*, TTree*, Geometry*);
 
 
@@ -116,12 +118,14 @@ int main(int argc, char **argv)
   TTree *geo_tree = new TTree("geometry", "siSensorGeoParams");
   TTree *events_tree = new TTree("events", "siSensorHits");
   TTree *meas_tree = new TTree("measures", "siSensorMeasures");
+  TTree *calo_tree = new TTree("calorimeter", "calorimeterEdep");
 
   if
   (
     fillGeoTree(geo_tree, geo) != 0
     || fillEvTree(reader, events_tree, geo) != 0
     || fillMeasTree(events_tree, meas_tree, geo) != 0
+    || fillCaloTree(reader, calo_tree) != 0
   )
     return 1;
 
@@ -163,7 +167,8 @@ int fillGeoTree(TTree *geo_tree, Geometry *geo)
 }
 
 
-int fillEvTree(GGSTRootReader &reader, TTree *events_tree, Geometry *geo)
+int fillEvTree
+  (GGSTRootReader &reader, TTree *events_tree, Geometry *geo)
 {
   static const string routineName("Digitization::fillEvTree");
 
@@ -290,6 +295,63 @@ int fillEvTree(GGSTRootReader &reader, TTree *events_tree, Geometry *geo)
     } //for iHit
 
     events_tree->Fill();
+  } //for iEv
+
+  return 0;
+}
+
+
+int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree)
+{
+  static const string routineName("Digitization::fillCaloTree");
+
+
+  COUT(INFO) <<ENDL;
+  COUT(INFO) <<"Saving calorimeter energies..." <<ENDL;
+
+  energy_t calo_energy = 0;
+  calo_tree->Branch("Events", &calo_energy); //TTree can understand that calo_energy is a double?
+
+
+  // Create and retrieve the hits sub-reader
+  GGSTHitsReader *hReader = reader.GetReader<GGSTHitsReader>();
+
+  // Set which hit detectors are to be read
+  // The name is the same of the sensitive logical volume name in the simulation
+  hReader->SetDetector("calorimeter", kTRUE);
+
+
+  COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
+
+  for (int iEv = 0; iEv < reader.GetEntries(); iEv++)
+  {
+    //reset energy for new event
+    calo_energy = 0;
+
+    reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
+
+    GGSTPartHit *phit;
+    GGSTIntHit *inthit;
+
+    int nHits = hReader->GetNHits("calorimeter"); // Number of hit siLayers for current event
+
+    for (int iHit = 0; iHit < nHits; iHit++)
+    {
+      inthit = hReader->GetHit("calorimeter", iHit);
+      int nPHit = inthit->GetNPartHits();
+
+      for (int i = 0; i < nPHit; i++)
+      {
+        phit = inthit->GetPartHit(i);
+
+        //add to total energy deposited in calo by event iEv
+        calo_energy += 1e+9 * phit->eDep;
+
+      } //for i
+    } //for iHit
+
+    calo_tree->Fill();
+
   } //for iEv
 
   return 0;
