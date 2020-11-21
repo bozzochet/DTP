@@ -122,9 +122,8 @@ void TimeSim::GetCurrentSignal
   AddCurrentSignal(signal, charge);
 }
 
-/* THIS METHOD NEEDS TO BE REVISITED: signal generated has non noise;
- * how to collect noise ?
- *
+
+
 int TimeSim::GetChargeSignal(const int &gr, signal_t *signal)
 {
   std::map <mytime_t, energy_t> time_energy;
@@ -162,12 +161,24 @@ int TimeSim::GetChargeSignal(const int &gr, signal_t *signal)
     charge_t q = 0; //q(t)
 
 
-    //sum single hit contributions to q(t)
+    //add single hit contributions to q(t)
+
+    bool in_range = false;
 
     for(int i=0; i < (int) charge.size(); ++i)
       if(t >= charge[i]->GetXmin() && t <= charge[i]->GetXmax())
+      {
         //t is in charge[i] range
         q += charge[i]->Eval(t);
+        in_range = true;
+      }
+
+
+    //if t does not belong to any of charges functions' range
+    // q mantains charge collected previously
+
+    if( !in_range)
+      q = signal->GetY()[signal->GetN()-1];
 
 
     signal->SetPoint(signal->GetN(), t, q);
@@ -176,7 +187,7 @@ int TimeSim::GetChargeSignal(const int &gr, signal_t *signal)
 
   return (int) time_energy.size();
 }
-*/
+
 
 
 /* DEPRECATED : look at GetChargeSignal(gr,signal) above; it is
