@@ -2,7 +2,7 @@
 //#include "DEBUG.h"
 #include "physics.h"
 #include "vector2.h"
-#include "progress.h"
+#include "info.h"
 #include "PosSim.h"
 #include "TrCluster.hh"
 #include "Geometry.h"

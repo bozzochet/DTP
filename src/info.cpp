@@ -1,7 +1,8 @@
 
-#include "progress.h"
+#include "info.h"
 
-void progress(const std::clock_t &time, const int &n, const int &N)
+void info::progress
+  (const std::clock_t &start, const int &n, const int &N)
 {
 
     double frac = (double) n / (double) N ;
@@ -34,15 +35,13 @@ void progress(const std::clock_t &time, const int &n, const int &N)
     if(frac*100 < 100) std::cout <<" ";
     if(frac*100 < 10) std::cout <<" ";
 
-    if(n+1 == N)
-    {
-      std::cout <<std::endl;
-      return; //don't print extimated time
-    }
 
     //extimated time
 
-    double v = ((double) n) / ((double)(time / CLOCKS_PER_SEC));
+    double v =
+      (double) n
+      / (double) ( (std::clock() - start) / CLOCKS_PER_SEC );
+
     int extimated = (N-n) / v;
 
     if(extimated / 3600 > 0)
@@ -65,9 +64,41 @@ void progress(const std::clock_t &time, const int &n, const int &N)
       std::cout <<"      ";
 
 
-    if(extimated > 0)
+    if(extimated > 0 && n+1 != N)
     {
       if(extimated < 10) std::cout <<" ";
       std::cout <<extimated <<"s ";
     }
+    else
+      std::cout <<"   ";
+
+
+    if(n+1 == N)
+      std::cout <<std::endl;
+}
+
+
+void info::elapsed_time(const std::clock_t &start)
+{
+  int sec = (std::clock() - start) / CLOCKS_PER_SEC;
+
+  if(sec != 0)
+    std::cout <<"elapsed time: ";
+  else
+    std::cout <<std::endl;
+
+  if(sec >= 3600)
+  {
+    std::cout <<sec/3600 <<"h ";
+    sec %= 3600;
+  }
+
+  if(sec >= 60)
+  {
+    std::cout <<sec/60 <<"min ";
+    sec %= 60;
+  }
+
+  if(sec > 0)
+    std::cout <<sec <<"s " <<std::endl;
 }

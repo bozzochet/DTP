@@ -79,7 +79,7 @@ install(TARGETS Digit DESTINATION "${INSTALL_LIB_DIR}")
 
 set(Digitization_SRC
 	Digitization.cpp
-  progress.cpp
+  info.cpp
 	G__TrCluster.cxx
 )
 
@@ -100,7 +100,7 @@ install(TARGETS Digitization DESTINATION "${INSTALL_BIN_DIR}")
 
 set(DataAnalysis_SRC
 	DataAnalysis.cpp
-  progress.cpp
+  info.cpp
 	G__TrCluster.cxx
 )
 

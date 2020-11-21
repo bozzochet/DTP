@@ -2,7 +2,7 @@
 
 #include "TrCluster.hh"
 #include "physics.h"
-#include "progress.h"
+#include "info.h"
 #include "measure.h"
 #include "Geometry.h"
 #include "TimeSegm.h"
@@ -124,8 +124,8 @@ int main(int argc, char **argv)
   (
     fillGeoTree(geo_tree, geo) != 0
     || fillEvTree(reader, events_tree, geo) != 0
-    || fillMeasTree(events_tree, meas_tree, geo) != 0
     || fillCaloTree(reader, calo_tree) != 0
+    || fillMeasTree(events_tree, meas_tree, geo) != 0
   )
     return 1;
 
@@ -196,7 +196,12 @@ int fillEvTree
 
   COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
 
+  std::clock_t start = std::clock();
+
   for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
+
+    //print and update progress bar
+    info::progress(start, iEv, reader.GetEntries());
 
     reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
     GGSTPartHit *phit;
@@ -297,6 +302,9 @@ int fillEvTree
     events_tree->Fill();
   } //for iEv
 
+  COUT(INFO) <<" ";
+  info::elapsed_time(start);
+
   return 0;
 }
 
@@ -323,8 +331,14 @@ int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree)
 
   COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
 
+  std::clock_t start = std::clock();
+
   for (int iEv = 0; iEv < reader.GetEntries(); iEv++)
   {
+
+    //print and update progress bar
+    info::progress(start, iEv, reader.GetEntries());
+
     //reset energy for new event
     calo_energy = 0;
 
@@ -353,6 +367,9 @@ int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree)
     calo_tree->Fill();
 
   } //for iEv
+
+  COUT(INFO) <<" ";
+  info::elapsed_time(start);
 
   return 0;
 }
@@ -394,7 +411,7 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
   {
 
     //print and update progress bar
-    progress(std::clock() - start, i, events_tree->GetEntries());
+    info::progress(start, i, events_tree->GetEntries());
 
 		events_tree->GetEntry(i);
 
@@ -505,27 +522,8 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
   } //for i
 
 
-  //digitization execution time
-
-  int sec = (std::clock() - start) / CLOCKS_PER_SEC;
-
-  if(sec != 0)
-    COUT(INFO) <<"Digitization took ";
-
-  if(sec >= 3600)
-  {
-    std::cout <<sec/3600 <<"h ";
-    sec %= 3600;
-  }
-
-  if(sec >= 60)
-  {
-    std::cout <<sec/60 <<"min ";
-    sec %= 60;
-  }
-
-  if(sec > 0)
-    std::cout <<sec <<"s " <<std::endl;
+  COUT(INFO) <<" ";
+  info::elapsed_time(start);
 
 
   delete pos_sim;
