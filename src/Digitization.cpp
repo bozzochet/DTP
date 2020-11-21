@@ -211,6 +211,8 @@ int fillEvTree
     a.Clear();
 
     GGSTHadrIntInfo *intInfo = hadrReader->GetInelastic();
+
+    /*
     if (intInfo)
       cout << "\n  Inelastic interaction happened at z = " << intInfo->GetInteractionPoint()[2] << endl;
     if (hadrReader->GetNQuasiElastic() > 0) {
@@ -220,6 +222,8 @@ int fillEvTree
           cout << "\n  QuasiElastic interaction happened at z = " << qintInfo->GetInteractionPoint()[2] << endl;
       }
     }
+    */
+
     // Hits loop
     int ncluster = 0;
 
