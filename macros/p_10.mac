@@ -1,0 +1,41 @@
+#########################################
+# Basic geometry visualization commands #
+#########################################
+
+# Open an OpenGL visualization
+/vis/open OGL 600x600-0+0
+#/vis/viewer/set/autoRefresh false
+#/vis/verbose errors
+
+##### Setup the particle generator #####
+/GGS/generatorActions/set gun				# Use the GGS gun generator
+#/gun/List
+#/GGS/generatorActions/gun/particle d_quark		# Shoot
+#/GGS/generatorActions/gun/particle u_quark		# Shoot
+/GGS/generatorActions/gun/particle proton		# Shoot protons
+#/GGS/generatorActions/gun/particle e-			# Shoot electron
+#/GGS/generatorActions/gun/particle ion			# Shoot ?...
+#/GGS/generatorActions/gun/particle mu-			# Shoot muon
+#/gun/ion 8 16						# Shoot ?...
+/GGS/generatorActions/gun/energy 10 GeV		# ... of 100 GeV ...
+/GGS/generatorActions/gun/minTheta 0 deg		# ... with a polar angle between 0 ...
+/GGS/generatorActions/gun/maxTheta 10 deg		# ... and 10 deg ...
+/GGS/generatorActions/gun/minPhi 0 deg			# ... and an azimuthal angle between 0 ...
+/GGS/generatorActions/gun/maxPhi 360 deg		# ... and 360 deg ...
+/GGS/generatorActions/gun/position 0 0 50 cm		# ... from a fixed point above the instrument
+
+##### Setup the sensitive detectors #####
+/GGS/scoring/addGGSIntHitSD siSensor
+/GGS/scoring/siSensor.GGSIntHitSD/storeParticleHits true
+
+/GGS/scoring/addGGSIntHitSD calorimeter
+/GGS/scoring/calorimeter.GGSIntHitSD/storeParticleHits true
+
+##### Setup the output on ROOT file #####
+/GGS/userActions/addGGSHitsAction			# Save hits
+/GGS/userActions/addGGSMCTruthAction			# Save MC truth
+/GGS/userActions/addGGSHadrIntAction			# Save information about 1st hadronic interaction...
+/GGS/userActions/hadrIntAction/outProducts true		# ... and also informations about the produced particles
+
+##### Events to produce
+/run/beamOn 10000
