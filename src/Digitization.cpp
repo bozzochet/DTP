@@ -134,6 +134,7 @@ int main(int argc, char **argv)
 
   geo_tree->Write();
   events_tree->Write();
+  calo_tree->Write();
   meas_tree->Write();
 
   outFile->Close();
