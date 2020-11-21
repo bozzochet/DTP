@@ -19,7 +19,7 @@ echo && \
 echo 100 GeV && \
 echo && \
 
-GGSPenny -g lib/libTestGeometry.so -gd macros/geo.mac -d macros/e_100.mac -ro simulations/e/100/test.root && \
+#GGSPenny -g lib/libTestGeometry.so -gd macros/geo.mac -d macros/e_100.mac -ro simulations/e/100/test.root && \
 exe/Digitization simulations/e/100/test.root simulations/e/100/digit.root && \
 exe/DataAnalysis simulations/e/100/digit.root simulations/e/100/histos.root && \
 
