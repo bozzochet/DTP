@@ -127,13 +127,15 @@ void TimeSim::GetCurrentSignal
 int TimeSim::GetChargeSignal(const int &gr, signal_t *signal)
 {
   std::map <mytime_t, energy_t> time_energy;
-  segm_->GetHits(gr, time_energy);
+  std::map <mytime_t, energy_t> time_noise;
+  segm_->GetHits(gr, time_energy, time_noise);
 
   if( (int) time_energy.size() == 0)
     return 0; //no hit on this group
 
 
   std::vector<signal_fun_t*> charge;
+  std::vector<signal_fun_t*> noise;
   std::vector<mytime_t> hit_time;
 
   //get ideal charge functions and store them and hit times in vecs
@@ -143,6 +145,15 @@ int TimeSim::GetChargeSignal(const int &gr, signal_t *signal)
     charge.push_back
     (
       GetChargeIdealFun(it->first, GetChargeFromEnergy(it->second))
+    );
+
+    noise.push_back
+    (
+      GetChargeNoiseFun
+      (
+        charge.back()->GetXmin(), charge.back()->GetXmax(),
+        time_noise[it->first]
+      )
     );
 
     hit_time.push_back(it->first);
@@ -170,6 +181,7 @@ int TimeSim::GetChargeSignal(const int &gr, signal_t *signal)
       {
         //t is in charge[i] range
         q += charge[i]->Eval(t);
+        q += noise[i]->Eval(t);
         in_range = true;
       }
 
