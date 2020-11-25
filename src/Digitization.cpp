@@ -338,7 +338,7 @@ int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree)
   catch(const std::runtime_error &e) //calorimeter not sensitive
   {
     COUT(INFO) <<"!!! calorimeter hits not available" <<ENDL;
-    COUT(INFO) <<"If needed, setup sensitive calorimeter in" <<ENDL;
+    COUT(INFO) <<"If needed, setup sensitive calo in" <<ENDL;
     COUT(INFO) <<" macros/run.mac and run again the simulation" <<ENDL;
     return 0;
   }
