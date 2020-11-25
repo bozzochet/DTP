@@ -163,6 +163,8 @@ int TimeSegm::SetHit(TrCluster *cl, const energy_t &noise)
 
   group_[i]->SetHit(cl->time, cl->eDep, noise);
 
+  hit_.push_back(i);
+
   return i;
 }
 

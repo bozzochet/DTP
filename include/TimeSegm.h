@@ -152,6 +152,8 @@ class TimeSegm
 
   std::vector<Group*> group_;
 
+  std::vector<int> hit_;  //store in which group are hits
+
 
 //methods
 
@@ -208,6 +210,13 @@ public:
   {
     for(int i = 0; i < (int) group_.size(); ++i)
       group_[i]->Reset();
+  }
+
+
+  inline void GetHitsGroups(std::vector<int> &v)
+  {
+    for(int i=0; i < hit_.size(); ++i)
+      v.push_back(hit_[i]);
   }
 
 
