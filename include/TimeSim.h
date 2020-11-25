@@ -64,7 +64,7 @@ class TimeSim
 
   /* noise deviation:
    *   pair/um * thickness * fond_charge */
-  const charge_t CHARGE_NOISE_ = 8 * 300 * FOND_CHARGE;
+  const charge_t CHARGE_NOISE_DEV_ = 8 * 300 * FOND_CHARGE;
 
 
 
@@ -135,7 +135,7 @@ public:
     return
       TMath::Floor
       (
-        (random_->Gaus(0, 2*CHARGE_NOISE_)-random_->Gaus(0, CHARGE_NOISE_)) / FOND_CHARGE
+        (random_->Gaus(0, 2*CHARGE_NOISE_DEV_)-random_->Gaus(0, CHARGE_NOISE_DEV_)) / FOND_CHARGE
       ) * FOND_CHARGE;
   }
 

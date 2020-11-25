@@ -104,80 +104,51 @@ int main(int argc, char **argv) {
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
 
 
-  //energy
+  //energy deposited in Si trackers
 
   TH1F *h_energy = new TH1F
-    ("h_energy", "MC energy;energy [eV];", 1000, -150e+6, 150e+6);
+    ("h_energy", ";energy [eV];", 1000, -150e+6, 150e+6);
 
   TH1F *h_energy_meas = new TH1F
-    ("h_energy_meas", "energy measures;energy [eV];", 1000, 0, 150e+6);
+    ("h_energy_meas", ";energy [eV];", 1000, 0, 150e+6);
 
   TH1F *h_energy_res = new TH1F
+    ("h_energy_res", ";E_meas - E_true [eV];", 1000, -150e+3, 150e+3);
+
+
+  //energy deposited in calorimeter
+  TH1F *h_energy_calo = new TH1F
   (
-    "h_energy_res",
-    "resolution of energy measurement;E_meas - E_true [eV];",
-    1000, -150e+3, 150e+3
+    "h_energy_calo", ";energy [eV];", 1000, 0,
+    argc > 3 ? std::atof(argv[3]) * 1e+9 : 150e+9
   );
 
 
   //position
 
 	TH1F *h_pos_res = new TH1F
-  (
-    "h_pos_res", "resolution position measurement;x_meas - x_true[m];",
-    1000, -1, 1
-  );
+    ("h_pos_res", ";x_meas - x_true[m];", 1000, -1, 1);
 
 
   //time
 
   TH1F *h_time = new TH1F
-    ("h_time", "hit times;log10(t / ns);", 1000, 0, 10);
+    ("h_time", ";log10(t / ns);", 1000, 0, 10);
 
   TH1F *h_time_meas15= new TH1F
-  (
-    "h_time_meas15", "time measures (threshold 15%);log10(t / ns);",
-    1000, 0, 10
-  );
+    ("h_time_meas15", ";log10(t / ns);", 1000, 0, 10);
 
   TH1F *h_time_res15 = new TH1F
-  (
-    "h_time_res15",
-    "resolution of time measurement (threshold 15%);t_meas - t_true [ns];",
-    1000, 0, 2
-  );
+    ("h_time_res15", ";t_meas - t_true [ns];", 1000, 0, 2);
 
 
-  TH1F *h_time_HIGH_meas15= new TH1F
-  (
-    "h_time_HIGH_meas15",
-    "time measures (E > 0, threshold 15%);log10(t / ns);",
-    1000, 0, 10
-  );
-
-  TH1F *h_time_HIGH_res15 = new TH1F
-  (
-    "h_time_HIGH_res15",
-    "resolution of time measurement (E > 0, threshold 15%);t_meas - t_true [ns];",
-    1000, 0, 2
-  );
-
-
-  //hit time backscattered particles (electrons and protons)
+  //slowest hit time for each event
 
   TH1F *h_time_slow = new TH1F
-  (
-    "h_time_slow",
-    "slowest hit times;log10(t / ns);",
-    1000, 0, 10
-  );
+    ("h_time_slow", ";log10(t / ns);", 1000, 0, 10);
 
   TH1F *h_time_meas15_slow = new TH1F
-  (
-    "h_time_meas15_slow",
-    "slowest hit times;log10(t / ns);",
-    1000, 0, 10
-  );
+    ("h_time_meas15_slow", ";log10(t / ns);", 1000, 0, 10);
 
 
 	TRandom3 *tr = new TRandom3();
@@ -219,6 +190,13 @@ int main(int argc, char **argv) {
   meas_tree->SetBranchAddress("Measures", &meas);
 
 
+  TTree *calo_tree;
+  inFile->GetObject("calorimeter", calo_tree);
+
+  energy_t Ecalo;
+  calo_tree->SetBranchAddress("Events", &Ecalo);
+
+
   TTree *geo_tree;
   inFile->GetObject("geometry", geo_tree);
 
@@ -250,7 +228,6 @@ int main(int argc, char **argv) {
   //lost measures counters
 
   int energy_lost = 0;
-  int time_lost = 0;
   int position_lost = 0;
 
 
@@ -259,6 +236,10 @@ int main(int argc, char **argv) {
 		v.resize(geo.Nlayers);
 
     events_tree->GetEntry(i);
+
+    calo_tree->GetEntry(i);
+
+    h_energy_calo->Fill(Ecalo);
 
     /*
 		if (a->GetEntries()>10) {
@@ -329,22 +310,20 @@ int main(int argc, char **argv) {
         else
           ++energy_lost;
 
+        // In the next "if" is used for energy a threshold
+        // proportional to CHARGE_NOISE_DEV_ variable defined in
+        // TimeSim.h.
+        // Digitization executable does not save TimeSim object
+        // parameters used to generate time measures.
+        // Would be better that Digitization saves TimeSim parameters
+        // to read them in analysis.
 
-        if(meas.time[m] >= 0)
+        if(meas.time[m] >= 0 && meas.energy[m] > 8*300*ENERGY_COUPLE)
         {
           h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
           h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
 
           v_slow_meas.push_back(meas.time[m]);
-        }
-        else
-          ++time_lost;
-
-
-        if(meas.time[m] >= 0 && meas.energy[m] > 0)
-        {
-          h_time_HIGH_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
-          h_time_HIGH_res15->Fill(1e+9 * (meas.time[m] - cl->time));
         }
 
       } //for m
@@ -353,7 +332,7 @@ int main(int argc, char **argv) {
       //read only valid position measures without lost ones
 
       if(TMath::Abs(meas.position) < 1)
-      // this if is also a temporary fix for Digitization bug:
+      // this "if" is a temporary fix for Digitization bug:
       // Digitization.cpp,  line 424
         h_pos_res->Fill(meas.position - cl->pos[cl->xy]);
       else
@@ -381,9 +360,6 @@ int main(int argc, char **argv) {
   COUT(INFO) <<ENDL;
 
   COUT(INFO) <<"Lost energies:  " <<energy_lost <<" on " <<iMeas*2
-    <<ENDL;
-
-  COUT(INFO) <<"Lost times:     " <<time_lost <<" on " <<iMeas*2
     <<ENDL;
 
   COUT(INFO) <<"Lost positions: " <<position_lost <<" on " <<iMeas
@@ -475,6 +451,7 @@ int main(int argc, char **argv) {
 */
 
   outFile->WriteTObject(h_energy);
+  outFile->WriteTObject(h_energy_calo);
   outFile->WriteTObject(h_energy_meas);
   outFile->WriteTObject(h_energy_res);
 
@@ -482,13 +459,11 @@ int main(int argc, char **argv) {
 
   outFile->WriteTObject(h_time);
   outFile->WriteTObject(h_time_meas15);
-  //outFile->WriteTObject(h_time_HIGH_meas15);
 
   outFile->WriteTObject(h_time_slow);
   outFile->WriteTObject(h_time_meas15_slow);
 
   outFile->WriteTObject(h_time_res15);
-  //outFile->WriteTObject(h_time_HIGH_res15);
 
   outFile->Close();
 
