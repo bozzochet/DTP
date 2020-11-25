@@ -1,14 +1,14 @@
 
-void ElectronProton()
+void ElectronProton(int max)
 {
-  int E[3] = {10, 100, 1000}; //beam energies in GeV
+  int E[4] = {10, 100, 1000, 10000}; //beam energies in GeV
 
   gStyle->SetOptTitle(0);
 
   std::string label[2] = {"meas15","slow"};
 
   for(int i=0; i<2; ++i)
-    for(int j=0; j<3; ++j)
+    for(int j=0; j<max; ++j)
     {
       std::string p_file = "simulations/p/";
       p_file += std::to_string(E[j]);
