@@ -73,6 +73,7 @@ class TimeSegm
     const char *name_ = "_NONE_";
 
     TGraph *time_energy_; //store points (hit time, energy deposited)
+    TGraph *time_noise_; //store points (hit time, noise collected)
 
     bool sorted_ = false;
 
@@ -80,10 +81,14 @@ class TimeSegm
   public:
 
     Group(const char *name)
-    { name_ = name; time_energy_ = new TGraph(); }
+    {
+      name_ = name;
+      time_energy_ = new TGraph();
+      time_noise_ = new TGraph();
+    }
 
     ~Group()
-    { delete time_energy_; }
+    { delete time_energy_; delete time_noise_; }
 
 
     inline void Sort()
@@ -91,15 +96,18 @@ class TimeSegm
       if( !sorted_)
       {
         time_energy_->Sort();
+        time_noise_->Sort();
         sorted_ = true;
       }
     }
 
 
-    inline void SetHit(const mytime_t &t, const energy_t &E)
+    inline void SetHit
+      (const mytime_t &t, const energy_t &E, const energy_t &noise)
     {
       sorted_ = false;
       time_energy_->SetPoint(time_energy_->GetN(), t, E);
+      time_noise_->SetPoint(time_noise_->GetN(), t, noise);
     }
 
 
@@ -107,8 +115,11 @@ class TimeSegm
     { return name_; }
 
 
-    inline void Clear()
-    { delete time_energy_; time_energy_ = new TGraph(); }
+    inline void Reset()
+    {
+      delete time_energy_; time_energy_ = new TGraph();
+      delete time_noise_; time_noise_ = new TGraph();
+    }
 
 
     inline void GetTimes(std::vector<mytime_t> &v)
@@ -122,7 +133,8 @@ class TimeSegm
 
     /* get time_energy_ points;
      * after execution, map passed contains points sorted */
-    void GetHits(std::map <mytime_t, energy_t>&);
+    void GetHits
+      (std::map <mytime_t, energy_t>&, std::map <mytime_t, energy_t>&);
 
 
   }; //class Group
@@ -179,23 +191,28 @@ public:
   { return group_.size(); }
 
 
-  inline void GetHits(const int &i, std::map<mytime_t, energy_t> &m)
-  { group_[i]->GetHits(m); }
+  inline void GetHits
+  (
+    const int &i,
+    std::map<mytime_t, energy_t> &E,
+    std::map<mytime_t, energy_t> &noise
+  )
+  { group_[i]->GetHits(E, noise); }
 
 
   inline void GetTimes(const int &i, std::vector<mytime_t> &v)
   { group_[i]->GetTimes(v); }
 
 
-  inline void Clear()
+  inline void Reset()
   {
     for(int i = 0; i < (int) group_.size(); ++i)
-      group_[i]->Clear();
+      group_[i]->Reset();
   }
 
 
   //individuates right group and call Group::SetHit; return group ID
-  int SetHit(TrCluster *cl);
+  int SetHit(TrCluster *cl, const energy_t &noise);
 
 };
 

@@ -90,7 +90,7 @@ length_t TimeSegm::GetVoidSpace()
 
 
 
-int TimeSegm::SetHit(TrCluster *cl)
+int TimeSegm::SetHit(TrCluster *cl, const energy_t &noise)
 {
   int i = -1;
 
@@ -126,7 +126,7 @@ int TimeSegm::SetHit(TrCluster *cl)
     //hit in void space between i-th and (i+1)-th pads
     if(pos - side_void*i > side_)
     {
-      //??????
+      //NOT HANDLED: given to i-th pad
     }
   }
 
@@ -161,12 +161,18 @@ int TimeSegm::SetHit(TrCluster *cl)
   }
 
 
-  group_[i]->SetHit(cl->time, cl->eDep);
+  group_[i]->SetHit(cl->time, cl->eDep, noise);
+
+  return i;
 }
 
 
 
-void TimeSegm::Group::GetHits(std::map <mytime_t, energy_t> &m)
+void TimeSegm::Group::GetHits
+(
+  std::map <mytime_t, energy_t> &m_energy,
+  std::map <mytime_t, energy_t> &m_noise
+)
 {
   Sort();
 
@@ -174,9 +180,12 @@ void TimeSegm::Group::GetHits(std::map <mytime_t, energy_t> &m)
   {
     mytime_t t;
     energy_t E;
+    energy_t noise;
 
     time_energy_->GetPoint(i, t, E);
+    time_noise_->GetPoint(i, t, noise);
 
-    m[t] = E;
+    m_energy[t] = E;
+    m_noise[t] = noise;
   }
 }
