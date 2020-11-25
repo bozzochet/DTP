@@ -425,6 +425,9 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
   for (int i = 0; i < events_tree->GetEntries(); i++)
   {
 
+    //clear from previous events
+    pos_sim->Reset();
+
     //print and update progress bar
     info::progress(start, i, events_tree->GetEntries());
 
@@ -434,13 +437,15 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
     {
       TrCluster *cl = (TrCluster*) a->At(j);
 
-      pos_sim->Reset(); //clear previuos hit
-
       // scan clusts
       for(int k = 0; k<2; ++k)
       {
         int strip = cl->strip;
         int ladder = cl->ladder;
+
+
+        //clear from hits already processed
+        time_segm->Reset();
 
 
         //go to next strip or stay?
@@ -470,22 +475,15 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
 
 
         //set hit pos one time for clust (clust refers to same pos)
-
         if(k==0) pos_sim->SetHitPos(cl->layer, cl->pos[cl->xy]);
 
 
-        //time measure and energy
+        //energy
 
-        TGraph *charge = new TGraph();
+        energy_t noise = time_sim->GetChargeNoise();
 
-        //ideal charge signal
-        time_sim->GetChargeSignal
-          (cl->time, cl->clust[k], charge, false);
-
-        //add noise to charge signal and to energy
         meas.energy[k] = cl->clust[k]
-          + time_sim->AddChargeNoise(charge) / FOND_CHARGE
-            * ENERGY_COUPLE ;
+          + noise / FOND_CHARGE * ENERGY_COUPLE ;
 
 
         if(meas.energy[k] > 0)
@@ -496,6 +494,13 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
           pos_sim->DepositEnergy(ladder, strip, 0);
 
 
+        //time measures
+
+        int gr = time_segm->SetHit(cl, noise);
+
+        TGraph *charge = new TGraph();
+
+        time_sim->GetChargeSignal(gr, charge);
         meas.time[k] = time_sim->GetMeas(charge, 0.15);
 
         delete charge;
