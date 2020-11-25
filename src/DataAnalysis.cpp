@@ -148,22 +148,7 @@ int main(int argc, char **argv) {
   );
 
 
-  TH1F *h_time_HIGH_meas15= new TH1F
-  (
-    "h_time_HIGH_meas15",
-    "time measures (E > 0, threshold 15%);log10(t / ns);",
-    1000, 0, 10
-  );
-
-  TH1F *h_time_HIGH_res15 = new TH1F
-  (
-    "h_time_HIGH_res15",
-    "resolution of time measurement (E > 0, threshold 15%);t_meas - t_true [ns];",
-    1000, 0, 2
-  );
-
-
-  //hit time backscattered particles (electrons and protons)
+  //slowest hit time for each event
 
   TH1F *h_time_slow = new TH1F
   (
@@ -250,7 +235,6 @@ int main(int argc, char **argv) {
   //lost measures counters
 
   int energy_lost = 0;
-  int time_lost = 0;
   int position_lost = 0;
 
 
@@ -329,22 +313,20 @@ int main(int argc, char **argv) {
         else
           ++energy_lost;
 
+        // In the next "if" is used for energy a threshold
+        // proportional to CHARGE_NOISE_DEV_ variable defined in
+        // TimeSim.h.
+        // Digitization executable does not save TimeSim object
+        // parameters used to generate time measures.
+        // Would be better that Digitization saves TimeSim parameters
+        // to read them in analysis.
 
-        if(meas.time[m] >= 0)
+        if(meas.time[m] >= 0 && meas.energy[m] > 8*300*ENERGY_COUPLE)
         {
           h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
           h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
 
           v_slow_meas.push_back(meas.time[m]);
-        }
-        else
-          ++time_lost;
-
-
-        if(meas.time[m] >= 0 && meas.energy[m] > 0)
-        {
-          h_time_HIGH_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
-          h_time_HIGH_res15->Fill(1e+9 * (meas.time[m] - cl->time));
         }
 
       } //for m
@@ -353,7 +335,7 @@ int main(int argc, char **argv) {
       //read only valid position measures without lost ones
 
       if(TMath::Abs(meas.position) < 1)
-      // this if is also a temporary fix for Digitization bug:
+      // this "if" is a temporary fix for Digitization bug:
       // Digitization.cpp,  line 424
         h_pos_res->Fill(meas.position - cl->pos[cl->xy]);
       else
@@ -381,9 +363,6 @@ int main(int argc, char **argv) {
   COUT(INFO) <<ENDL;
 
   COUT(INFO) <<"Lost energies:  " <<energy_lost <<" on " <<iMeas*2
-    <<ENDL;
-
-  COUT(INFO) <<"Lost times:     " <<time_lost <<" on " <<iMeas*2
     <<ENDL;
 
   COUT(INFO) <<"Lost positions: " <<position_lost <<" on " <<iMeas
