@@ -215,7 +215,7 @@ public:
 
   inline void GetHitsGroups(std::vector<int> &v)
   {
-    for(int i=0; i < hit_.size(); ++i)
+    for(int i=0; i < (int) hit_.size(); ++i)
       v.push_back(hit_[i]);
   }
 
