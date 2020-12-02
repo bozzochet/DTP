@@ -7,5 +7,7 @@ PosSim is not working properly in master branch while the code in here for Digit
 
 The problem of this branch is execution time.
 The new code is very slow and the cause could be the deletion and reallocation of TGraph private members of TimeSegm::Group (it is a nested class) in every Digitization step or the use of TGraph objects themselves.
+Also the use of Group::Sort() could slow the program.
+
 The modifications done would not have broken the code, so TimeSegm should work fine; anyway segm C was added afterwards and not tested properly yet.
 Becuase of this, TimeSegm class has to be used keeping in mind it could still have some unexpected behaviours.
