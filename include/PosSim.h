@@ -61,7 +61,7 @@ public:
   ~PosSim()
   { delete eDepSegm; delete hitPos; }
 
-  inline void Reset()
+  inline void Clear()
   { delete eDepSegm; delete hitPos; SetVectors(); }
 
   inline void SetHitPos(const int &layer, const double &pos)
