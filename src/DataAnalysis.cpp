@@ -107,37 +107,37 @@ int main(int argc, char **argv) {
   //MC
 
   TH1F *h_time = new TH1F
-  ("h_time", ";log10(t / ns);", 1000, 0, 10);
+  ("h_time", ";log10(t / ns);", 1000, 0, 4);
 
   TH1F *h_time_slow = new TH1F
-  ("h_time_slow", ";log10(t / ns);", 1000, 0, 10);
+  ("h_time_slow", ";log10(t / ns);", 1000, 0, 4);
 
   TH1F *h_energy = new TH1F
-    ("h_energy", ";energy [eV];", 1000, -150e+6, 150e+6);
+    ("h_energy", ";energy [MeV];", 1000, -150, 150);
 
 
   //measures
 
   TH1F *h_time_meas15= new TH1F
-    ("h_time_meas15", ";log10(t / ns);", 1000, 0, 10);
+    ("h_time_meas15", ";log10(t / ns);", 1000, 0, 4);
 
   TH1F *h_time_meas15_slow = new TH1F
-    ("h_time_meas15_slow", ";log10(t / ns);", 1000, 0, 10);
+    ("h_time_meas15_slow", ";log10(t / ns);", 1000, 0, 4);
 
   TH1F *h_energy_meas = new TH1F
-    ("h_energy_meas", ";energy [eV];", 1000, 0, 150e+6);
+    ("h_energy_meas", ";energy [MeV];", 1000, 0, 150);
 
 
   //resolutions
 
   TH1F *h_time_res15 = new TH1F
-    ("h_time_res15", ";t_meas - t_true [ns];", 1000, 0, 2);
+    ("h_time_res15", ";t_meas - t_true [ns];", 1000, 0, 1);
 
   TH1F *h_energy_res = new TH1F
-    ("h_energy_res", ";E_meas - E_true [eV];", 1000, -150e+3, 150e+3);
+    ("h_energy_res", ";E_meas - E_true [keV];", 1000, -150, 150);
 
   TH1F *h_pos_res = new TH1F
-    ("h_pos_res", ";x_meas - x_true[m];", 1000, -1, 1);
+    ("h_pos_res", ";x_meas - x_true [cm];", 1000, -20, 20);
 
   //end of histos
 
@@ -265,7 +265,7 @@ int main(int argc, char **argv) {
 
       for(int m=0; m<2; ++m)
       {
-        h_energy->Fill(cl->clust[m]);
+        h_energy->Fill(cl->clust[m] * 1e-6);
 
 /* DEBUG.h
         debug::out <<"\ni: " <<i <<" j: " <<j <<" m: " <<m;
@@ -284,8 +284,8 @@ int main(int argc, char **argv) {
 
         if(meas.energy[m] > 0)
         {
-          h_energy_meas->Fill(meas.energy[m]);
-          h_energy_res->Fill(meas.energy[m] - cl->clust[m]);
+          h_energy_meas->Fill(meas.energy[m] * 1e-6);
+          h_energy_res->Fill(1e-3 * (meas.energy[m] - cl->clust[m]));
         }
         else
           ++energy_lost;
@@ -314,7 +314,7 @@ int main(int argc, char **argv) {
       if(TMath::Abs(meas.position) < 1)
       // this "if" is a temporary fix for Digitization bug:
       // Digitization.cpp,  line 424
-        h_pos_res->Fill(meas.position - cl->pos[cl->xy]);
+        h_pos_res->Fill(1e+2 * (meas.position - cl->pos[cl->xy]));
       else
         ++position_lost;
 
