@@ -75,3 +75,10 @@ GGSWolowitz -g lib/libTestGeometry.so -gd macros/geo.mac -t vgm -o lib/TestGeome
 `DataAnalysis` output will be `histos.root`
 
 A working example can be found in `useful_command/digit_analyze.sh`
+
+`DataAnalysis_calo` executable analysis considers energy deposit in calorimeter.
+The command must pass these arguments:
+```
+./exe/DataAnalysis_calo DigitOut.root AnaOut.root <beam energy in GeV> <E calo min in GeV> <E calo max in GeV>
+```
+where `Ecalo_min` and `Ecalo_max` are needed to consider hit times of in a specific energy range
