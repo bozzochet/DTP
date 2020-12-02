@@ -434,7 +434,7 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
     {
       TrCluster *cl = (TrCluster*) a->At(j);
 
-      pos_sim->Reset(); //clear previuos hit
+      pos_sim->Clear(); //clear previuos hit
 
       // scan clusts
       for(int k = 0; k<2; ++k)
