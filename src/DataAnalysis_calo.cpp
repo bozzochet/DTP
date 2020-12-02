@@ -110,9 +110,7 @@ int main(int argc, char **argv) {
   // - meas histos store quantities measured by Time and Pos libraries
   // - energy_calo hist stores energy deposited in the calorimeter,
   //     while time_calo stores quantities referred to events where
-  //     energy deposited in calorimeter is in a range defined by the
-  //     user with argv[4] (energy value), argv[5]
-  //     (distance percentage)
+  //     energy deposited in calorimeter is in the range [argv(4),argv(5)]
 
 
   if(argc < 6)
@@ -123,8 +121,8 @@ int main(int argc, char **argv) {
 
   //argv are expressed in GeV
   const energy_t beam_energy = std::atof(argv[3]) * 1e+9;
-  const energy_t Ecalo_offset = std::atof(argv[4]) * 1e+9;
-  const double Ecalo_frac = std::atof(argv[5]);
+  const energy_t Ecalo_min = std::atof(argv[4]) * 1e+9;
+  const energy_t Ecalo_max = std::atof(argv[5]) * 1e+9;
 
 
   //MC
@@ -352,11 +350,7 @@ int main(int argc, char **argv) {
           h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
           h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
 
-          if
-          (
-            TMath::Abs(Ecalo - Ecalo_offset)
-            < Ecalo_frac * Ecalo_offset
-          )
+          if(Ecalo <= Ecalo_max && Ecalo >= Ecalo_min)
             h_time_calo->Fill(TMath::Log10(1e+9 * meas.time[m]));
 
           v_slow_meas.push_back(meas.time[m]);
@@ -390,7 +384,7 @@ int main(int argc, char **argv) {
         (1e+9 * TMath::MaxElement(v_slow_meas.size(), &v_slow_meas[0]))
     );
 
-    if(TMath::Abs(Ecalo - Ecalo_offset) < Ecalo_frac * Ecalo_offset)
+    if(Ecalo <= Ecalo_max && Ecalo >= Ecalo_min)
       h_time_calo_slow->Fill
       (
         TMath::Log10
