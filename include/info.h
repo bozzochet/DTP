@@ -16,15 +16,13 @@
 
 namespace info
 {
-
   //print a progress bar
   void progress
     (const std::clock_t &start, const int &partial, const int &tot);
 
   //print total elapsed time
   void elapsed_time(const std::clock_t &start);
-
-};
+}
 
 
 #endif
