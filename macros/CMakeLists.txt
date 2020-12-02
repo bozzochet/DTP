@@ -9,6 +9,7 @@ configure_file(e_1000.mac e_1000.mac COPYONLY)
 configure_file(e_10000.mac e_10000.mac COPYONLY)
 
 configure_file(p_10.mac p_10.mac COPYONLY)
+configure_file(p_15.mac p_15.mac COPYONLY)
 configure_file(p_100.mac p_100.mac COPYONLY)
 configure_file(p_1000.mac p_1000.mac COPYONLY)
 configure_file(p_10000.mac p_10000.mac COPYONLY)
