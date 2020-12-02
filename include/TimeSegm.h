@@ -117,8 +117,11 @@ class TimeSegm
 
     inline void Clear()
     {
-      delete time_energy_; time_energy_ = new TGraph();
-      delete time_noise_; time_noise_ = new TGraph();
+      while(time_energy_->GetN() != 0)
+        time_energy_->RemovePoint(0);
+      while(time_noise_->GetN() != 0)
+        time_noise_->RemovePoint(0);
+      sorted_ = false;
     }
 
 

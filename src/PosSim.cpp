@@ -5,8 +5,8 @@
 void PosSim::ShareEnergy()
 {
   std::vector<double> fill;
-  for (int ix = 0; ix < (*eDepSegm).size(); ix++) {
-    for (int jx = 0; jx < (*eDepSegm)[0].size(); jx+=jump) {
+  for (int ix = 0; ix < eDepSegm.size(); ix++) {
+    for (int jx = 0; jx < eDepSegm[0].size(); jx+=jump) {
       fill.clear();
 		  fill.shrink_to_fit();
 		  int i0 = ix;
@@ -15,7 +15,7 @@ void PosSim::ShareEnergy()
 		  //Saving the energy from non-active strips
 
 			for(int jp = 1; jp<jump; jp++) {
-  			if(j0!=(*eDepSegm)[0].size()-1) {
+  			if(j0!=eDepSegm[0].size()-1) {
   			  j0++;
 		  	}
 
@@ -24,18 +24,18 @@ void PosSim::ShareEnergy()
 				  j0 = 0;
 			  }
 
-			  if(i0==(*eDepSegm).size())
+			  if(i0==eDepSegm.size())
 				  break;
 
-				if((*eDepSegm)[i0][j0]!=0) {
-  				fill.push_back((*eDepSegm)[i0][j0]);
-	  			(*eDepSegm)[i0][j0] = 0;
+				if(eDepSegm[i0][j0]!=0) {
+  				fill.push_back(eDepSegm[i0][j0]);
+	  			eDepSegm[i0][j0] = 0;
 				}
 		  }
 
 		  //Moving to right-side strip
 
-		  if(j0!=(*eDepSegm).size()-1) {
+		  if(j0!=eDepSegm.size()-1) {
 			  j0++;
 			}
   		else if( (i0+1) % geo_->Nsquares != 0) {
@@ -54,8 +54,8 @@ void PosSim::ShareEnergy()
       //Distributing the energy to left and right-side strips
 
 		  for(int s = 0; s < fill.size(); s++) {
-			  (*eDepSegm)[ix][jx] += fill[s]/(2*(s+1));
-			  (*eDepSegm)[i0][j0] += fill[s]/(2*(fill.size()-s));
+			  eDepSegm[ix][jx] += fill[s]/(2*(s+1));
+			  eDepSegm[i0][j0] += fill[s]/(2*(fill.size()-s));
 		  }
 
 		}
@@ -68,11 +68,11 @@ void PosSim::ShareEnergy()
 void PosSim::AddNoise()
 {
 
-	for (int ii = 0; ii < (*eDepSegm).size(); ii++) {
-		for (int jj = 0; jj < (*eDepSegm)[ii].size(); jj++) {
+	for (int ii = 0; ii < eDepSegm.size(); ii++) {
+		for (int jj = 0; jj < eDepSegm[ii].size(); jj++) {
 			double fluct = random_->Gaus(0, 9e+3); //9kev
 
-			(*eDepSegm)[ii][jj] += fluct;
+			eDepSegm[ii][jj] += fluct;
 			}
 		}
 }
@@ -93,7 +93,7 @@ void PosSim::GetCluster(int &i1, int &j1, int &i2, int &j2)
         firstPoint = false;
       }
 
-      if((*eDepSegm)[ii][jj] < 9e+3)
+      if(eDepSegm[ii][jj] < 9e+3)
         break;
 
       i1 = ii;
@@ -110,7 +110,7 @@ void PosSim::GetCluster(int &i1, int &j1, int &i2, int &j2)
         firstPoint = false;
       }
 
-      if((*eDepSegm)[ii][jj] < 9e+3)
+      if(eDepSegm[ii][jj] < 9e+3)
         break;
 
       i2 = ii;
@@ -132,7 +132,7 @@ void PosSim::FillCluster
     }
 
     double thisPos = ((i1%geo_->Nsquares)*geo_->squareSide) + (j1*geo_->pitch) - (geo_->Nsquares*geo_->squareSide*0.5);
-    strip.push_back(make_pair(thisPos,(*eDepSegm)[i1][j1]));
+    strip.push_back(make_pair(thisPos,eDepSegm[i1][j1]));
 
     j1+=jump;
   }
@@ -193,8 +193,8 @@ double PosSim::GetSimPos
 
     //Comparing the simulated hit positions with the real ones on the same layer
 /*
-    for(int m = 0 ; m < (*hitPos)[layer].size(); m++)
-      segmp->Fill(simPos-(*hitPos)[layer][m]);
+    for(int m = 0 ; m < hitPos[layer].size(); m++)
+      segmp->Fill(simPos-hitPos[layer][m]);
 */
     //cout<<"Simulated position: "<<simPos<<endl;
 
@@ -211,7 +211,7 @@ double PosSim::GetMeas()
 
       //Find the boundaries of the clusters
 
-      if((*eDepSegm)[ix][jx] < 27e+3)
+      if(eDepSegm[ix][jx] < 27e+3)
         continue;
 
       //cout<<"Analysing cluster\n";

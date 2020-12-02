@@ -7,6 +7,8 @@
  *    project, leaving it where possible as the original version,
  *    modifying only the necessary to make it work with the rest of the
  *    project.
+ *
+ * The original behaviour is in legacy branch
  */
 
 #ifndef POS_SIM
@@ -30,20 +32,16 @@ class PosSim
 {
   Geometry *geo_ = NULL;
   //TRandom3 *random_ = NULL;
-  vector2<double> *eDepSegm = NULL;
-	vector2<double> *hitPos = NULL;
+  vector2<double> eDepSegm;
+	vector2<double> hitPos;
 
   int jump = 0;
 
 
-  inline void SetVectors()
+  inline void ResizeVectors()
   {
-    eDepSegm = new vector2<double>
-      (
-        geo_->Nladders, vector<double>(geo_->Nstrips)
-      );
-
-  	hitPos = new vector2<double> (geo_->Nlayers);
+    eDepSegm.resize(geo_->Nladders, vector<double>(geo_->Nstrips));
+  	hitPos.resize(geo_->Nlayers, vector<double>(0));
   }
 
   void GetCluster(int&, int&, int&, int&);
@@ -56,20 +54,17 @@ class PosSim
 public:
 
   PosSim(Geometry *geo, int j /*, TRandom3 *r*/)
-  { geo_ = geo; SetVectors(); jump = j; /*random_ = r;*/ }
-
-  ~PosSim()
-  { delete eDepSegm; delete hitPos; }
+  { geo_ = geo; ResizeVectors(); jump = j; /*random_ = r;*/ }
 
   inline void Clear()
-  { delete eDepSegm; delete hitPos; SetVectors(); }
+  { eDepSegm.clear(); hitPos.clear(); ResizeVectors(); }
 
   inline void SetHitPos(const int &layer, const double &pos)
-  { (*hitPos)[layer].push_back(pos); }
+  { hitPos[layer].push_back(pos); }
 
   inline void DepositEnergy
     (const int &ladder, const int &strip, const double &energy)
-  { (*eDepSegm)[ladder][strip] += energy; }
+  { eDepSegm[ladder][strip] += energy; }
 
   //share energy between active strips: one every jump
   void ShareEnergy();
