@@ -1,5 +1,5 @@
 
-###LEGACY branch
+### LEGACY branch
 
 PosSim class was created merging together code parts in digitization and analysis src files.
 Originally the measures were done at the end of every event while at the moment, Digitization.cpp stores measures at each step (i.e. at each event's single hit).
