@@ -42,7 +42,7 @@ void ElectronProton(bool calo, int E_e, int E_p /*in GeV*/)
 {
   gStyle->SetOptTitle(0);
 
-  std::string label[4] = {"meas15", "slow", "calo", "calo_slow"};
+  std::string label[4] = {"meas15", "meas15_slow", "calo", "calo_slow"};
 
   for(int i = 0; i < calo ? 4 : 2; ++i)
   {
