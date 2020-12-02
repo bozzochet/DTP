@@ -44,7 +44,9 @@ void ElectronProton(bool calo, int E_e, int E_p /*in GeV*/)
 
   std::string label[4] = {"meas15", "meas15_slow", "calo", "calo_slow"};
 
-  for(int i = 0; i < calo ? 4 : 2; ++i)
+  int max = calo ? 4 : 2;
+  
+  for(int i = 0; i < max; ++i)
   {
     std::string title = "h_time_";
     title += label[i];
