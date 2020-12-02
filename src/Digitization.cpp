@@ -426,7 +426,7 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
   {
 
     //clear from previous events
-    pos_sim->Reset();
+    pos_sim->Clear();
 
     //print and update progress bar
     info::progress(start, i, events_tree->GetEntries());
@@ -445,7 +445,7 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
 
 
         //clear from hits already processed
-        time_segm->Reset();
+        time_segm->Clear();
 
 
         //go to next strip or stay?

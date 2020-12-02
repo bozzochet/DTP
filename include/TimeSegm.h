@@ -115,7 +115,7 @@ class TimeSegm
     { return name_; }
 
 
-    inline void Reset()
+    inline void Clear()
     {
       delete time_energy_; time_energy_ = new TGraph();
       delete time_noise_; time_noise_ = new TGraph();
@@ -206,10 +206,10 @@ public:
   { group_[i]->GetTimes(v); }
 
 
-  inline void Reset()
+  inline void Clear()
   {
     for(int i = 0; i < (int) group_.size(); ++i)
-      group_[i]->Reset();
+      group_[i]->Clear();
   }
 
 
