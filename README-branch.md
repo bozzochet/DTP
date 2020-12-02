@@ -1,5 +1,5 @@
 
-###SEGM branch
+### SEGM branch
 
 Segm branch implements TimeSegm class in Digitization.cpp.
 This branch has a different behaviour in noise management that improves the parallel working of PosSim and Time* classes.
