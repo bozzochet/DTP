@@ -10,11 +10,11 @@ void ElectronProton(int max)
   for(int i=0; i<2; ++i)
     for(int j=0; j<max; ++j)
     {
-      std::string p_file = "simulations/p/";
+      std::string p_file = "p/";
       p_file += std::to_string(E[j]);
       p_file += "/histos.root";
 
-      std::string e_file = "simulations/e/";
+      std::string e_file = "e/";
       e_file += std::to_string(E[j]);
       e_file += "/histos.root";
 
