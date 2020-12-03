@@ -359,7 +359,6 @@ int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree)
 
     reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
 
-    GGSTPartHit *phit;
     GGSTIntHit *inthit;
 
     int nHits = hReader->GetNHits("calorimeter"); // Number of hit siLayers for current event
@@ -367,17 +366,10 @@ int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree)
     for (int iHit = 0; iHit < nHits; iHit++)
     {
       inthit = hReader->GetHit("calorimeter", iHit);
-      int nPHit = inthit->GetNPartHits();
 
-      for (int i = 0; i < nPHit; i++)
-      {
-        phit = inthit->GetPartHit(i);
-
-        //add to total energy deposited in calo by event iEv
-        calo_energy += 1e+9 * phit->eDep;
-
-      } //for i
-    } //for iHit
+      //add to total energy deposited in calo by event iEv
+      calo_energy += 1e+9 * inthit->eDep;
+    }
 
     calo_tree->Fill();
 

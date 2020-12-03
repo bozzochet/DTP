@@ -28,7 +28,6 @@
 /GGS/scoring/addGGSIntHitSD siSensor
 /GGS/scoring/siSensor.GGSIntHitSD/storeParticleHits true
 #/GGS/scoring/addGGSIntHitSD calorimeter
-#/GGS/scoring/calorimeter.GGSIntHitSD/storeParticleHits true
 
 ##### Setup the output on ROOT file #####
 /GGS/userActions/addGGSHitsAction			# Save hits
