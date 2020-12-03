@@ -127,14 +127,14 @@ int main(int argc, char **argv) {
 
   //MC
 
-  TH1F *h_time = new TH1F
-  ("h_time", ";log10(t / ns);", 1000, 0, 4);
+  TH1F *h_time_MC = new TH1F
+  ("h_time_MC", ";log10(t / ns);", 1000, 0, 4);
 
-  TH1F *h_time_slow = new TH1F
-  ("h_time_slow", ";log10(t / ns);", 1000, 0, 4);
+  TH1F *h_time_MC_slow = new TH1F
+  ("h_time_MC_slow", ";log10(t / ns);", 1000, 0, 4);
 
-  TH1F *h_energy = new TH1F
-    ("h_energy", ";energy [MeV];", 1000, -150, 150);
+  TH1F *h_energy_MC = new TH1F
+    ("h_energy_MC", ";energy [MeV];", 1000, -150, 150);
 
 
   //measures
@@ -281,7 +281,7 @@ int main(int argc, char **argv) {
 
     //measured times for particle i;
     //the slowest is used afterwards to fill h_time_meas15_slow
-    //and h_time_slow
+    //and h_time_MC_slow
     std::vector<mytime_t> v_slow;
     std::vector<mytime_t> v_slow_meas;
 
@@ -293,7 +293,7 @@ int main(int argc, char **argv) {
 
 			v[cl->layer].push_back(*cl);
 
-      h_time->Fill(TMath::Log10(1e+9 * cl->time));
+      h_time_MC->Fill(TMath::Log10(1e+9 * cl->time));
 
       v_slow.push_back(cl->time);
 
@@ -312,7 +312,7 @@ int main(int argc, char **argv) {
 
       for(int m=0; m<2; ++m)
       {
-        h_energy->Fill(cl->clust[m] * 1e-6);
+        h_energy_MC->Fill(cl->clust[m] * 1e-6);
 
 /* DEBUG.h
         debug::out <<"\ni: " <<i <<" j: " <<j <<" m: " <<m;
@@ -373,7 +373,7 @@ int main(int argc, char **argv) {
 
     //fill slow hit
 
-    h_time_slow->Fill
+    h_time_MC_slow->Fill
     (
       TMath::Log10(1e+9 * TMath::MaxElement(v_slow.size(), &v_slow[0]))
     );
@@ -490,22 +490,17 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hk);
 */
 
-  outFile->WriteTObject(h_time);
-  outFile->WriteTObject(h_time_slow);
-  outFile->WriteTObject(h_energy);
-
+  outFile->WriteTObject(h_time_res15);
   outFile->WriteTObject(h_time_meas15);
   outFile->WriteTObject(h_time_meas15_slow);
-  outFile->WriteTObject(h_energy_meas);
-
-  outFile->WriteTObject(h_time_res15);
-  outFile->WriteTObject(h_energy_res);
-  outFile->WriteTObject(h_pos_res);
-
   outFile->WriteTObject(h_time_calo);
   outFile->WriteTObject(h_time_calo_slow);
+
+  outFile->WriteTObject(h_energy_res);
+  outFile->WriteTObject(h_energy_meas);
   outFile->WriteTObject(h_energy_calo);
 
+  //outFile->WriteTObject(h_pos_res);
 
 
   outFile->Close();
