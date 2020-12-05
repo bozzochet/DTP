@@ -333,7 +333,7 @@ int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree)
   // The name is the same of the sensitive logical volume name in the simulation
   try
   {
-    hReader->SetDetector("calorimeter", kTRUE);
+    hReader->SetDetector("calorimeter");
   }
   catch(const std::runtime_error &e) //calorimeter not sensitive
   {
