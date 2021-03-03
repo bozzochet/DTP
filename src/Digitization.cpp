@@ -228,7 +228,7 @@ int fillEvTree
     int ncluster = 0;
 
     for (int iHit = 0; iHit < nHits; iHit++) {
-      inthit = hReader->GetHit("siSensor", iHit);
+      inthit = (GGSTIntHit *)hReader->GetHit("siSensor", iHit);
       int nPHit = inthit->GetNPartHits();
       int llayer = inthit->GetVolumeID() / (geo->Nsquares * geo->Nsquares);
       //cout<<"layer : "<<llayer<<endl;
@@ -236,7 +236,7 @@ int fillEvTree
 
       for (int i = 0; i < nPHit; i++) {
         TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
-        phit = inthit->GetPartHit(i);
+        phit = (GGSTPartHit *)inthit->GetPartHit(i);
         //cout<<"Entry #"<<iHit+i+1<<endl;
 
 
@@ -365,7 +365,7 @@ int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree)
 
     for (int iHit = 0; iHit < nHits; iHit++)
     {
-      inthit = hReader->GetHit("calorimeter", iHit);
+      inthit = (GGSTIntHit *)hReader->GetHit("calorimeter", iHit);
 
       //add to total energy deposited in calo by event iEv
       calo_energy += 1e+9 * inthit->eDep;
