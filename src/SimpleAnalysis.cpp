@@ -52,7 +52,7 @@ int findLadder(int ID, int layer, bool condition) {
     int row = (ID - (pow(Nsquares,2)*layer))/Nsquares;
     bool leftOrRight = ID % (int(Nsquares)) > (Nsquares*0.5);
     return row + (Nsquares*leftOrRight) + (Nsquares*2*layer);
-    }
+  }
   else
     return (ID % ((int(Nsquares))*2)) + (layer*Nsquares*2);
 }
@@ -98,12 +98,12 @@ int main(int argc, char **argv) {
 
   COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
 
-	/*const GGSTGeoParams *geoParams = reader.GetGeoParams();
+  /*const GGSTGeoParams *geoParams = reader.GetGeoParams();
 
-	int Nsquares = geoParams->GetRealGeoParam("Nsquares"); //squares per side
-	int Nladders = Nsquares*5; //number of ladders
-	int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
-	double squareSide = geoParams->GetRealGeoParam("squareSide");*/
+    int Nsquares = geoParams->GetRealGeoParam("Nsquares"); //squares per side
+    int Nladders = Nsquares*5; //number of ladders
+    int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
+    double squareSide = geoParams->GetRealGeoParam("squareSide");*/
 
   TClonesArray a("TrCluster", 200);
   tree->Branch("Events", &a);
@@ -136,45 +136,45 @@ int main(int argc, char **argv) {
     // Hits loop
     int ncluster = 0;
 
-	 for (int iHit = 0; iHit < nHits; iHit++) {
-		inthit = hReader->GetHit("siSensor", iHit);
-		int nPHit = inthit->GetNPartHits();
-		int llayer = inthit->GetVolumeID() / (Nsquares * Nsquares);
-		//cout<<"layer : "<<llayer<<endl;
-		//cout<<"square : "<<inthit->GetVolumeID()<<endl;
+    for (int iHit = 0; iHit < nHits; iHit++) {
+      inthit = (GGSTIntHit *)hReader->GetHit("siSensor", iHit);
+      int nPHit = inthit->GetNPartHits();
+      int llayer = inthit->GetVolumeID() / (Nsquares * Nsquares);
+      //cout<<"layer : "<<llayer<<endl;
+      //cout<<"square : "<<inthit->GetVolumeID()<<endl;
 
 
 
-		for (int i = 0; i < nPHit; i++) {
-			TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
-			phit = inthit->GetPartHit(i);
-      //cout<<"Entry #"<<iHit+i+1<<endl;
+      for (int i = 0; i < nPHit; i++) {
+	TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
+	phit = (GGSTPartHit *)inthit->GetPartHit(i);
+	//cout<<"Entry #"<<iHit+i+1<<endl;
 
-			c->segm = llayer % 2 == 0;
-			c->pos[0] = 0.5 * (phit->entrancePoint[0] + phit->exitPoint[0]); // x coordinate
-			c->pos[1] = 0.5 * (phit->entrancePoint[1] + phit->exitPoint[1]); // y coordinate
- 			c->pos[2] = 0.5 * (phit->entrancePoint[2] + phit->exitPoint[2]); // z coordinate
-			c->time = phit->time;
-			c->eDep = phit->eDep;
-			c->spRes = 0.00007;
-			c->layer = llayer;
-			c->parID = phit->parentID;
-			c->parPdg = phit->particlePdg;
-			c->ID = inthit->GetVolumeID();
+	c->segm = llayer % 2 == 0;
+	c->pos[0] = 0.5 * (phit->entrancePoint[0] + phit->exitPoint[0]); // x coordinate
+	c->pos[1] = 0.5 * (phit->entrancePoint[1] + phit->exitPoint[1]); // y coordinate
+	c->pos[2] = 0.5 * (phit->entrancePoint[2] + phit->exitPoint[2]); // z coordinate
+	c->time = phit->time;
+	c->eDep = phit->eDep;
+	c->spRes = 0.00007;
+	c->layer = llayer;
+	c->parID = phit->parentID;
+	c->parPdg = phit->particlePdg;
+	c->ID = inthit->GetVolumeID();
 
-			//Find the nearest strip to the left
-			c->strip = findStrip(c->pos[c->segm]);
+	//Find the nearest strip to the left
+	c->strip = findStrip(c->pos[c->segm]);
 
 
-			// Find the ladder it belongs
-      c->ladder = findLadder(c->ID, c->layer, c->segm);
+	// Find the ladder it belongs
+	c->ladder = findLadder(c->ID, c->layer, c->segm);
 
-      //Deposit energy and create cluster
-      double thisPos = ((c->ladder%Nsquares)*squareSide) + (c->strip*pitch) - (Nsquares*squareSide*0.5);
-      double fraction = (c->pos[c->segm]-thisPos)/pitch;
+	//Deposit energy and create cluster
+	double thisPos = ((c->ladder%Nsquares)*squareSide) + (c->strip*pitch) - (Nsquares*squareSide*0.5);
+	double fraction = (c->pos[c->segm]-thisPos)/pitch;
 
-			c->clust[0] = c->eDep * (1-fraction);
-			c->clust[1] = c->eDep * (fraction);
+	c->clust[0] = c->eDep * (1-fraction);
+	c->clust[1] = c->eDep * (fraction);
 
       }
     }

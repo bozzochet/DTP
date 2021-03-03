@@ -26,6 +26,10 @@ get_property(include_dirs DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY INCLUDE_DIRECTO
 list(REMOVE_ITEM include_dirs "/usr/include")
 set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES ${include_dirs})
 
+if(APPLE)
+  set(CMAKE_SHARED_LINKER_FLAGS "-undefined dynamic_lookup")
+endif()
+
 ##################################################
 
 set(INC_DIR "${CMAKE_BINARY_DIR}/include")

@@ -49,7 +49,7 @@ install(TARGETS TestGeometry_nocalo DESTINATION "${INSTALL_LIB_DIR}")
 find_package(ROOT CONFIG REQUIRED)
 
 include( ${ROOT_USE_FILE} )
-include("${ROOT_DIR}/modules/RootNewMacros.cmake")
+#include("${ROOT_DIR}/modules/RootNewMacros.cmake")
 root_generate_dictionary(G__TrCluster
 			TrCluster.hh
 			LINKDEF ${CMAKE_SOURCE_DIR}/include/TrCluster_linkdef.h
@@ -72,6 +72,9 @@ add_library(TimeSimulation SHARED ${TIME_SIMULATION_SRC})
 set_target_properties(TimeSimulation PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
 )
+if (APPLE)
+    set_property(TARGET TimeSimulation PROPERTY SUFFIX ".so")
+endif()
 install(TARGETS TimeSimulation DESTINATION "${INSTALL_LIB_DIR}")
 
 #################
@@ -81,6 +84,9 @@ add_library(PosSimulation SHARED ${POS_SIMULATION_SRC})
 set_target_properties(PosSimulation PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
 )
+if (APPLE)
+    set_property(TARGET PosSimulation PROPERTY SUFFIX ".so")
+endif()
 install(TARGETS PosSimulation DESTINATION "${INSTALL_LIB_DIR}")
 
 #################
