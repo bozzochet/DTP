@@ -67,60 +67,42 @@ endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 
 ######################### EXTRA LIBS #########################
 
-set(TIME_SIMULATION_SRC TimeSimulation.cpp)
-add_library(TimeSimulation SHARED ${TIME_SIMULATION_SRC})
-set_target_properties(TimeSimulation PROPERTIES
+set(DIGIT_SRC TimeSim.cpp PosSim.cpp TimeSegm.cpp)
+add_library(Digit SHARED ${DIGIT_SRC})
+set_target_properties(Digit PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
 )
 if (APPLE)
-    set_property(TARGET TimeSimulation PROPERTY SUFFIX ".so")
+    set_property(TARGET Digit PROPERTY SUFFIX ".so")
 endif()
-install(TARGETS TimeSimulation DESTINATION "${INSTALL_LIB_DIR}")
+install(TARGETS Digit DESTINATION "${INSTALL_LIB_DIR}")
 
-#################
+######################## EXECUTABLES ########################
 
-set(POS_SIMULATION_SRC PosSimulation.cpp)
-add_library(PosSimulation SHARED ${POS_SIMULATION_SRC})
-set_target_properties(PosSimulation PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY "${LIB_DIR}"
-)
-if (APPLE)
-    set_property(TARGET PosSimulation PROPERTY SUFFIX ".so")
-endif()
-install(TARGETS PosSimulation DESTINATION "${INSTALL_LIB_DIR}")
-
-#################
-
-set(EXTRA_LIBRARIES TimeSimulation PosSimulation)
-
-#################
-
-set(SimpleAnalysis_SRC
-	SimpleAnalysis.cpp
-  progress.cpp
-  Geometry.cpp
+set(Digitization_SRC
+	Digitization.cpp
+  info.cpp
 	G__TrCluster.cxx
 )
 
-add_executable(SimpleAnalysis ${SimpleAnalysis_SRC})
-target_link_libraries(SimpleAnalysis
+add_executable(Digitization ${Digitization_SRC})
+target_link_libraries(Digitization
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}
-  ${EXTRA_LIBRARIES}
+  Digit
 )
 
-set_target_properties(SimpleAnalysis PROPERTIES
+set_target_properties(Digitization PROPERTIES
 				     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
 				     )
 
-install(TARGETS SimpleAnalysis DESTINATION "${INSTALL_BIN_DIR}")
+install(TARGETS Digitization DESTINATION "${INSTALL_BIN_DIR}")
 
 #################
 
 set(DataAnalysis_SRC
 	DataAnalysis.cpp
-  progress.cpp
-  Geometry.cpp
+  info.cpp
 	G__TrCluster.cxx
 )
 
@@ -128,7 +110,6 @@ add_executable(DataAnalysis ${DataAnalysis_SRC})
 target_link_libraries(DataAnalysis
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}
-  ${EXTRA_LIBRARIES}
 )
 
 set_target_properties(DataAnalysis PROPERTIES
@@ -139,51 +120,22 @@ install(TARGETS DataAnalysis DESTINATION "${INSTALL_BIN_DIR}")
 
 #################
 
-#set(weightfield2_signal_SRC weightfield2_signal.cpp)
-
-#add_executable(weightfield2_signal ${weightfield2_signal_SRC})
-#target_link_libraries(weightfield2_signal
-#  ${ROOT_LIBRARIES}
-#)
-
-#set_target_properties(weightfield2_signal PROPERTIES
-#				     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
-#				     )
-
-#install(TARGETS weightfield2_signal DESTINATION "${INSTALL_BIN_DIR}")
-
-#################
-
-set(alternative_simple_analysis_SRC
-        alternative_simple_analysis.cpp
-        G__TrCluster.cxx
+set(DataAnalysis_calo_SRC
+	DataAnalysis_calo.cpp
+  info.cpp
+	G__TrCluster.cxx
 )
 
-add_executable(alternative_simple_analysis ${alternative_simple_analysis_SRC})
-target_link_libraries(alternative_simple_analysis
+add_executable(DataAnalysis_calo ${DataAnalysis_calo_SRC})
+target_link_libraries(DataAnalysis_calo
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}
 )
 
-set_target_properties(alternative_simple_analysis PROPERTIES
+set_target_properties(DataAnalysis_calo PROPERTIES
 				     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
 				     )
 
-install(TARGETS alternative_simple_analysis DESTINATION "${INSTALL_BIN_DIR}")
-
-#################
-
-set(weightfield2_signal_SRC weightfield2_signal.cpp)
-
-add_executable(weightfield2_signal ${weightfield2_signal_SRC})
-target_link_libraries(weightfield2_signal
-  ${ROOT_LIBRARIES}
-)
-
-set_target_properties(weightfield2_signal PROPERTIES
-				     RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}"
-				     )
-
-install(TARGETS weightfield2_signal DESTINATION "${INSTALL_BIN_DIR}")
+install(TARGETS DataAnalysis_calo DESTINATION "${INSTALL_BIN_DIR}")
 
 #################

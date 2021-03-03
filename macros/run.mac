@@ -27,6 +27,7 @@
 ##### Setup the sensitive detectors #####
 /GGS/scoring/addGGSIntHitSD siSensor
 /GGS/scoring/siSensor.GGSIntHitSD/storeParticleHits true
+#/GGS/scoring/addGGSIntHitSD calorimeter
 
 ##### Setup the output on ROOT file #####
 /GGS/userActions/addGGSHitsAction			# Save hits

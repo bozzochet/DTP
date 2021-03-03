@@ -104,6 +104,27 @@ int main(int argc, char **argv) {
 	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
 
 
+  //in the following definitions:
+  // - argv[3] must contain energy of the beam (in macros/run.mac)
+  // - slow histos store slowest hits for each event
+  // - meas histos store quantities measured by Time and Pos libraries
+  // - energy_calo hist stores energy deposited in the calorimeter,
+  //     while time_calo stores quantities referred to events where
+  //     energy deposited in calorimeter is in the range [argv(4),argv(5)]
+
+
+  if(argc < 6)
+  {
+    COUT(ERROR) <<"calo and beam parameters not given" <<ENDL;
+    return 1;
+  }
+
+  //argv are expressed in GeV
+  const energy_t beam_energy = std::atof(argv[3]) * 1e+9;
+  const energy_t Ecalo_min = std::atof(argv[4]) * 1e+9;
+  const energy_t Ecalo_max = std::atof(argv[5]) * 1e+9;
+
+
   //MC
 
   TH1F *h_time_MC = new TH1F
@@ -138,6 +159,21 @@ int main(int argc, char **argv) {
 
   TH1F *h_pos_res = new TH1F
     ("h_pos_res", ";x_meas - x_true [cm];", 1000, -20, 20);
+
+
+  //calo
+
+  TH1F *h_time_calo = new TH1F
+    ("h_time_calo", ";log10(t / ns);", 1000, 0, 4);
+
+  TH1F *h_time_calo_slow = new TH1F
+    ("h_time_calo_slow", ";log10(t / ns);", 1000, 0, 4);
+
+  TH1F *h_energy_calo = new TH1F
+  (
+    "h_energy_calo", ";energy [GeV];",
+    1000, 0, beam_energy * 1e-9
+  );
 
   //end of histos
 
@@ -181,6 +217,13 @@ int main(int argc, char **argv) {
   meas_tree->SetBranchAddress("Measures", &meas);
 
 
+  TTree *calo_tree;
+  inFile->GetObject("calorimeter", calo_tree);
+
+  energy_t Ecalo;
+  calo_tree->SetBranchAddress("Events", &Ecalo);
+
+
   TTree *geo_tree;
   inFile->GetObject("geometry", geo_tree);
 
@@ -220,6 +263,10 @@ int main(int argc, char **argv) {
 		v.resize(geo.Nlayers);
 
     events_tree->GetEntry(i);
+
+    calo_tree->GetEntry(i);
+
+    h_energy_calo->Fill(Ecalo * 1e-9);
 
     /*
 		if (a->GetEntries()>10) {
@@ -303,6 +350,9 @@ int main(int argc, char **argv) {
           h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
           h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
 
+          if(Ecalo <= Ecalo_max && Ecalo >= Ecalo_min)
+            h_time_calo->Fill(TMath::Log10(1e+9 * meas.time[m]));
+
           v_slow_meas.push_back(meas.time[m]);
         }
 
@@ -333,6 +383,16 @@ int main(int argc, char **argv) {
       TMath::Log10
         (1e+9 * TMath::MaxElement(v_slow_meas.size(), &v_slow_meas[0]))
     );
+
+    if(Ecalo <= Ecalo_max && Ecalo >= Ecalo_min)
+      h_time_calo_slow->Fill
+      (
+        TMath::Log10
+        (
+          1e+9 *
+          TMath::MaxElement(v_slow_meas.size(), &v_slow_meas[0])
+        )
+      );
 
   } //for i
 
@@ -430,14 +490,18 @@ int main(int argc, char **argv) {
 	outFile->WriteTObject(hk);
 */
 
-outFile->WriteTObject(h_time_res15);
-outFile->WriteTObject(h_time_meas15);
-outFile->WriteTObject(h_time_meas15_slow);
+  outFile->WriteTObject(h_time_res15);
+  outFile->WriteTObject(h_time_meas15);
+  outFile->WriteTObject(h_time_meas15_slow);
+  outFile->WriteTObject(h_time_calo);
+  outFile->WriteTObject(h_time_calo_slow);
 
-outFile->WriteTObject(h_energy_res);
-outFile->WriteTObject(h_energy_meas);
+  outFile->WriteTObject(h_energy_res);
+  outFile->WriteTObject(h_energy_meas);
+  outFile->WriteTObject(h_energy_calo);
 
-//outFile->WriteTObject(h_pos_res);
+  //outFile->WriteTObject(h_pos_res);
+
 
   outFile->Close();
 
