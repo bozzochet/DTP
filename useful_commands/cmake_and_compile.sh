@@ -2,7 +2,7 @@
 
 #echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 
-cmake -DCMAKE_INSTALL_PREFIX=${PWD/%_build}_install ${PWD/%_build} -DGGS_DIR=$GGS_SYS/
+cmake -DCMAKE_INSTALL_PREFIX=${PWD/%_build}_install ${PWD/%_build} -DBoost_INCLUDE_DIR=/usr/local/Cellar/boost/1.75.0_2/include/ -DGGS_DIR=$GGS_SYS/
 
 make
 #make install

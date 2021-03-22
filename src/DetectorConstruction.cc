@@ -41,12 +41,16 @@ DetectorConstruction::DetectorConstruction()
   detMessenger = new DetectorMessenger(this);
 
   messenger_ = new G4GenericMessenger(this, "/Detector/");
-  messenger_->DeclareProperty("Nlayers", Nlayers, "layers number");
-  messenger_->DeclareProperty("Nsquares", Nsquares, "squares per side on layer");
-  messenger_->DeclareProperty("Nrows", Nrows, "rows of ladders on a layer");
+  messenger_->DeclareProperty("CaloSide", CaloSide, "Calo side in cm").SetUnit("cm");
+  messenger_->DeclareProperty("CaloStkGap", CaloStkGap, "STK-Calo distance in cm").SetUnit("cm");
+  messenger_->DeclareProperty("Nsquares", Nsquares, "wafers per side on layer");
+  messenger_->DeclareProperty("Nrows", Nrows, "number of ladders per column");
+  messenger_->DeclareProperty("Nlayers", Nlayers, "layer number");
+  messenger_->DeclareProperty("LayerGap", LayerGap, "gap between 2 ladders on the same plane in cm").SetUnit("cm");
+  messenger_->DeclareProperty("PlaneGap", PlaneGap, "gap between planes in cm").SetUnit("cm");
   messenger_->DeclareProperty("Nstrips", Nstrips, "strips per ladder");
   messenger_->DeclareProperty("pitch", pitch, "strips pitch in cm").SetUnit("cm");
-  messenger_->DeclareProperty("thickness", thickness, "thickness of layers in mm").SetUnit("mm");
+  messenger_->DeclareProperty("thickness", thickness, "thickness of layers in cm").SetUnit("cm");
 
 }
 
@@ -57,11 +61,11 @@ DetectorConstruction::~DetectorConstruction() { delete detMessenger; }
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void DetectorConstruction::DefineMaterials() {
-  G4NistManager *man = G4NistManager::Instance();
+  // G4NistManager *man = G4NistManager::Instance();
 
-  G4bool isotopes = false;
+  // G4bool isotopes = false;
 
-  G4Element *Si = man->FindOrBuildElement("Si", isotopes);
+  // G4Element *Si = man->FindOrBuildElement("Si", isotopes);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -78,13 +82,16 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
   delete messenger_;
   messenger_ = NULL;
 
-
-  G4double l = 0.0001 * mm;
+  
+  //  G4double l = 0.0001 * mm;//0.1 um? MD: maybe just to avoid overlaps
+  G4double l = 0.0;
 
   G4NistManager *nist = G4NistManager::Instance();
   G4Material *silicon = nist->FindOrBuildMaterial("G4_Si");
   G4Material *default_mat = nist->FindOrBuildMaterial("G4_Galactic");
+#ifndef _NOCALO_
   G4Material *BGO = nist->FindOrBuildMaterial("G4_BGO");
+#endif
 
   G4double world_diameter = 400. * cm;
   G4Sphere *solidWorld =
@@ -105,59 +112,81 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
                                      0,                      // copy number
                                      fCheckOverlaps);        // checking overlaps
 
-  G4int N = Nsquares;
-  G4double dim = pitch * Nstrips;
-  G4int strips = Nstrips;
-  G4double pad_x = N * dim;
-  G4double pad_y = N * dim;
-  G4double pad_z = thickness;
+  G4int N = Nsquares; //e.g 8
+  G4double dim = pitch * Nstrips; //e.g. 9.6 cm
+  G4double pad_x = N * dim; //e.g. 8*9.6 cm
+  G4double pad_y = N * dim; //e.g. 8*9.6 cm
+  G4double pad_z = thickness; //e.g 300 um
 
-  G4double lp = N * (2 * pad_z + 2 * mm) + 4 * (2 * cm); // lunghezza pacchetto di silicio
-  G4Box *padMother = new G4Box("pad", 0.5 * (pad_x + l), 0.5 * (pad_y + l), 0.5 * (lp + l));
-  G4LogicalVolume *padLogic = new G4LogicalVolume(padMother, default_mat, "pad");
+  //  printf("%f %f %f\n", pad_x, pad_y, pad_z);
+
+  G4double StkDepth = Nlayers * (pad_z + LayerGap) + (Nlayers/2.0-1) * PlaneGap; // profondità tracker
+  G4Box *padMother = new G4Box("pad", 0.5 * (pad_x + l), 0.5 * (pad_y + l), 0.5 * (StkDepth + l));
+  G4LogicalVolume *padLogic = new G4LogicalVolume(padMother, default_mat, "pad");//sort of box containing the whole Stk
   new G4PVPlacement(0,                            // no rotation
-                    G4ThreeVector(0, 0, -lp / 2), // at (0,0,0)
-                    padLogic,                     // its logical volume
-                    "pad",                        // its name
-                    logicWorld,                   // its mother  volume
-                    false,                        // no boolean operation
-                    0,                            // copy number
-                    fCheckOverlaps);              // checking overlaps
+   		    G4ThreeVector(0, 0, -StkDepth/2.0), // at (0,0,depth/2)
+   		    // = its "center" is at depth/2
+   		    // --> the top face is touching (0,0,0)
+   		    padLogic,                     // its logical volume
+   		    "pad",                        // its name
+   		    logicWorld,                   // its mother  volume
+   		    false,                        // no boolean operation
+   		    0,                            // copy number
+   		    fCheckOverlaps);              // checking overlaps
 
   G4Box *siLayer = new G4Box("siLayer", 0.5 * pad_x, 0.5 * pad_y, 0.5 * pad_z);
   G4LogicalVolume *siLayerLogic = new G4LogicalVolume(siLayer, silicon, "siLayer");
-
+  
   G4Box *siLadder = new G4Box("siLadder", 0.5 * dim, 0.5 * pad_y, 0.5 * pad_z);
   G4LogicalVolume *siLadderLogic = new G4LogicalVolume(siLadder, silicon, "siLadder");
-
-  for (int i = 0; i < N; i++) {
-    new G4PVPlacement(0, G4ThreeVector(i * dim - 0.5 * (pad_x - dim), 0, 0), siLadderLogic, "siLadder",
-                      siLayerLogic, false, i, fCheckOverlaps);
-  }
-  //  new G4PVReplica("siLadderp", siLadderLogic, siLayerLogic, kXAxis, N, dim);
-
+  
+  for (int i = 0; i < N; i++) { //8 wafers per ladder but also 8 ladders side-by-side
+    //    printf("%f, %f, %f\n", i * dim - 0.5 * (pad_x - dim), 0.0, 0.0),
+    new G4PVPlacement(0,
+  		      G4ThreeVector(i * dim - 0.5 * (pad_x - dim), 0.0, 0.0),
+  		      siLadderLogic, //current
+  		      "siLadder", //name
+  		      siLayerLogic, //mother
+  		      false, //many
+  		      i, //copy number
+  		      fCheckOverlaps);
+  } //MD: non capisco perchè questi layer non vengono disegnati nella geometria Leonard
+  // probabilmente perchè solamente gli N layer sono messi nella box che era messa nel World
+  //  new G4PVReplica("siLadderp", siLadderLogic, siLayerLogic, kXAxis, N, dim);//should be alternative to the loop above
+  
   G4Box *siSensor = new G4Box("siSensor", 0.5 * dim, 0.5 * dim, 0.5 * pad_z);
-  G4LogicalVolume *siSensorLogic = new G4LogicalVolume(siSensor, silicon, "siSensor");
+  G4LogicalVolume *siSensorLogic = new G4LogicalVolume(siSensor, silicon, "siSensor");  
+  new G4PVReplica("siSensorp", siSensorLogic, siLadderLogic, kYAxis, N, dim);//the ladder is filled of wafers
 
-	new G4PVReplica("siSensorp", siSensorLogic, siLadderLogic, kYAxis, N, dim);
-
-	G4double z = -0.5 * lp;
-	for (int i = 0; i < 5; i++) {
-		new G4PVPlacement(0, G4ThreeVector(0, 0, z), siLayerLogic, "siLayer", padLogic, false, 2 * i, fCheckOverlaps);
-		new G4PVPlacement(0, G4ThreeVector(0, 0, z + 2 * mm), siLayerLogic, "siLayer", padLogic, false, 2 * i + 1, fCheckOverlaps); // va ruotato!!
-		z += (2 * cm + 2 * mm + 0.3 * mm);
-  	}
-
-  G4double TrkCaloGap = 2 * cm;
-  G4double caloSide = 90 * cm;
-
+  G4RotationMatrix* rotationMatrixX = new G4RotationMatrix();
+  G4RotationMatrix* rotationMatrixY = new G4RotationMatrix();
+  rotationMatrixY->rotateZ(90.*deg);
+  
+  G4double z = -StkDepth/2.0;
+  for (int i = 0; i < Nlayers; i++) {
+    G4RotationMatrix* rotationMatrix = rotationMatrixX;
+    if (i%2) rotationMatrix = rotationMatrixY;
+    new G4PVPlacement(rotationMatrix,
+		      G4ThreeVector(0, 0, z),
+		      siLayerLogic,
+		      "siLayer",
+		      padLogic,
+		      false,
+		      i,
+		      fCheckOverlaps);
+    if (!(i%2)) z += LayerGap;
+    else z += PlaneGap;
+    z += thickness;
+  }
+  
 #ifndef _NOCALO_
-  G4Box *calorimeter = new G4Box("calorimetro", 30 * cm, 30 * cm, 30 * cm);
+  //  printf("%f\n", CaloSide);
+  G4Box *calorimeter = new G4Box("calorimetro", CaloSide/2.0, CaloSide/2.0, CaloSide/2.0);
   G4LogicalVolume *calorimeterLogic = new G4LogicalVolume(calorimeter, BGO, "calorimeter");
-  new G4PVPlacement(0, G4ThreeVector(0, 0, -1. * caloSide / 2 - lp - TrkCaloGap), calorimeterLogic, "calorimeter",
-                    logicWorld, false, 0, fCheckOverlaps);
+  new G4PVPlacement(0, G4ThreeVector(0, 0, -1.0 * (CaloSide/2.0 + StkDepth + CaloStkGap)), calorimeterLogic, "calorimeter",
+   		    logicWorld, false, 0, fCheckOverlaps);
 #endif
-
+  
   // always return the physical World
   return fPhysicalWorld;
 }
@@ -186,11 +215,15 @@ void DetectorConstruction::updateGeometry() { G4RunManager::GetRunManager()->Def
 
 bool DetectorConstruction::ExportParameters() {
   bool result = true;
-  result = result && ExportIntParameter("Nlayers", Nlayers);
+  result = result && ExportIntParameter("CaloSide", CaloSide / cm);
+  result = result && ExportIntParameter("CaloStkGap", CaloStkGap / cm);
   result = result && ExportIntParameter("Nsquares", Nsquares);
   result = result && ExportIntParameter("Nrows", Nrows);
+  result = result && ExportIntParameter("Nlayers", Nlayers);
+  result = result && ExportIntParameter("LayerGap", LayerGap / cm);
+  result = result && ExportIntParameter("PlaneGap", PlaneGap / cm);
   result = result && ExportIntParameter("Nstrips", Nstrips);
   result = result && ExportRealParameter("pitch", pitch / cm);
-  result = result && ExportRealParameter("thickness", thickness / mm);
+  result = result && ExportRealParameter("thickness", thickness / cm);
   return result;
 }

@@ -3,6 +3,7 @@ set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES ${includ
 
 configure_file(cmake_and_compile.sh cmake_and_compile.sh COPYONLY)
 configure_file(run.sh run.sh COPYONLY)
+configure_file(run_hs.sh run_hs.sh COPYONLY)
 configure_file(show_events.sh show_events.sh COPYONLY)
 configure_file(show_geometry.sh show_geometry.sh COPYONLY)
 configure_file(digit_analyze.sh digit_analyze.sh COPYONLY)

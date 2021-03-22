@@ -1,4 +1,3 @@
-
 //#include "DEBUG.h"
 #include "physics.h"
 #include "vector2.h"
@@ -56,61 +55,36 @@ int main(int argc, char **argv) {
   COUT(INFO) <<"Recreating output file " <<outFileName <<"..." <<ENDL;
   TFile *outFile = new TFile(outFileName, "recreate");
 
-/*
-  //geometry
-
-  GGSTRootReader reader;
-  if (!(reader.Open(argv[1]))) {
-    std::cerr << "Cannot open input file " << argv[1] <<std::endl;
-    return 1;
-  }
-
-  const GGSTGeoParams *GEO = reader.GetGeoParams();
-  Geometry *geo = new Geometry;
-
-  geo->Nlayers = GEO->GetIntGeoParam("Nlayers");
-  geo->Nstrips = GEO->GetIntGeoParam("Nstrips");
-  geo->Nrows = GEO->GetIntGeoParam("Nrows");
-  geo->Nsquares = GEO->GetIntGeoParam("Nsquares");
-  geo->pitch = 1e-2 * GEO->GetRealGeoParam("pitch");
-  geo->thickness = 1e-3 * GEO->GetRealGeoParam("thickness");
-
-  geo->squareSide = geo->pitch * ((double) geo->Nstrips);
-  geo->Nladders = geo->Nsquares * geo->Nrows * geo->Nlayers;
-*/
-
-
   COUT(INFO) <<"Creating histos..." <<ENDL;
-
-	TH1F *h = new TH1F("disttemp", "disttemp", 100, -0.5, 0.5);
-	TH1F *h1 = new TH1F("bt", "bt", 1000, 0, 2);
-	TH1F *h2 = new TH1F("btls", "btls", 1000, 0, 2000);
-	TH1F *h3 = new TH1F("btls_log", "btls_log", 1000, 0, 4);
-	TH1F *h4 = new TH1F("bt_sim", "bt_sim", 1000, 0, 2);
-	TH1F *h5 = new TH1F("btls_sim", "btls_sim", 1500, 0, 15);
-	TH1F *h5cut = new TH1F("btls_sim_cut", "btls_sim_cut", 1500, 0, 15);
-	TH1F *h5nopri = new TH1F("btls_sim_nopri", "btls_sim_nopri", 1500, 0, 15);
-	TH1F *h5nomip = new TH1F("btls_sim_nomip", "btls_sim_nomip", 1500, 0, 15);
-
-	TH1F *hprotons = new TH1F("protoni", "protoni", 1000, 0, 4);
-	TH1F *hantip = new TH1F("antiprotoni", "antiprotoni", 1000, 0, 4);
-	TH1F *hneutrons = new TH1F("neutroni", "neutroni", 1000, 0, 4);
-	TH1F *hgamma = new TH1F("fotoni", "gamma", 1000, 0, 4);
-	TH1F *hisotopes = new TH1F("isotopo", "isotopo", 1000, 0, 4);
-	TH1F *helectron = new TH1F("elettroni", "elettroni", 1000, 0, 4);
-	TH1F *hpositron = new TH1F("positroni", "positroni", 1000, 0, 4);
-	TH1F *helectronmu = new TH1F("muoni", "muoni", 1000, 0, 4);
-	TH1F *hpi = new TH1F("pi", "pi", 1000, 0, 4);
-	TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
-
+  
+  TH1F *h = new TH1F("disttemp", "disttemp", 100, -0.5, 0.5);
+  TH1F *h1 = new TH1F("bt", "bt", 1000, 0, 2);
+  TH1F *h2 = new TH1F("btls", "btls", 1000, 0, 2000);
+  TH1F *h3 = new TH1F("btls_log", "btls_log", 1000, 0, 4);
+  TH1F *h4 = new TH1F("bt_sim", "bt_sim", 1000, 0, 2);
+  TH1F *h5 = new TH1F("btls_sim", "btls_sim", 1500, 0, 15);
+  TH1F *h5cut = new TH1F("btls_sim_cut", "btls_sim_cut", 1500, 0, 15);
+  TH1F *h5nopri = new TH1F("btls_sim_nopri", "btls_sim_nopri", 1500, 0, 15);
+  TH1F *h5nomip = new TH1F("btls_sim_nomip", "btls_sim_nomip", 1500, 0, 15);
+  
+  TH1F *hprotons = new TH1F("protoni", "protoni", 1000, 0, 4);
+  TH1F *hantip = new TH1F("antiprotoni", "antiprotoni", 1000, 0, 4);
+  TH1F *hneutrons = new TH1F("neutroni", "neutroni", 1000, 0, 4);
+  TH1F *hgamma = new TH1F("fotoni", "gamma", 1000, 0, 4);
+  TH1F *hisotopes = new TH1F("isotopo", "isotopo", 1000, 0, 4);
+  TH1F *helectron = new TH1F("elettroni", "elettroni", 1000, 0, 4);
+  TH1F *hpositron = new TH1F("positroni", "positroni", 1000, 0, 4);
+  TH1F *helectronmu = new TH1F("muoni", "muoni", 1000, 0, 4);
+  TH1F *hpi = new TH1F("pi", "pi", 1000, 0, 4);
+  TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
 
   //MC
 
   TH1F *h_time_MC = new TH1F
-  ("h_time_MC", ";log10(t / ns);", 1000, 0, 4);
+    ("h_time_MC", ";log10(t / ns);", 1000, 0, 4);
 
   TH1F *h_time_MC_slow = new TH1F
-  ("h_time_MC_slow", ";log10(t / ns);", 1000, 0, 4);
+    ("h_time_MC_slow", ";log10(t / ns);", 1000, 0, 4);
 
   TH1F *h_energy_MC = new TH1F
     ("h_energy_MC", ";energy [MeV];", 1000, -150, 150);
@@ -142,26 +116,26 @@ int main(int argc, char **argv) {
   //end of histos
 
 
-	TRandom3 *tr = new TRandom3();
-	tr->SetSeed(time(NULL));
-	vector2<TrCluster> v;
+  TRandom3 *tr = new TRandom3();
+  tr->SetSeed(time(NULL));
+  vector2<TrCluster> v;
 
-	/*
+  /*
 
-	Passing the parameters from DetectorConstruction.cc, not working yet
+    Passing the parameters from DetectorConstruction.cc, not working yet
 
-	GGSTRootReader reader;
-	const GGSTGeoParams *geoParams = reader.GetGeoParams();
+    GGSTRootReader reader;
+    const GGSTGeoParams *geoParams = reader.GetGeoParams();
 
-	const int Nsquares = geoParams->GetRealGeoParam("Nsquares"); //squares per side
-	const int Nladders = Nsquares*5; //number of ladders
-	const int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
-	const double squareSide = geoParams->GetRealGeoParam("squareSide");
-	const double pitch = squareSide/(double(Nstrips));
-	double eDepSegm[Nladders][Nstrips];
-	double PrimeDepSegm[Nladders][Nstrips];
+    const int Nsquares = geoParams->GetRealGeoParam("Nsquares"); //squares per side
+    const int Nladders = Nsquares*5; //number of ladders
+    const int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
+    const double squareSide = geoParams->GetRealGeoParam("squareSide");
+    const double pitch = squareSide/(double(Nstrips));
+    double eDepSegm[Nladders][Nstrips];
+    double PrimeDepSegm[Nladders][Nstrips];
 
-	*/
+  */
 
 
   COUT(INFO) <<"Opening TTree objects in " <<inputFileName <<"..." <<ENDL;
@@ -188,19 +162,24 @@ int main(int argc, char **argv) {
   geo_tree->SetBranchAddress("Geometry", &geo);
   geo_tree->GetEntry(0);
 
+  geo.ComputeDerived();
+  
   COUT(INFO) <<ENDL;
   COUT(INFO) <<"=================================" <<ENDL;
   COUT(INFO) <<"Geometric parameters:     " <<ENDL;
+  COUT(INFO) <<"  Calo side:              " <<geo.CaloSide <<ENDL;
+  COUT(INFO) <<"  Calo-Stk gap:           " <<geo.CaloStkGap <<ENDL;
+  COUT(INFO) <<"  wafers per side:        " <<geo.Nsquares  <<ENDL;
+  COUT(INFO) <<"  ladders per 'column':   " <<geo.Nrows  <<ENDL;
   COUT(INFO) <<"  layers:                 " <<geo.Nlayers <<ENDL;
+  COUT(INFO) <<"  gap between layers:     " <<geo.LayerGap <<ENDL;
+  COUT(INFO) <<"  gap between planes:     " <<geo.PlaneGap <<ENDL;
   COUT(INFO) <<"  strips per ladder:      " <<geo.Nstrips <<ENDL;
-  COUT(INFO) <<"  ladders rows per layer: " <<geo.Nrows  <<ENDL;
-  COUT(INFO) <<"  squares per side:       " <<geo.Nsquares  <<ENDL;
   COUT(INFO) <<"  implant pitch:          " <<geo.pitch  <<ENDL;
   COUT(INFO) <<"  layers thickness:       " <<geo.thickness <<ENDL;
-  COUT(INFO) <<"  squares side:           " <<geo.squareSide <<ENDL;
-  COUT(INFO) <<"  ladders:                " <<geo.Nladders <<ENDL;
+  COUT(INFO) <<"  wafer side:             " <<geo.squareSide <<ENDL;
+  COUT(INFO) <<"  total # of ladders:     " <<geo.Nladders <<ENDL;
   COUT(INFO) <<"=================================" <<ENDL;
-
 
   COUT(INFO) <<ENDL;
   COUT(INFO) <<"Begin loop over " <<events_tree->GetEntries() <<ENDL;
@@ -217,18 +196,18 @@ int main(int argc, char **argv) {
 
   for (int i = 0; i < events_tree->GetEntries(); i++) {
 
-		v.resize(geo.Nlayers);
+    v.resize(geo.Nlayers);
 
     events_tree->GetEntry(i);
 
     /*
-		if (a->GetEntries()>10) {
-			printf("\nEvent %d: %d hits\n", i, a->GetEntries());
-	   		for (int j = 0; j < a->GetEntries(); j++) {
-				TrCluster *cl = (TrCluster *)a->At(j);
-				printf("%d) %d %f\n", j, cl->parID, cl->eDep);
-				}
-		}
+      if (a->GetEntries()>10) {
+      printf("\nEvent %d: %d hits\n", i, a->GetEntries());
+      for (int j = 0; j < a->GetEntries(); j++) {
+      TrCluster *cl = (TrCluster *)a->At(j);
+      printf("%d) %d %f\n", j, cl->parID, cl->eDep);
+      }
+      }
     */
 
 
@@ -239,12 +218,12 @@ int main(int argc, char **argv) {
     std::vector<mytime_t> v_slow_meas;
 
 
-		for (int j = 0; j < a->GetEntries(); j++) {
+    for (int j = 0; j < a->GetEntries(); j++) {
 
       //cout<<endl<<"Entry #"<<i+j<<endl;
-			TrCluster *cl = (TrCluster *)a->At(j);
+      TrCluster *cl = (TrCluster *)a->At(j);
 
-			v[cl->layer].push_back(*cl);
+      v[cl->layer].push_back(*cl);
 
       h_time_MC->Fill(TMath::Log10(1e+9 * cl->time));
 
@@ -264,75 +243,75 @@ int main(int argc, char **argv) {
       //scan energies clust and measures
 
       for(int m=0; m<2; ++m)
-      {
-        h_energy_MC->Fill(cl->clust[m] * 1e-6);
+	{
+	  h_energy_MC->Fill(cl->clust[m] * 1e-6);
 
-/* DEBUG.h
-        debug::out <<"\ni: " <<i <<" j: " <<j <<" m: " <<m;
+	  /* DEBUG.h
+	     debug::out <<"\ni: " <<i <<" j: " <<j <<" m: " <<m;
 
-        debug::out <<"\n\tE: " <<cl->clust[m];
-        debug::out <<"\n\tE + noise: " <<meas.energy[m];
-        debug::out <<"\n\tt: " <<cl->time;
-        debug::out <<"\n\tt meas: " <<meas.time[m];
-        debug::out <<"\n\tpos: " <<cl->pos[cl->xy];
-        debug::out <<"\n\tpos meas: " <<meas.position;
+	     debug::out <<"\n\tE: " <<cl->clust[m];
+	     debug::out <<"\n\tE + noise: " <<meas.energy[m];
+	     debug::out <<"\n\tt: " <<cl->time;
+	     debug::out <<"\n\tt meas: " <<meas.time[m];
+	     debug::out <<"\n\tpos: " <<cl->pos[cl->xy];
+	     debug::out <<"\n\tpos meas: " <<meas.position;
 
-        debug::out <<std::endl;
-*/
+	     debug::out <<std::endl;
+	  */
 
-        //analyze valid measures
+	  //analyze valid measures
 
-        if(meas.energy[m] > 0)
-        {
-          h_energy_meas->Fill(meas.energy[m] * 1e-6);
-          h_energy_res->Fill(1e-3 * (meas.energy[m] - cl->clust[m]));
-        }
-        else
-          ++energy_lost;
+	  if(meas.energy[m] > 0)
+	    {
+	      h_energy_meas->Fill(meas.energy[m] * 1e-6);
+	      h_energy_res->Fill(1e-3 * (meas.energy[m] - cl->clust[m]));
+	    }
+	  else
+	    ++energy_lost;
 
-        // In the next "if" is used for energy a threshold
-        // proportional to CHARGE_NOISE_DEV_ variable defined in
-        // TimeSim.h.
-        // Digitization executable does not save TimeSim object
-        // parameters used to generate time measures.
-        // Would be better that Digitization saves TimeSim parameters
-        // to read them in analysis.
+	  // In the next "if" is used for energy a threshold
+	  // proportional to CHARGE_NOISE_DEV_ variable defined in
+	  // TimeSim.h.
+	  // Digitization executable does not save TimeSim object
+	  // parameters used to generate time measures.
+	  // Would be better that Digitization saves TimeSim parameters
+	  // to read them in analysis.
 
-        if(meas.time[m] >= 0 && meas.energy[m] > 8*300*ENERGY_COUPLE)
-        {
-          h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
-          h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
+	  if(meas.time[m] >= 0 && meas.energy[m] > 8*300*ENERGY_COUPLE)
+	    {
+	      h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
+	      h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
 
-          v_slow_meas.push_back(meas.time[m]);
-        }
+	      v_slow_meas.push_back(meas.time[m]);
+	    }
 
-      } //for m
+	} //for m
 
 
       //read only valid position measures without lost ones
 
       if(TMath::Abs(meas.position) < 1)
-      // this "if" is a temporary fix for Digitization bug:
-      // Digitization.cpp,  line 424
+	// this "if" is a temporary fix for Digitization bug:
+	// Digitization.cpp,  line 424
         h_pos_res->Fill(1e+2 * (meas.position - cl->pos[cl->xy]));
       else
         ++position_lost;
 
-		} //for j
+    } //for j
 
 
     //fill slow hit
 
     h_time_MC_slow->Fill
-    (
-      TMath::Log10(1e+9 * TMath::MaxElement(v_slow.size(), &v_slow[0]))
-    );
+      (
+       TMath::Log10(1e+9 * TMath::MaxElement(v_slow.size(), &v_slow[0]))
+       );
 
     h_time_meas15_slow->Fill
-    (
-      TMath::Log10
-        (1e+9 * TMath::MaxElement(v_slow_meas.size(), &v_slow_meas[0]))
-    );
+      (
+       TMath::Log10
+       (1e+9 * TMath::MaxElement(v_slow_meas.size(), &v_slow_meas[0]))
+       );
 
   } //for i
 
@@ -340,104 +319,104 @@ int main(int argc, char **argv) {
   COUT(INFO) <<ENDL;
 
   COUT(INFO) <<"Lost energies:  " <<energy_lost <<" on " <<iMeas*2
-    <<ENDL;
+	     <<ENDL;
 
   COUT(INFO) <<"Lost positions: " <<position_lost <<" on " <<iMeas
-    <<ENDL;
+	     <<ENDL;
 
 
-	// Find tStart and tMean
+  // Find tStart and tMean
 
-	float tStart = v[0][0].time;
-	float tMean = 0;
-	int _n = 0;
-	for (auto il : v) {
-		for (auto hit : il) {
-			if(tStart>hit.time) tStart = hit.time;
-			if (hit.parID != 0) continue;
-			tMean += hit.time;
-			_n++;
-			}
-		}
-	tMean /= _n;
+  float tStart = v[0][0].time;
+  float tMean = 0;
+  int _n = 0;
+  for (auto il : v) {
+    for (auto hit : il) {
+      if(tStart>hit.time) tStart = hit.time;
+      if (hit.parID != 0) continue;
+      tMean += hit.time;
+      _n++;
+    }
+  }
+  tMean /= _n;
 
 
   COUT(INFO) <<ENDL;
   COUT(INFO) <<"Particle identification..." <<ENDL;
 
-	//Particle identification
+  //Particle identification
 
-	for (int il = 0; il<v.size(); il++) {
-		for (int hit = 0; hit<v[il].size(); hit++) {
+  for (int il = 0; il<(int)(v.size()); il++) {
+    for (int hit = 0; hit<(int)(v[il].size()); hit++) {
 
-			if (v[il][hit].parPdg == 2212)
-				hprotons->Fill(log10(v[il][hit].time - tStart + 1));
-			if (v[il][hit].parPdg == -2212)
-				hantip->Fill(log10(v[il][hit].time - tStart + 1));
-			if (v[il][hit].parPdg == 2112)
-				hneutrons->Fill(log10(v[il][hit].time - tStart + 1));
-			if (v[il][hit].parPdg == 11)
-				helectron->Fill(log10(v[il][hit].time - tStart + 1));
-			if (v[il][hit].parPdg == 211 || v[il][hit].parPdg == -211)
-				hpi->Fill(log10(v[il][hit].time - tStart + 1));
-			if (v[il][hit].parPdg == 130 || v[il][hit].parPdg == 310 || v[il][hit].parPdg == 311 || v[il][hit].parPdg == 321 || v[il][hit].parPdg == -321)
-				hk->Fill(log10(v[il][hit].time - tStart + 1));
-			if (v[il][hit].parPdg == 13 || v[il][hit].parPdg == -13)
-				helectronmu->Fill(log10(v[il][hit].time - tStart + 1));
-			if (v[il][hit].parPdg == 22)
-				hgamma->Fill(log10(v[il][hit].time - tStart + 1));
-			if (v[il][hit].parPdg > 1000000000)
-				hisotopes->Fill(log10(v[il][hit].time - tStart + 1));
+      if (v[il][hit].parPdg == 2212)
+	hprotons->Fill(log10(v[il][hit].time - tStart + 1));
+      if (v[il][hit].parPdg == -2212)
+	hantip->Fill(log10(v[il][hit].time - tStart + 1));
+      if (v[il][hit].parPdg == 2112)
+	hneutrons->Fill(log10(v[il][hit].time - tStart + 1));
+      if (v[il][hit].parPdg == 11)
+	helectron->Fill(log10(v[il][hit].time - tStart + 1));
+      if (v[il][hit].parPdg == 211 || v[il][hit].parPdg == -211)
+	hpi->Fill(log10(v[il][hit].time - tStart + 1));
+      if (v[il][hit].parPdg == 130 || v[il][hit].parPdg == 310 || v[il][hit].parPdg == 311 || v[il][hit].parPdg == 321 || v[il][hit].parPdg == -321)
+	hk->Fill(log10(v[il][hit].time - tStart + 1));
+      if (v[il][hit].parPdg == 13 || v[il][hit].parPdg == -13)
+	helectronmu->Fill(log10(v[il][hit].time - tStart + 1));
+      if (v[il][hit].parPdg == 22)
+	hgamma->Fill(log10(v[il][hit].time - tStart + 1));
+      if (v[il][hit].parPdg > 1000000000)
+	hisotopes->Fill(log10(v[il][hit].time - tStart + 1));
 
-			//time
-			double smearedtime = tr->Gaus(v[il][hit].time - tStart,0.1);
-			h1->Fill(v[il][hit].time - tStart);
-			h2->Fill(v[il][hit].time - tStart);
-			h3->Fill(log10(v[il][hit].time - tStart + 1));
-			h4->Fill(smearedtime);
-			h5->Fill(smearedtime);
+      //time
+      double smearedtime = tr->Gaus(v[il][hit].time - tStart,0.1);
+      h1->Fill(v[il][hit].time - tStart);
+      h2->Fill(v[il][hit].time - tStart);
+      h3->Fill(log10(v[il][hit].time - tStart + 1));
+      h4->Fill(smearedtime);
+      h5->Fill(smearedtime);
 
-			if (smearedtime<0.55) h5cut->Fill(smearedtime);
-			if (v[il][hit].parID != 0) h5nopri->Fill(smearedtime);
-			if (v[9].size()>5) h5nomip->Fill(smearedtime);
-			if (v[il][hit].parID == 0) h->Fill(v[il][hit].time - tMean); //ns
-			}
-		}
-	v.clear();
+      if (smearedtime<0.55) h5cut->Fill(smearedtime);
+      if (v[il][hit].parID != 0) h5nopri->Fill(smearedtime);
+      if (v[9].size()>5) h5nomip->Fill(smearedtime);
+      if (v[il][hit].parID == 0) h->Fill(v[il][hit].time - tMean); //ns
+    }
+  }
+  v.clear();
 
 
   COUT(INFO) <<"Writing output..." <<ENDL;
 
-/*
-	outFile->WriteTObject(h);
-	outFile->WriteTObject(h1);
-	outFile->WriteTObject(h2);
-	outFile->WriteTObject(h3);
-	outFile->WriteTObject(h4);
-	outFile->WriteTObject(h5);
-	outFile->WriteTObject(h5cut);
-	outFile->WriteTObject(h5nopri);
-	outFile->WriteTObject(h5nomip);
+  /*
+    outFile->WriteTObject(h);
+    outFile->WriteTObject(h1);
+    outFile->WriteTObject(h2);
+    outFile->WriteTObject(h3);
+    outFile->WriteTObject(h4);
+    outFile->WriteTObject(h5);
+    outFile->WriteTObject(h5cut);
+    outFile->WriteTObject(h5nopri);
+    outFile->WriteTObject(h5nomip);
 
-  outFile->WriteTObject(hprotons);
-	outFile->WriteTObject(hneutrons);
-	outFile->WriteTObject(hgamma);
-	outFile->WriteTObject(hisotopes);
-	outFile->WriteTObject(helectron);
-	outFile->WriteTObject(hpositron);
-	outFile->WriteTObject(helectronmu);
-	outFile->WriteTObject(hpi);
-	outFile->WriteTObject(hk);
-*/
+    outFile->WriteTObject(hprotons);
+    outFile->WriteTObject(hneutrons);
+    outFile->WriteTObject(hgamma);
+    outFile->WriteTObject(hisotopes);
+    outFile->WriteTObject(helectron);
+    outFile->WriteTObject(hpositron);
+    outFile->WriteTObject(helectronmu);
+    outFile->WriteTObject(hpi);
+    outFile->WriteTObject(hk);
+  */
 
-outFile->WriteTObject(h_time_res15);
-outFile->WriteTObject(h_time_meas15);
-outFile->WriteTObject(h_time_meas15_slow);
+  outFile->WriteTObject(h_time_res15);
+  outFile->WriteTObject(h_time_meas15);
+  outFile->WriteTObject(h_time_meas15_slow);
 
-outFile->WriteTObject(h_energy_res);
-outFile->WriteTObject(h_energy_meas);
+  outFile->WriteTObject(h_energy_res);
+  outFile->WriteTObject(h_energy_meas);
 
-//outFile->WriteTObject(h_pos_res);
+  //outFile->WriteTObject(h_pos_res);
 
   outFile->Close();
 

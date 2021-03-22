@@ -1,5 +1,3 @@
-
-
 #include "TrCluster.hh"
 #include "physics.h"
 #include "info.h"
@@ -27,7 +25,10 @@
 
 using namespace std;
 
+float eps = std::numeric_limits<float>::epsilon();
 
+#define COSTANT_FRACTION_FOR_TIMING 0.10
+//#define COSTANT_FRACTION_FOR_TIMING 0.15
 
 int findStrip
   (double position, int Nsquares, int Nstrips, double pitch)
@@ -50,13 +51,13 @@ int findLadder
 }
 
 
-int fillGeoTree(TTree*, Geometry*);
+int fillGeoTree(TTree*, TDirectory*, Geometry*);
 
-int fillEvTree(GGSTRootReader&, TTree*, Geometry*);
+int fillEvTree(GGSTRootReader&, TTree*, TDirectory*, Geometry*);
 
-int fillCaloTree(GGSTRootReader&, TTree*);
+int fillCaloTree(GGSTRootReader&, TTree*, TDirectory*);
 
-int fillMeasTree(TTree*, TTree*, Geometry*);
+int fillMeasTree(TTree*, TTree*, TDirectory*, Geometry*);
 
 
 
@@ -89,53 +90,55 @@ int main(int argc, char **argv)
   const GGSTGeoParams *GEO = reader.GetGeoParams();
   Geometry *geo = new Geometry;
 
-  geo->Nlayers = GEO->GetIntGeoParam("Nlayers");
-  geo->Nstrips = GEO->GetIntGeoParam("Nstrips");
-  geo->Nrows = GEO->GetIntGeoParam("Nrows");
+  geo->CaloSide = GEO->GetIntGeoParam("CaloSide");
+  geo->CaloStkGap = GEO->GetIntGeoParam("CaloStkGap");
   geo->Nsquares = GEO->GetIntGeoParam("Nsquares");
+  geo->Nrows = GEO->GetIntGeoParam("Nrows");
+  geo->Nlayers = GEO->GetIntGeoParam("Nlayers");
+  geo->LayerGap = GEO->GetIntGeoParam("LayerGap");
+  geo->PlaneGap = GEO->GetIntGeoParam("PlaneGap");
+  geo->Nstrips = GEO->GetIntGeoParam("Nstrips");
   geo->pitch = 1e-2 * GEO->GetRealGeoParam("pitch");
   geo->thickness = 1e-3 * GEO->GetRealGeoParam("thickness");
 
-  geo->squareSide = geo->pitch * ((double) geo->Nstrips);
-  geo->Nladders = geo->Nsquares * geo->Nrows * geo->Nlayers;
-
+  geo->ComputeDerived();
+  
   COUT(INFO) <<ENDL;
   COUT(INFO) <<"=================================" <<ENDL;
   COUT(INFO) <<"Geometric parameters:     " <<ENDL;
+  COUT(INFO) <<"  Calo side:              " <<geo->CaloSide <<ENDL;
+  COUT(INFO) <<"  Calo-Stk gap:           " <<geo->CaloStkGap <<ENDL;
+  COUT(INFO) <<"  wafers per side:        " <<geo->Nsquares  <<ENDL;
+  COUT(INFO) <<"  ladders per 'column':   " <<geo->Nrows  <<ENDL;
   COUT(INFO) <<"  layers:                 " <<geo->Nlayers <<ENDL;
+  COUT(INFO) <<"  gap between layers:     " <<geo->LayerGap <<ENDL;
+  COUT(INFO) <<"  gap between planes:     " <<geo->PlaneGap <<ENDL;
   COUT(INFO) <<"  strips per ladder:      " <<geo->Nstrips <<ENDL;
-  COUT(INFO) <<"  ladders rows per layer: " <<geo->Nrows  <<ENDL;
-  COUT(INFO) <<"  squares per side:       " <<geo->Nsquares  <<ENDL;
   COUT(INFO) <<"  implant pitch:          " <<geo->pitch  <<ENDL;
   COUT(INFO) <<"  layers thickness:       " <<geo->thickness <<ENDL;
-  COUT(INFO) <<"  squares side:           " <<geo->squareSide <<ENDL;
-  COUT(INFO) <<"  ladders:                " <<geo->Nladders <<ENDL;
+  COUT(INFO) <<"  wafer side:             " <<geo->squareSide <<ENDL;
+  COUT(INFO) <<"  total # of ladders:     " <<geo->Nladders <<ENDL;
   COUT(INFO) <<"=================================" <<ENDL;
 
 
   //trees
-
+  outFile->cd();
   TTree *geo_tree = new TTree("geometry", "siSensorGeoParams");
   TTree *events_tree = new TTree("events", "siSensorHits");
   TTree *meas_tree = new TTree("measures", "siSensorMeasures");
   TTree *calo_tree = new TTree("calorimeter", "calorimeterEdep");
-
+  
   if
-  (
-    fillGeoTree(geo_tree, geo) != 0
-    || fillEvTree(reader, events_tree, geo) != 0
-    || fillCaloTree(reader, calo_tree) != 0
-    || fillMeasTree(events_tree, meas_tree, geo) != 0
-  )
+    (
+     fillGeoTree(geo_tree, outFile, geo) != 0
+     || fillEvTree(reader, events_tree, outFile, geo) != 0
+     || fillCaloTree(reader, calo_tree, outFile) != 0
+     || fillMeasTree(events_tree, meas_tree, outFile, geo) != 0
+     )
     return 1;
 
   // Save histograms
   outFile->cd();
-
-  geo_tree->Write();
-  events_tree->Write();
-  calo_tree->Write();
-  meas_tree->Write();
 
   outFile->Close();
   delete outFile;
@@ -148,7 +151,7 @@ int main(int argc, char **argv)
 }
 
 
-int fillGeoTree(TTree *geo_tree, Geometry *geo)
+int fillGeoTree(TTree *geo_tree, TDirectory* outFile, Geometry *geo)
 {
   static const string routineName("Digitization::fillGeoTree");
 
@@ -162,18 +165,22 @@ int fillGeoTree(TTree *geo_tree, Geometry *geo)
     "Nlayers:Nstrips:Nrows:Nsquares:pitch/D:thickness/D:squareSide/D:Nladders"
   );
 
+  outFile->cd();
   geo_tree->Fill();
 
+  outFile->cd();
+  geo_tree->Write();
+  
   return 0;
 }
 
 
 int fillEvTree
-  (GGSTRootReader &reader, TTree *events_tree, Geometry *geo)
+(GGSTRootReader &reader, TTree *events_tree, TDirectory* outFile, Geometry *geo)
 {
   static const string routineName("Digitization::fillEvTree");
-
-
+  
+  
   COUT(INFO) <<ENDL;
   COUT(INFO) <<"Saving MC truth..." <<ENDL;
 
@@ -226,22 +233,22 @@ int fillEvTree
 
     // Hits loop
     int ncluster = 0;
-
+    
     for (int iHit = 0; iHit < nHits; iHit++) {
       inthit = (GGSTIntHit *)hReader->GetHit("siSensor", iHit);
       int nPHit = inthit->GetNPartHits();
       int llayer = inthit->GetVolumeID() / (geo->Nsquares * geo->Nsquares);
       //cout<<"layer : "<<llayer<<endl;
       //cout<<"square : "<<inthit->GetVolumeID()<<endl;
-
+      
       for (int i = 0; i < nPHit; i++) {
         TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
         phit = (GGSTPartHit *)inthit->GetPartHit(i);
         //cout<<"Entry #"<<iHit+i+1<<endl;
-
-
+	
+	
         //fill with MC truth
-
+	
         c->xy = llayer % 2 == 0;
         c->pos[0] = 1e-2 * 0.5 * (phit->entrancePoint[0] + phit->exitPoint[0]); // x coordinate
         c->pos[1] = 1e-2 * 0.5 * (phit->entrancePoint[1] + phit->exitPoint[1]); // y coordinate
@@ -253,49 +260,45 @@ int fillEvTree
         c->parID = phit->parentID;
         c->parPdg = phit->particlePdg;
         c->ID = inthit->GetVolumeID();
-
+	
         //Find the nearest strip to the left
         c->strip = findStrip(c->pos[c->xy], geo->Nsquares, geo->Nstrips, geo->pitch);
-
+	
         // Find the ladder it belongs
         c->ladder = findLadder(c->ID, c->layer, c->xy, geo->Nsquares);
-
+	
         //Deposit energy and create cluster
         double thisPos = ((c->ladder%geo->Nsquares)*geo->squareSide) + (c->strip*geo->pitch) - (geo->Nsquares*geo->squareSide*0.5);
         double fraction = (c->pos[c->xy]-thisPos)/geo->pitch;
-
+	
         c->clust[0] = c->eDep * (1-fraction);
         c->clust[1] = c->eDep * (fraction);
-
-
+	
+	
         //errors
-
+	
         int error = 0;
-
-        if
-        (
-          c->strip < 0 || c->strip >= geo->Nstrips
-          || c->ladder < 0 || c->ladder >= geo->Nladders * geo->Nlayers
-        )
-        {
+	
+        if (
+	    c->strip < 0 || c->strip >= geo->Nstrips
+	    || c->ladder < 0 || c->ladder >= geo->Nladders * geo->Nlayers
+	    ) {
           COUT(ERROR) <<ENDL <<"ladder or strip out of range: lad:"
-            <<c->ladder <<" str:" <<c->strip <<ENDL;
-
+		      <<c->ladder <<" str:" <<c->strip <<ENDL;
+	  
           error = 1;
         }
-
-
-        if
-        (
-          c->pos[0] < -geo->Nsquares*0.5*geo->squareSide
-          || c->pos[0] > geo->Nsquares*0.5*geo->squareSide
-          || c->pos[1] < -geo->Nsquares*0.5*geo->squareSide
-          || c->pos[1] > geo->Nsquares*0.5*geo->squareSide
-        )
-        {
-          COUT(ERROR) <<ENDL <<"pos x or y out of range: x:" <<c->pos[0]
-            <<" y:" <<c->pos[1] <<ENDL;
-
+	
+        if (
+	    c->pos[0] < -geo->Nsquares*0.5*geo->squareSide - eps
+	    || c->pos[0] > geo->Nsquares*0.5*geo->squareSide + eps
+	    || c->pos[1] < -geo->Nsquares*0.5*geo->squareSide - eps
+	    || c->pos[1] > geo->Nsquares*0.5*geo->squareSide + eps
+	    ) {
+	  
+          COUT(ERROR) << ENDL << "pos x or y out of range:" << ENDL;
+	  COUT(ERROR) << ENDL << "x:" << c->pos[0] << " (" << -geo->Nsquares*0.5*geo->squareSide << ", " << geo->Nsquares*0.5*geo->squareSide << ")" << ENDL;
+	  COUT(ERROR) << ENDL << "y:" << c->pos[1] << " (" << -geo->Nsquares*0.5*geo->squareSide << ", " << geo->Nsquares*0.5*geo->squareSide << ")" << ENDL;
           error = 1;
         }
 
@@ -304,9 +307,13 @@ int fillEvTree
       } //for i
     } //for iHit
 
+    outFile->cd();
     events_tree->Fill();
   } //for iEv
 
+  outFile->cd();
+  events_tree->Write();
+  
   COUT(INFO) <<" ";
   info::elapsed_time(start);
 
@@ -314,7 +321,7 @@ int fillEvTree
 }
 
 
-int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree)
+int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree, TDirectory* outFile)
 {
   static const string routineName("Digitization::fillCaloTree");
 
@@ -343,7 +350,6 @@ int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree)
     return 0;
   }
 
-
   COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
 
   std::clock_t start = std::clock();
@@ -371,10 +377,14 @@ int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree)
       calo_energy += 1e+9 * inthit->eDep;
     }
 
+    outFile->cd();
     calo_tree->Fill();
 
   } //for iEv
 
+  outFile->cd();
+  calo_tree->Write();
+  
   COUT(INFO) <<" ";
   info::elapsed_time(start);
 
@@ -382,7 +392,7 @@ int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree)
 }
 
 
-int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
+int fillMeasTree(TTree *events_tree, TTree *meas_tree, TDirectory* outFile, Geometry *geo)
 {
   static const string routineName("Digitization::fillMeasTree");
 
@@ -487,8 +497,7 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
         //deposit 0: a negative energy could affect pos calculation
           pos_sim->DepositEnergy(ladder, strip, 0);
 
-
-        meas.time[k] = time_sim->GetMeas(charge, 0.15);
+        meas.time[k] = time_sim->GetMeas(charge, COSTANT_FRACTION_FOR_TIMING);
 
         delete charge;
 
@@ -523,12 +532,15 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, Geometry *geo)
         COUT(INFO) <<ENDL <<"\n\tE: " <<cl->clust[0] <<" " <<cl->clust[1] <<"\n\tE + noise: " <<meas.energy[0] <<" " <<meas.energy[1] <<"\n\tt: " <<cl->time <<"\n\tt meas: " <<meas.time[0] <<" " <<meas.time[1] <<"\n\tpos: " <<cl->pos[cl->xy] <<"\n\tpos meas: " <<meas.position <<ENDL;
 */
 
+      outFile->cd();
       meas_tree->Fill();
 
     } //for j
   } //for i
 
-
+  outFile->cd();
+  meas_tree->Write();
+  
   COUT(INFO) <<" ";
   info::elapsed_time(start);
 

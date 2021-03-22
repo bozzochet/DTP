@@ -1,81 +1,80 @@
-
 #include "PosSim.h"
 
 
 void PosSim::ShareEnergy()
 {
   std::vector<double> fill;
-  for (int ix = 0; ix < (*eDepSegm).size(); ix++) {
-    for (int jx = 0; jx < (*eDepSegm)[0].size(); jx+=jump) {
+  for (int ix = 0; ix < (int)((*eDepSegm).size()); ix++) {
+    for (int jx = 0; jx < (int)((*eDepSegm)[0].size()); jx+=jump) {
       fill.clear();
-		  fill.shrink_to_fit();
-		  int i0 = ix;
-		  int j0 = jx;
+      fill.shrink_to_fit();
+      int i0 = ix;
+      int j0 = jx;
 
-		  //Saving the energy from non-active strips
+      //Saving the energy from non-active strips
 
-			for(int jp = 1; jp<jump; jp++) {
-  			if(j0!=(*eDepSegm)[0].size()-1) {
-  			  j0++;
-		  	}
+      for(int jp = 1; jp<jump; jp++) {
+	if(j0!=(int)((*eDepSegm)[0].size())-1) {
+	  j0++;
+	}
 
-			  else {
-				  i0++;
-				  j0 = 0;
-			  }
+	else {
+	  i0++;
+	  j0 = 0;
+	}
 
-			  if(i0==(*eDepSegm).size())
-				  break;
+	if(i0==(int)((*eDepSegm).size()))
+	  break;
 
-				if((*eDepSegm)[i0][j0]!=0) {
-  				fill.push_back((*eDepSegm)[i0][j0]);
-	  			(*eDepSegm)[i0][j0] = 0;
-				}
-		  }
+	if((*eDepSegm)[i0][j0]!=0) {
+	  fill.push_back((*eDepSegm)[i0][j0]);
+	  (*eDepSegm)[i0][j0] = 0;
+	}
+      }
 
-		  //Moving to right-side strip
+      //Moving to right-side strip
 
-		  if(j0!=(*eDepSegm).size()-1) {
-			  j0++;
-			}
-  		else if( (i0+1) % geo_->Nsquares != 0) {
-				i0++;
-				j0 = 0;
-			}
-  		else {
-	  	/* no active strips between (ix,jx) and layer
-		  * row end: distribute the entire energy to
-		  * (ix,jx) strip
-		  */
-  		  i0 = ix;
-	  	  j0 = jx;
-		  }
+      if(j0!=(int)((*eDepSegm).size())-1) {
+	j0++;
+      }
+      else if( (i0+1) % geo_->Nsquares != 0) {
+	i0++;
+	j0 = 0;
+      }
+      else {
+	/* no active strips between (ix,jx) and layer
+	 * row end: distribute the entire energy to
+	 * (ix,jx) strip
+	 */
+	i0 = ix;
+	j0 = jx;
+      }
 
       //Distributing the energy to left and right-side strips
 
-		  for(int s = 0; s < fill.size(); s++) {
-			  (*eDepSegm)[ix][jx] += fill[s]/(2*(s+1));
-			  (*eDepSegm)[i0][j0] += fill[s]/(2*(fill.size()-s));
-		  }
+      for(int s = 0; s < (int)(fill.size()); s++) {
+	(*eDepSegm)[ix][jx] += fill[s]/(2*(s+1));
+	(*eDepSegm)[i0][j0] += fill[s]/(2*(fill.size()-s));
+      }
 
-		}
+    }
   }
 
 }
 
 
 /*
-void PosSim::AddNoise()
-{
+  void PosSim::AddNoise()
+  {
 
-	for (int ii = 0; ii < (*eDepSegm).size(); ii++) {
-		for (int jj = 0; jj < (*eDepSegm)[ii].size(); jj++) {
-			double fluct = random_->Gaus(0, 9e+3); //9kev
+  for (int ii = 0; ii < (*eDepSegm).size(); ii++) {
+  for (int jj = 0; jj < (*eDepSegm)[ii].size(); jj++) {
+  double fluct = random_->Gaus(0, 9e+3); //9kev
 
-			(*eDepSegm)[ii][jj] += fluct;
-			}
-		}
-}
+  (*eDepSegm)[ii][jj] += fluct;
+  }
+  }
+  }
 */
 
 
@@ -120,7 +119,7 @@ void PosSim::GetCluster(int &i1, int &j1, int &i2, int &j2)
 
 
 void PosSim::FillCluster
-  (vector_pair<double> &strip, int i1, int j1, int i2, int j2)
+(vector_pair<double> &strip, int i1, int j1, int i2, int j2)
 {
   while((i1*geo_->Nstrips)+j1 <= (i2*geo_->Nstrips)+j2) {
 
@@ -140,9 +139,9 @@ void PosSim::FillCluster
 
 
 double PosSim::GetSimPos
-  (const vector_pair<double> &strip, const int layer)
+(const vector_pair<double> &strip, const int layer)
 {
-  for(int k = 0; k < strip.size(); k++) {
+  for(int k = 0; k < (int)(strip.size()); k++) {
 
     if(strip[k].second < 27e+3)
       continue;
@@ -154,7 +153,7 @@ double PosSim::GetSimPos
 
     while(k1>0 && strip[k1].second >= 27e+3)
       k1--;
-    while(k2<(strip.size()-1) && strip[k2].second >= 27e+3)
+    while(k2<(int)((strip.size())-1) && strip[k2].second >= 27e+3)
       k2++;
 
     //Finding the peak
@@ -173,7 +172,7 @@ double PosSim::GetSimPos
 
     if(kMax == 0)
       kNext = 1;
-    else if(kMax == strip.size()-1)
+    else if(kMax == (int)(strip.size())-1)
       kNext = strip.size()-2;
     else if(strip[kMax+1].second > strip[kMax-1].second)
       kNext = kMax+1;
@@ -192,14 +191,15 @@ double PosSim::GetSimPos
     return simPos;
 
     //Comparing the simulated hit positions with the real ones on the same layer
-/*
-    for(int m = 0 ; m < (*hitPos)[layer].size(); m++)
+    /*
+      for(int m = 0 ; m < (*hitPos)[layer].size(); m++)
       segmp->Fill(simPos-(*hitPos)[layer][m]);
-*/
+    */
     //cout<<"Simulated position: "<<simPos<<endl;
-
+    
     //Advancing within the current cluster
     k = k2;
+    // FIX ME
   }
 }
 
@@ -234,5 +234,6 @@ double PosSim::GetMeas()
       //Advancing and looking for other clusters
       ix = i2;
       jx = j2;
+      // FIX ME, se return of GetSimPos
     }
 }

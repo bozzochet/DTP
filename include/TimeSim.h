@@ -60,7 +60,8 @@ class TimeSim
   const double STOP_CHARGE_FRACTION_ = 0.999;
 
   //signal parameters
-  const mytime_t T_SAMPLING_ = 1e-13;
+  //  const mytime_t T_SAMPLING_ = 1e-13;
+  const mytime_t T_SAMPLING_ = 1e-12;
 
   /* noise deviation:
    *   pair/um * thickness * fond_charge */

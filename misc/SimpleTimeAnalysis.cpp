@@ -37,7 +37,6 @@ const double thickness = GEO.GetThickness();
 
 
 //time measures on charge signal
->>>>>>> master:src/TimeAnalysis.cpp
 void charge_meas
 (
   const char *input, const char *output,
