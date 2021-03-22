@@ -41,17 +41,30 @@ DetectorConstruction::DetectorConstruction()
   detMessenger = new DetectorMessenger(this);
 
   messenger_ = new G4GenericMessenger(this, "/Detector/");
-  messenger_->DeclareProperty("CaloSide", CaloSide, "Calo side in cm").SetUnit("cm");
-  messenger_->DeclareProperty("CaloStkGap", CaloStkGap, "STK-Calo distance in cm").SetUnit("cm");
+  
+  // messenger_->DeclareProperty("CaloSide", CaloSide, "Calo side in cm").SetUnit("cm");
+  // messenger_->DeclareProperty("CaloStkGap", CaloStkGap, "STK-Calo distance in cm").SetUnit("cm");
+  // messenger_->DeclareProperty("Nsquares", Nsquares, "wafers per side on layer");
+  // messenger_->DeclareProperty("Nrows", Nrows, "number of ladders per column");
+  // messenger_->DeclareProperty("Nlayers", Nlayers, "layer number");
+  // messenger_->DeclareProperty("LayerGap", LayerGap, "gap between 2 ladders on the same plane in cm").SetUnit("cm");
+  // messenger_->DeclareProperty("PlaneGap", PlaneGap, "gap between planes in cm").SetUnit("cm");
+  // messenger_->DeclareProperty("Nstrips", Nstrips, "strips per ladder");
+  // messenger_->DeclareProperty("pitch", pitch, "strips pitch in cm").SetUnit("cm");
+  // messenger_->DeclareProperty("thickness", thickness, "thickness of layers in cm").SetUnit("cm");
+  
+  messenger_->DeclarePropertyWithUnit("CaloSide", "cm", CaloSide, "Calo side in cm");
+  messenger_->DeclarePropertyWithUnit("CaloStkGap", "cm", CaloStkGap, "STK-Calo distance in cm");
   messenger_->DeclareProperty("Nsquares", Nsquares, "wafers per side on layer");
   messenger_->DeclareProperty("Nrows", Nrows, "number of ladders per column");
   messenger_->DeclareProperty("Nlayers", Nlayers, "layer number");
-  messenger_->DeclareProperty("LayerGap", LayerGap, "gap between 2 ladders on the same plane in cm").SetUnit("cm");
-  messenger_->DeclareProperty("PlaneGap", PlaneGap, "gap between planes in cm").SetUnit("cm");
+  messenger_->DeclarePropertyWithUnit("LayerGap", "cm", LayerGap, "gap between 2 ladders on the same plane in cm");
+  messenger_->DeclarePropertyWithUnit("PlaneGap", "cm", PlaneGap, "gap between planes in cm");
   messenger_->DeclareProperty("Nstrips", Nstrips, "strips per ladder");
-  messenger_->DeclareProperty("pitch", pitch, "strips pitch in cm").SetUnit("cm");
-  messenger_->DeclareProperty("thickness", thickness, "thickness of layers in cm").SetUnit("cm");
+  messenger_->DeclarePropertyWithUnit("pitch", "cm", pitch, "strips pitch in cm");
+  messenger_->DeclarePropertyWithUnit("thickness", "cm", thickness, "thickness of layers in cm");
 
+  
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
