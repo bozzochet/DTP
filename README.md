@@ -66,7 +66,11 @@ GGSWolowitz -g lib/libTestGeometry.so -gd macros/geo.mac -t vgm -o lib/TestGeome
 
 - conversion from GGS output to plain ROOT file:
 ```
-./exe/Digitization GGSOutput.root DigitOut.root
+./exe/Digitization [output file name] <input file name 1> <input file name 2> ...
+```
+for example:
+```
+./exe/Digitization DigitOut.root GGSOutput.root
 ```
 - create analysis histos:
 ```

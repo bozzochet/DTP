@@ -78,11 +78,10 @@ int main(int argc, char **argv)
   // Create the reader container and open the data file
   GGSTRootReader reader;
 
-  /*
   int shift=2;
   for (int ii=shift; ii<argc; ii++) {
     TString inputFileName = argv[ii];
-    printf("%d) %s\n", ii, argv[ii]);
+    //    printf("%d) %s\n", ii, argv[ii]);
 
     static GGSTFilesHandler* handler = NULL;
     handler = reader.Open(inputFileName, handler);
@@ -92,24 +91,13 @@ int main(int argc, char **argv)
       return 1;
     }
   }
-  */
 
-  TString inputFileName = argv[2];
-  
-  static GGSTFilesHandler* handler = reader.Open(inputFileName);
-  
-  if (!handler) {
-    COUT(ERROR) << "Cannot open input file " << inputFileName << ENDL;
-    return 1;
-  }
-  
   //create output file
   TFile *outFile = TFile::Open(outFileName, "RECREATE");
   if (!outFile || outFile->IsZombie()) {
     COUT(ERROR) << "Cannot create digitization output file " << outFileName << ENDL;
     return 1;
   }
-
 
   //geometry
 
