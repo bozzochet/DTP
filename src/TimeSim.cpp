@@ -39,6 +39,7 @@ charge_t TimeSim::AddChargeNoise(signal_t *signal)
     signal->SetPoint(i, t, q + noise->Eval(t));
   }
 
+  if (noise) delete noise;
   return Q_NOISE;
 }
 
