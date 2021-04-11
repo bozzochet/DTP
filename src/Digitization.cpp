@@ -67,16 +67,42 @@ int main(int argc, char **argv)
   static const string routineName("Digitization::main");
   GGSSmartLog::verboseLevel = GGSSmartLog::INFO; // Print only INFO messages or more important
 
-  TString inputFileName = argv[1];
-  TString outFileName = argv[2];
+  if (argc<3) {
+    COUT(ERROR) << "You need to pass at least an input file name and an output one" << ENDL;
+    COUT(ERROR) << argv[0] << " [output file name] <input file name 1> <input file name 2> ..." << ENDL;
+    return -1;
+  }
+
+  TString outFileName = argv[1];
 
   // Create the reader container and open the data file
   GGSTRootReader reader;
-  if (!(reader.Open(inputFileName))) {
+
+  /*
+  int shift=2;
+  for (int ii=shift; ii<argc; ii++) {
+    TString inputFileName = argv[ii];
+    printf("%d) %s\n", ii, argv[ii]);
+
+    static GGSTFilesHandler* handler = NULL;
+    handler = reader.Open(inputFileName, handler);
+    
+    if (!handler) {
+      COUT(ERROR) << "Cannot open input file " << inputFileName << ENDL;
+      return 1;
+    }
+  }
+  */
+
+  TString inputFileName = argv[2];
+  
+  static GGSTFilesHandler* handler = reader.Open(inputFileName);
+  
+  if (!handler) {
     COUT(ERROR) << "Cannot open input file " << inputFileName << ENDL;
     return 1;
   }
-
+  
   //create output file
   TFile *outFile = TFile::Open(outFileName, "RECREATE");
   if (!outFile || outFile->IsZombie()) {
@@ -125,8 +151,14 @@ int main(int argc, char **argv)
   outFile->cd();
   TTree *geo_tree = new TTree("geometry", "siSensorGeoParams");
   TTree *events_tree = new TTree("events", "siSensorHits");
+  events_tree->SetAutoSave(-3000000);
+  events_tree->SetAutoFlush(-3000000);
   TTree *meas_tree = new TTree("measures", "siSensorMeasures");
+  meas_tree->SetAutoSave(-3000000);
+  meas_tree->SetAutoFlush(-3000000);
   TTree *calo_tree = new TTree("calorimeter", "calorimeterEdep");
+  calo_tree->SetAutoSave(-3000000);
+  calo_tree->SetAutoFlush(-3000000);
   
   if
     (
