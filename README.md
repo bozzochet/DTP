@@ -72,6 +72,7 @@ for example:
 ```
 ./exe/Digitization DigitOut.root GGSOutput.root
 ```
+If the first and only input argument (not sure if more are passed) is a text file with a list of files they're are chained (as passing them as paramenters).
 - create analysis histos:
 ```
 ./exe/DataAnalysis DigitOut.root
