@@ -75,15 +75,27 @@ for example:
 If the first and only input argument (not sure if more are passed) is a text file with a list of files they're are chained (as passing them as paramenters).
 - create analysis histos:
 ```
-./exe/DataAnalysis DigitOut.root
+./exe/DataAnalysis [output file name] <input file name 1> <input file name 2> ...
 ```
-`DataAnalysis` output will be `histos.root`
+for example:
+```
+./exe/DataAnalysis AnaOut.root DigitOut.root
+```
+`DataAnalysis` output will be `AnaOut.root`
 
-A working example can be found in `useful_command/digit_analyze.sh`
+(a working example can be found in `useful_command/digit_analyze.sh`)
 
-`DataAnalysis_calo` executable analysis considers energy deposit in calorimeter.
-The command must pass these arguments:
+and
 ```
-./exe/DataAnalysis_calo DigitOut.root AnaOut.root <beam energy in GeV> <E calo min in GeV> <E calo max in GeV>
+./exe/DataAnalysis_calo [output file name] <input file name 1> <input file name 2> ... [nominal energy] [min deposited energy] [max deposited energy]
 ```
-where `Ecalo_min` and `Ecalo_max` are needed to consider hit times of in a specific energy range
+for example:
+```
+./exe/DataAnalysis_calo AnaOut.root DigitOut.root 100 60 80
+```
+where `DataAnalysis_calo` executable analysis considers energy deposit in calorimeter.
+The command requires three additional arguments:
+```
+./exe/DataAnalysis_calo AnaOut.root DigitOut.root <nominal energy in GeV> <E calo min in GeV> <E calo max in GeV>
+```
+where `Ecalo_min` and `Ecalo_max` are needed to consider hit times only if in the specified energy range. The `beam_energy` par is just used to create the binning of the energy histos. 
