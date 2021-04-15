@@ -6,7 +6,6 @@ configure_file(run.sh run.sh COPYONLY)
 configure_file(run_hs.sh run_hs.sh COPYONLY)
 configure_file(show_events.sh show_events.sh COPYONLY)
 configure_file(show_geometry.sh show_geometry.sh COPYONLY)
-configure_file(digit_analyze.sh digit_analyze.sh COPYONLY)
 
 install(DIRECTORY . DESTINATION useful_commands
        USE_SOURCE_PERMISSIONS
