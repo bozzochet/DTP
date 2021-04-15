@@ -153,10 +153,10 @@ int main(int argc, char **argv) {
   //measures
 
   TH1F *h_time_meas15= new TH1F
-    ("h_time_meas15", ";log10(t / ns);", 1000, 0, 4);
+    ("h_time_meas", ";log10(t / ns);", 1000, 0, 4);
 
   TH1F *h_time_meas15_slow = new TH1F
-    ("h_time_meas15_slow", ";log10(t / ns);", 1000, 0, 4);
+    ("h_time_meas_slow", ";log10(t / ns);", 1000, 0, 4);
 
   TH1F *h_energy_meas = new TH1F
     ("h_energy_meas", ";energy [MeV];", 1000, 0, 150);
@@ -483,28 +483,26 @@ int main(int argc, char **argv) {
 
 
   COUT(INFO) <<"Writing output..." <<ENDL;
-
-  /*
-    outFile->WriteTObject(h);
-    outFile->WriteTObject(h1);
-    outFile->WriteTObject(h2);
-    outFile->WriteTObject(h3);
-    outFile->WriteTObject(h4);
-    outFile->WriteTObject(h5);
-    outFile->WriteTObject(h5cut);
-    outFile->WriteTObject(h5nopri);
-    outFile->WriteTObject(h5nomip);
-
-    outFile->WriteTObject(hprotons);
-    outFile->WriteTObject(hneutrons);
-    outFile->WriteTObject(hgamma);
-    outFile->WriteTObject(hisotopes);
-    outFile->WriteTObject(helectron);
-    outFile->WriteTObject(hpositron);
-    outFile->WriteTObject(helectronmu);
-    outFile->WriteTObject(hpi);
-    outFile->WriteTObject(hk);
-  */
+  
+  outFile->WriteTObject(h);
+  outFile->WriteTObject(h1);
+  outFile->WriteTObject(h2);
+  outFile->WriteTObject(h3);
+  outFile->WriteTObject(h4);
+  outFile->WriteTObject(h5);
+  outFile->WriteTObject(h5cut);
+  outFile->WriteTObject(h5nopri);
+  outFile->WriteTObject(h5nomip);
+  
+  outFile->WriteTObject(hprotons);
+  outFile->WriteTObject(hneutrons);
+  outFile->WriteTObject(hgamma);
+  outFile->WriteTObject(hisotopes);
+  outFile->WriteTObject(helectron);
+  outFile->WriteTObject(hpositron);
+  outFile->WriteTObject(helectronmu);
+  outFile->WriteTObject(hpi);
+  outFile->WriteTObject(hk);
 
   outFile->WriteTObject(h_time_res15);
   outFile->WriteTObject(h_time_meas15);
@@ -520,7 +518,7 @@ int main(int argc, char **argv) {
     outFile->WriteTObject(h_energy_calo);
   }
   
-  //outFile->WriteTObject(h_pos_res);
+  outFile->WriteTObject(h_pos_res);
 
   outFile->Close();
 
