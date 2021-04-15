@@ -83,8 +83,6 @@ for example:
 ```
 `DataAnalysis` output will be `AnaOut.root`
 
-(a working example can be found in `useful_command/digit_analyze.sh`)
-
 and
 ```
 ./exe/DataAnalysis_calo [output file name] <input file name 1> <input file name 2> ... [nominal energy] [min deposited energy] [max deposited energy]
@@ -99,5 +97,3 @@ The command requires three additional arguments:
 ./exe/DataAnalysis_calo AnaOut.root DigitOut.root <nominal energy in GeV> <E calo min in GeV> <E calo max in GeV>
 ```
 where `Ecalo_min` and `Ecalo_max` are needed to consider hit times only if in the specified energy range. The `beam_energy` par is just used to create the binning of the energy histos. 
-
-(a working example can be found in `useful_command/digit_analyze.sh`)
