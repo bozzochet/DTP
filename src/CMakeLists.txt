@@ -119,14 +119,15 @@ set_target_properties(DataAnalysis PROPERTIES
 install(TARGETS DataAnalysis DESTINATION "${INSTALL_BIN_DIR}")
 
 #################
+### same source as before! just to have twice the same exe... ###
 
-set(DataAnalysis_calo_SRC
-	DataAnalysis_calo.cpp
+set(DataAnalysis_SRC
+	DataAnalysis.cpp
   info.cpp
 	G__TrCluster.cxx
 )
 
-add_executable(DataAnalysis_calo ${DataAnalysis_calo_SRC})
+add_executable(DataAnalysis_calo ${DataAnalysis_SRC})
 target_link_libraries(DataAnalysis_calo
   ${ROOT_LIBRARIES}
   ${GGS_ANALYSIS_LIBRARIES}

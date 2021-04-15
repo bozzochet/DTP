@@ -39,19 +39,57 @@ int main(int argc, char **argv) {
   static const string routineName("DataAnalysis::main");
   GGSSmartLog::verboseLevel = GGSSmartLog::INFO; // Print only INFO messages or more important
 
+  bool _calo_flag=false;
+  TString ExeName = argv[0];
+  if (ExeName.EndsWith("_calo")) _calo_flag=true;
 
-  TString inputFileName = argv[1];
+  if (!_calo_flag) {
+    if (argc<3) {
+      COUT(ERROR) << "You need to pass at least an input file name and an output one" << ENDL;
+      COUT(ERROR) << argv[0] << " [output file name] <input file name 1> <input file name 2> ..." << ENDL;
+      return -1;
+    }
+  }
+  else {
+    if(argc < 6) {
+      COUT(ERROR) << "You need to pass at least an input file name and an output one, the nominal energy and the selection ones" << ENDL;
+      COUT(ERROR) << argv[0] << " [output file name] <input file name 1> <input file name 2> ... [nominal energy] [min deposited energy] [max deposited energy]" << ENDL;
+      return -1;
+    }
+  } 
+  
+  TString outFileName = argv[1];
+  
+  TChain *events_tree = new TChain("events");
+  TChain *meas_tree = new TChain("measures");
+  TChain *calo_tree = new TChain("calorimeter");
+  TChain *geo_tree = new TChain("geometry");
+  
+  TString inputFileName = argv[2];
   COUT(INFO) <<"Opening input file " <<inputFileName <<"..." <<ENDL;
   auto inFile = TFile::Open(inputFileName);
 
 
-  TString outFileName;
+  int shift=2;
+  for (shift; shift<argc; shift++) {
+    TString inputFileName = argv[shift];
+    //    printf("%d) %s\n", shift, argv[shift]);
 
-  if(argc < 3)
-    outFileName = "histos.root";
-  else
-    outFileName = argv[2];
+    if (inputFileName.IsDigit()) {
+      break;//input files are over
+    }
+    
+    COUT(INFO) <<"Opening TTree objects in " <<inputFileName <<"..." <<ENDL;
+    
+    events_tree->Add(argv[shift]);
+    meas_tree->Add(argv[shift]);
+    if (_calo_flag) {
+      calo_tree->Add(argv[shift]);
+    }
+    geo_tree->Add(argv[shift]);
+  }
 
+  
   COUT(INFO) <<"Recreating output file " <<outFileName <<"..." <<ENDL;
   TFile *outFile = new TFile(outFileName, "recreate");
 
@@ -77,7 +115,29 @@ int main(int argc, char **argv) {
   TH1F *helectronmu = new TH1F("muoni", "muoni", 1000, 0, 4);
   TH1F *hpi = new TH1F("pi", "pi", 1000, 0, 4);
   TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
-
+  
+  //in the following definitions:
+  // - argv[3] must contain energy of the beam (in macros/run.mac)
+  // - slow histos store slowest hits for each event
+  // - meas histos store quantities measured by Time and Pos libraries
+  // - energy_calo hist stores energy deposited in the calorimeter,
+  //     while time_calo stores quantities referred to events where
+  //     energy deposited in calorimeter is in the range [argv(4),argv(5)]
+  
+  //argv are expressed in GeV
+  energy_t beam_energy = -999999;
+  energy_t Ecalo_min = -999999;
+  energy_t Ecalo_max = -999999;
+  
+  if (_calo_flag){
+    beam_energy = std::atof(argv[shift]) * 1e+9;
+    Ecalo_min = std::atof(argv[shift+1]) * 1e+9;
+    Ecalo_max = std::atof(argv[shift+2]) * 1e+9;
+    printf("%f %f %f\n", beam_energy, Ecalo_min, Ecalo_max);
+  }
+  
+  //histos
+  
   //MC
 
   TH1F *h_time_MC = new TH1F
@@ -113,6 +173,27 @@ int main(int argc, char **argv) {
   TH1F *h_pos_res = new TH1F
     ("h_pos_res", ";x_meas - x_true [cm];", 1000, -20, 20);
 
+  //calo
+
+  TH1F *h_time_calo = NULL;
+  TH1F *h_time_calo_slow = NULL;
+  TH1F *h_energy_calo = NULL;
+  
+  if (_calo_flag) {
+    
+    h_time_calo = new TH1F
+      ("h_time_calo", ";log10(t / ns);", 1000, 0, 4);
+    
+    h_time_calo_slow = new TH1F
+      ("h_time_calo_slow", ";log10(t / ns);", 1000, 0, 4);
+    
+    h_energy_calo = new TH1F
+      (
+       "h_energy_calo", ";energy [GeV];",
+       1000, 0, beam_energy * 1e-9
+       );
+  }
+  
   //end of histos
 
 
@@ -137,27 +218,19 @@ int main(int argc, char **argv) {
 
   */
 
-
-  COUT(INFO) <<"Opening TTree objects in " <<inputFileName <<"..." <<ENDL;
-
-  TTree *events_tree;
-  inFile->GetObject("events", events_tree);
   events_tree->Print();
 
   TClonesArray *a = new TClonesArray("TrCluster", 200);
   events_tree->SetBranchAddress("Events", &a);
 
-
-  TTree *meas_tree;
-  inFile->GetObject("measures", meas_tree);
-
   measure meas;
   meas_tree->SetBranchAddress("Measures", &meas);
 
-
-  TTree *geo_tree;
-  inFile->GetObject("geometry", geo_tree);
-
+  energy_t Ecalo;
+  if (_calo_flag) {
+    calo_tree->SetBranchAddress("Events", &Ecalo);
+  }
+  
   Geometry geo;
   geo_tree->SetBranchAddress("Geometry", &geo);
   geo_tree->GetEntry(0);
@@ -200,6 +273,12 @@ int main(int argc, char **argv) {
 
     events_tree->GetEntry(i);
 
+    if (_calo_flag) {
+      calo_tree->GetEntry(i);
+      
+      h_energy_calo->Fill(Ecalo * 1e-9);
+    }
+    
     /*
       if (a->GetEntries()>10) {
       printf("\nEvent %d: %d hits\n", i, a->GetEntries());
@@ -282,6 +361,11 @@ int main(int argc, char **argv) {
 	      h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
 	      h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
 
+	      if (_calo_flag) {
+		if(Ecalo <= Ecalo_max && Ecalo >= Ecalo_min)
+		  h_time_calo->Fill(TMath::Log10(1e+9 * meas.time[m]));
+	      }
+
 	      v_slow_meas.push_back(meas.time[m]);
 	    }
 
@@ -313,6 +397,19 @@ int main(int argc, char **argv) {
        (1e+9 * TMath::MaxElement(v_slow_meas.size(), &v_slow_meas[0]))
        );
 
+    if (_calo_flag) {
+      if(Ecalo <= Ecalo_max && Ecalo >= Ecalo_min) {
+	h_time_calo_slow->Fill
+	  (
+	   TMath::Log10
+	   (
+	    1e+9 *
+	    TMath::MaxElement(v_slow_meas.size(), &v_slow_meas[0])
+	    )
+	   );
+      }
+    }
+    
   } //for i
 
 
@@ -412,10 +509,17 @@ int main(int argc, char **argv) {
   outFile->WriteTObject(h_time_res15);
   outFile->WriteTObject(h_time_meas15);
   outFile->WriteTObject(h_time_meas15_slow);
-
+  if (_calo_flag){
+    outFile->WriteTObject(h_time_calo);
+    outFile->WriteTObject(h_time_calo_slow);
+  }
+  
   outFile->WriteTObject(h_energy_res);
   outFile->WriteTObject(h_energy_meas);
-
+  if (_calo_flag){
+    outFile->WriteTObject(h_energy_calo);
+  }
+  
   //outFile->WriteTObject(h_pos_res);
 
   outFile->Close();
