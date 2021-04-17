@@ -7,11 +7,11 @@
 #ifndef GEOMETRY_INCLUDE
 #define GEOMETRY_INCLUDE
 
-
+#include "TObject.h"
 #include "physics.h"
 
 
-class Geometry {
+class Geometry: public TObject {
 
 public:
   length_t CaloSide = -1;
@@ -32,7 +32,8 @@ public:
     squareSide = pitch * Nstrips;
     Nladders = Nsquares * Nrows * Nlayers;
   }
-  
+
+  ClassDef(Geometry, 2)
 };
 
 

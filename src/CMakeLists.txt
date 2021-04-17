@@ -65,6 +65,23 @@ if (${ROOT_VERSION} VERSION_GREATER "6.0")
       DESTINATION "${INSTALL_LIB_DIR}")
 endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 
+include( ${ROOT_USE_FILE} )
+#include("${ROOT_DIR}/modules/RootNewMacros.cmake")
+root_generate_dictionary(G__Geometry
+			Geometry.h
+			LINKDEF ${CMAKE_SOURCE_DIR}/include/Geometry_linkdef.h
+			MODULE Geometry
+			)
+
+#Install the ROOT 6 PCM and rootmap files.
+if (${ROOT_VERSION} VERSION_GREATER "6.0")
+   install(
+      FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/libGeometry_rdict.pcm
+      ${CMAKE_CURRENT_BINARY_DIR}/libGeometry.rootmap
+      DESTINATION "${INSTALL_LIB_DIR}")
+endif (${ROOT_VERSION} VERSION_GREATER "6.0")
+
 ######################### EXTRA LIBS #########################
 
 set(DIGIT_SRC TimeSim.cpp PosSim.cpp TimeSegm.cpp)
@@ -83,6 +100,7 @@ set(Digitization_SRC
 	Digitization.cpp
   info.cpp
 	G__TrCluster.cxx
+	G__Geometry.cxx
 )
 
 add_executable(Digitization ${Digitization_SRC})
@@ -104,6 +122,7 @@ set(DataAnalysis_SRC
 	DataAnalysis.cpp
   info.cpp
 	G__TrCluster.cxx
+	G__Geometry.cxx
 )
 
 add_executable(DataAnalysis ${DataAnalysis_SRC})
@@ -125,6 +144,7 @@ set(DataAnalysis_SRC
 	DataAnalysis.cpp
   info.cpp
 	G__TrCluster.cxx
+	G__Geometry.cxx
 )
 
 add_executable(DataAnalysis_calo ${DataAnalysis_SRC})

@@ -102,7 +102,7 @@ int main(int argc, char **argv)
   //geometry
 
   const GGSTGeoParams *GEO = reader.GetGeoParams();
-  Geometry *geo = new Geometry;
+  Geometry *geo = new Geometry();
 
   geo->CaloSide = GEO->GetIntGeoParam("CaloSide");
   geo->CaloStkGap = GEO->GetIntGeoParam("CaloStkGap");
@@ -180,10 +180,7 @@ int fillGeoTree(TTree *geo_tree, TDirectory* outFile, Geometry *geo)
   COUT(INFO) <<ENDL;
   COUT(INFO) <<"Saving geometric parameters..." <<ENDL;
 
-  geo_tree->Branch
-    (
-     "Geometry", &geo
-     );
+  geo_tree->Branch("Geometry", &geo);
   
   outFile->cd();
   geo_tree->Fill();

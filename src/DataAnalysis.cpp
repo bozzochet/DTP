@@ -273,8 +273,11 @@ int main(int argc, char **argv) {
   }
   
   Geometry geo;
-  geo_tree->SetBranchAddress("Geometry", &geo);
+  Geometry* p_geo = &geo;
+  geo_tree->SetBranchAddress("Geometry", &p_geo);
+  /* in Apr 2021 the object was saved wrongly inm Digitazion: skipping for now. To be restored after the MDPI paper
   geo_tree->GetEntry(0);
+  */
 
   geo.ComputeDerived();
   
@@ -297,7 +300,6 @@ int main(int argc, char **argv) {
 
   COUT(INFO) <<ENDL;
   COUT(INFO) <<"Begin loop over " <<events_tree->GetEntries() <<ENDL;
-
 
   int iMeas = 0; //iterator for meas_tree
 
