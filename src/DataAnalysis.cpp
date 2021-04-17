@@ -1,4 +1,8 @@
-//#include "DEBUG.h"
+//#define _DEBUG_
+
+#ifdef _DEBUG_
+#include "DEBUG.h"
+#endif
 #include "physics.h"
 #include "vector2.h"
 #include "info.h"
@@ -30,12 +34,15 @@
 
 using namespace std;
 
-
+#define SIGNAL_THRESHOLD 8.0*300.0*ENERGY_COUPLE
+#define TIME_RESOLUTION 1.0E-9*0.1
 
 int main(int argc, char **argv) {
 
-  //debug::start_debug(); //DEBUG.h
-
+#ifdef _DEBUG_
+  debug::start_debug(); //DEBUG.h
+#endif
+  
   static const string routineName("DataAnalysis::main");
   GGSSmartLog::verboseLevel = GGSSmartLog::INFO; // Print only INFO messages or more important
 
@@ -64,14 +71,9 @@ int main(int argc, char **argv) {
   TChain *meas_tree = new TChain("measures");
   TChain *calo_tree = new TChain("calorimeter");
   TChain *geo_tree = new TChain("geometry");
-  
-  TString inputFileName = argv[2];
-  COUT(INFO) <<"Opening input file " <<inputFileName <<"..." <<ENDL;
-  auto inFile = TFile::Open(inputFileName);
-
 
   int shift=2;
-  for (shift; shift<argc; shift++) {
+  for (shift=2; shift<argc; shift++) {
     TString inputFileName = argv[shift];
     //    printf("%d) %s\n", shift, argv[shift]);
 
@@ -92,29 +94,82 @@ int main(int argc, char **argv) {
   
   COUT(INFO) <<"Recreating output file " <<outFileName <<"..." <<ENDL;
   TFile *outFile = new TFile(outFileName, "recreate");
+  outFile->cd();
 
   COUT(INFO) <<"Creating histos..." <<ENDL;
   
-  TH1F *h = new TH1F("disttemp", "disttemp", 100, -0.5, 0.5);
-  TH1F *h1 = new TH1F("bt", "bt", 1000, 0, 2);
-  TH1F *h2 = new TH1F("btls", "btls", 1000, 0, 2000);
-  TH1F *h3 = new TH1F("btls_log", "btls_log", 1000, 0, 4);
-  TH1F *h4 = new TH1F("bt_sim", "bt_sim", 1000, 0, 2);
-  TH1F *h5 = new TH1F("btls_sim", "btls_sim", 1500, 0, 15);
-  TH1F *h5cut = new TH1F("btls_sim_cut", "btls_sim_cut", 1500, 0, 15);
-  TH1F *h5nopri = new TH1F("btls_sim_nopri", "btls_sim_nopri", 1500, 0, 15);
-  TH1F *h5nomip = new TH1F("btls_sim_nomip", "btls_sim_nomip", 1500, 0, 15);
+  TH1F *pri_deltat_wrt_mean = new TH1F("pri_deltat_wrt_mean", "#{Delta}t wrt mean (primary)", 100, -0.5, 0.5);
+  TH1F *pri_deltat_wrt_start = new TH1F("pri_deltat_wrt_start", "#{Delta}t wrt start (primary)", 1001, -2.0/1000.0, 2);
+  TH1F *pri_deltat_wrt_start_longscale = new TH1F("pri_deltat_wrt_start_longscale", "#{Delta}t wrt start (primary)", 1001, -2000.0/1000.0, 2000);
+  TH1F *pri_deltat_wrt_start_log = new TH1F("pri_deltat_wrt_start_log", "#{Delta}t wrt start (primary) (log)", 1000, 0, 4);
   
-  TH1F *hprotons = new TH1F("protoni", "protoni", 1000, 0, 4);
-  TH1F *hantip = new TH1F("antiprotoni", "antiprotoni", 1000, 0, 4);
-  TH1F *hneutrons = new TH1F("neutroni", "neutroni", 1000, 0, 4);
-  TH1F *hgamma = new TH1F("fotoni", "gamma", 1000, 0, 4);
-  TH1F *hisotopes = new TH1F("isotopo", "isotopo", 1000, 0, 4);
-  TH1F *helectron = new TH1F("elettroni", "elettroni", 1000, 0, 4);
-  TH1F *hpositron = new TH1F("positroni", "positroni", 1000, 0, 4);
-  TH1F *helectronmu = new TH1F("muoni", "muoni", 1000, 0, 4);
-  TH1F *hpi = new TH1F("pi", "pi", 1000, 0, 4);
-  TH1F *hk = new TH1F("k", "kaoni", 1000, 0, 4);
+  TH1F *deltat_wrt_start = new TH1F("deltat_wrt_start", "#{Delta}t wrt start", 1001, -2.0/1000.0, 2);
+  TH1F *deltat_wrt_start_longscale = new TH1F("deltat_wrt_start_longscale", "#{Delta}t wrt start", 1001, -2000.0/1000.0, 2000);
+  TH1F *deltat_wrt_start_log = new TH1F("deltat_wrt_start_log", "#{Delta}t wrt start (log)", 1000, 0, 4);
+  
+  TH1F *deltat_smeared_wrt_start = new TH1F("deltat_smeared_wrt_start", "#{Delta}t (smeared) wrt start", 1001, -2.0/1000.0, 2);
+  TH1F *deltat_smeared_wrt_start_longscale = new TH1F("deltat_smeared_wrt_start_longscale", "#{Delta}t (smeared) wrt start", 1001, -2000.0/1000.0, 2000);
+  TH1F *deltat_smeared_wrt_start_log = new TH1F("deltat_smeared_wrt_start_log", "#{Delta}t (smeared) wrt start (log)", 1000, 0, 4);
+
+  TH1F *nopri_deltat_smeared_wrt_start = new TH1F("nopri_deltat_smeared_wrt_start", "#{Delta}t (smeared) wrt start (no primaries)", 1001, -2.0/1000.0, 2);
+  TH1F *nopri_deltat_smeared_wrt_start_longscale = new TH1F("nopri_deltat_smeared_wrt_start_longscale", "#{Delta}t (smeared) wrt start (no primaries)", 1001, -2000.0/1000.0, 2000);
+  TH1F *nopri_deltat_smeared_wrt_start_log = new TH1F("nopri_deltat_smeared_wrt_start_log", "#{Delta}t (smeared) wrt start (no primaries) (log)", 1000, 0, 4);
+  
+  TH1F *nomip_deltat_smeared_wrt_start = new TH1F("nomip_deltat_smeared_wrt_start", "#{Delta}t (smeared) wrt start (no MIP)", 1001, -2.0/1000.0, 2);
+  TH1F *nomip_deltat_smeared_wrt_start_longscale = new TH1F("nomip_deltat_smeared_wrt_start_longscale", "#{Delta}t (smeared) wrt start (no MIP)", 1001, -2000.0/1000.0, 2000);
+  TH1F *nomip_deltat_smeared_wrt_start_log = new TH1F("nomip_deltat_smeared_wrt_start_log", "#{Delta}t (smeared) wrt start (no MIP) (log)", 1000, 0, 4);
+
+  TH1F *slower_deltat_wrt_start = new TH1F("slower_deltat_wrt_start", "#{Delta}t (slower) wrt start", 1001, -2.0/1000.0, 2);
+  TH1F *slower_deltat_wrt_start_longscale = new TH1F("slower_deltat_wrt_start_longscale", "#{Delta}t (slower) wrt start", 1001, -2000.0/1000.0, 2000);
+  TH1F *slower_deltat_wrt_start_log = new TH1F("slower_deltat_wrt_start_log", "#{Delta}t (slower) wrt start (log)", 1000, 0, 4);
+
+  TH1F *slower_deltat_smeared_wrt_start = new TH1F("slower_deltat_smeared_wrt_start", "#{Delta}t (slower-smeared) wrt start", 1001, -2.0/1000.0, 2);
+  TH1F *slower_deltat_smeared_wrt_start_longscale = new TH1F("slower_deltat_smeared_wrt_start_longscale", "#{Delta}t (slower-smeared) wrt start", 1001, -2000.0/1000.0, 2000);
+  TH1F *slower_deltat_smeared_wrt_start_log = new TH1F("slower_deltat_smeared_wrt_start_log", "#{Delta}t (slower-smeared) wrt start (log)", 1000, 0, 4);
+  
+  TH1F *primaries = new TH1F("primaries", "primaries", 1000, 0, 4);
+  primaries->SetLineColor(kBlack);
+  primaries->SetMarkerColor(kBlack);
+  
+  TH1F *protons = new TH1F("protons", "protons", 1000, 0, 4);
+  protons->SetLineColor(kGreen+2);
+  protons->SetMarkerColor(kGreen+2);
+  
+  TH1F *antip = new TH1F("antip", "antiprotons", 1000, 0, 4);
+  antip->SetLineColor(kYellow+2);
+  antip->SetMarkerColor(kYellow+2);
+  
+  TH1F *neutrons = new TH1F("neutrons", "neutrons", 1000, 0, 4);
+  neutrons->SetLineColor(kOrange+3);
+  neutrons->SetMarkerColor(kOrange+3);
+  
+  TH1F *gamma = new TH1F("gamma", "gamma", 1000, 0, 4);
+  gamma->SetLineColor(kCyan);
+  gamma->SetMarkerColor(kCyan);
+  
+  TH1F *isotopes = new TH1F("isotopes", "isotopes", 1000, 0, 4);
+  isotopes->SetLineColor(kOrange-8);
+  isotopes->SetMarkerColor(kOrange-8);
+  
+  TH1F *electrons = new TH1F("electrons", "electrons", 1000, 0, 4);
+  electrons->SetLineColor(kBlue);
+  electrons->SetMarkerColor(kBlue);
+  
+  TH1F *positrons = new TH1F("positrons", "positrons", 1000, 0, 4);
+  positrons->SetLineColor(kRed+2);
+  positrons->SetMarkerColor(kRed+2);
+  
+  TH1F *muons = new TH1F("muons", "muons", 1000, 0, 4);
+  muons->SetLineColor(kAzure+1);
+  muons->SetMarkerColor(kAzure+1);
+  
+  TH1F *pions = new TH1F("pions", "pions", 1000, 0, 4);
+  pions->SetLineColor(kOrange+7);
+  pions->SetMarkerColor(kOrange+7);
+  
+  TH1F *kaons = new TH1F("kaons", "kaons", 1000, 0, 4);
+  kaons->SetLineColor(kMagenta);
+  kaons->SetMarkerColor(kMagenta);
   
   //in the following definitions:
   // - argv[3] must contain energy of the beam (in macros/run.mac)
@@ -165,7 +220,7 @@ int main(int argc, char **argv) {
   //resolutions
 
   TH1F *h_time_res15 = new TH1F
-    ("h_time_res15", ";t_meas - t_true [ns];", 1000, 0, 1);
+    ("h_time_res", ";t_meas - t_true [ns];", 1000, 0, 1);
 
   TH1F *h_energy_res = new TH1F
     ("h_energy_res", ";E_meas - E_true [keV];", 1000, -150, 150);
@@ -175,23 +230,10 @@ int main(int argc, char **argv) {
 
   //calo
 
-  TH1F *h_time_calo = NULL;
-  TH1F *h_time_calo_slow = NULL;
   TH1F *h_energy_calo = NULL;
   
-  if (_calo_flag) {
-    
-    h_time_calo = new TH1F
-      ("h_time_calo", ";log10(t / ns);", 1000, 0, 4);
-    
-    h_time_calo_slow = new TH1F
-      ("h_time_calo_slow", ";log10(t / ns);", 1000, 0, 4);
-    
-    h_energy_calo = new TH1F
-      (
-       "h_energy_calo", ";energy [GeV];",
-       1000, 0, beam_energy * 1e-9
-       );
+  if (_calo_flag) {    
+    h_energy_calo = new TH1F("h_energy_calo", ";energy [GeV];", 1000, 0, beam_energy * 1e-9);
   }
   
   //end of histos
@@ -199,8 +241,7 @@ int main(int argc, char **argv) {
 
   TRandom3 *tr = new TRandom3();
   tr->SetSeed(time(NULL));
-  vector2<TrCluster> v;
-
+  
   /*
 
     Passing the parameters from DetectorConstruction.cc, not working yet
@@ -260,23 +301,25 @@ int main(int argc, char **argv) {
 
   int iMeas = 0; //iterator for meas_tree
 
-
   //lost measures counters
 
-  int energy_lost = 0;
-  int position_lost = 0;
-
+  int energy_lost = 0;//energy measured < 0
+  int position_lost = 0;//|position measured| < 1 (to be re-thought)
 
   for (int i = 0; i < events_tree->GetEntries(); i++) {
-
-    v.resize(geo.Nlayers);
-
+    
+    vector2<TrCluster> v;
+    //    v.resize(geo.Nlayers);
+    v.resize(10);//there's a bug and the values of geo are not retrieved correctly
+    
     events_tree->GetEntry(i);
 
     if (_calo_flag) {
       calo_tree->GetEntry(i);
       
       h_energy_calo->Fill(Ecalo * 1e-9);
+ 
+      if (Ecalo <= Ecalo_max && Ecalo >= Ecalo_min) continue;
     }
     
     /*
@@ -289,13 +332,11 @@ int main(int argc, char **argv) {
       }
     */
 
-
-    //measured times for particle i;
+    //measured times for primary/event i;
     //the slowest is used afterwards to fill h_time_meas15_slow
     //and h_time_MC_slow
-    std::vector<mytime_t> v_slow;
-    std::vector<mytime_t> v_slow_meas;
-
+    std::vector<mytime_t> v_times;
+    std::vector<mytime_t> v_times_meas;
 
     for (int j = 0; j < a->GetEntries(); j++) {
 
@@ -306,8 +347,7 @@ int main(int argc, char **argv) {
 
       h_time_MC->Fill(TMath::Log10(1e+9 * cl->time));
 
-      v_slow.push_back(cl->time);
-
+      v_times.push_back(cl->time);
 
       /* while Events branch work with two indexes (i,j),
        * Measures branch was filled with one index and contains
@@ -321,209 +361,238 @@ int main(int argc, char **argv) {
 
       //scan energies clust and measures
 
-      for(int m=0; m<2; ++m)
-	{
-	  h_energy_MC->Fill(cl->clust[m] * 1e-6);
+      for (int m=0; m<2; ++m) { //the clusters are two since there're the two strips around the hit position
+	//most likely for the timing this is even correct (at leat when there's no "grouping")
+	//but for the energy this is WRONG
 
-	  /* DEBUG.h
-	     debug::out <<"\ni: " <<i <<" j: " <<j <<" m: " <<m;
+	static double ene_true = 0;
+	static double ene_meas = 0;
+	if (m==0) {
+	  ene_true = cl->clust[m];
+	  ene_meas = meas.energy[m];
+	}
+	else {
+	  ene_true += cl->clust[m];
+	  ene_meas += meas.energy[m];
+	}
 
-	     debug::out <<"\n\tE: " <<cl->clust[m];
-	     debug::out <<"\n\tE + noise: " <<meas.energy[m];
-	     debug::out <<"\n\tt: " <<cl->time;
-	     debug::out <<"\n\tt meas: " <<meas.time[m];
-	     debug::out <<"\n\tpos: " <<cl->pos[cl->xy];
-	     debug::out <<"\n\tpos meas: " <<meas.position;
+	if (m==1) {
+	  h_energy_MC->Fill(ene_true * 1e-6);
+	}
+	
+#ifdef _DEBUG_
+	debug::out <<"\ni: " <<i <<" j: " <<j <<" m: " <<m;
+	
+	debug::out <<"\n\tE: " <<cl->clust[m];
+	debug::out <<"\n\tE + noise: " <<meas.energy[m];
+	debug::out <<"\n\tt: " <<cl->time;
+	debug::out <<"\n\tt meas: " <<meas.time[m];
+	debug::out <<"\n\tpos: " <<cl->pos[cl->xy];
+	debug::out <<"\n\tpos meas: " <<meas.position;
+	
+	debug::out <<std::endl;
+#endif	 
+	
+	//analyze valid measures
 
-	     debug::out <<std::endl;
-	  */
-
-	  //analyze valid measures
-
-	  if(meas.energy[m] > 0)
-	    {
-	      h_energy_meas->Fill(meas.energy[m] * 1e-6);
-	      h_energy_res->Fill(1e-3 * (meas.energy[m] - cl->clust[m]));
-	    }
-	  else
+	if (m==1) {
+	  if(ene_meas > 0) {
+	    h_energy_meas->Fill(ene_meas * 1e-6);
+	    h_energy_res->Fill(1e-3 * (ene_meas - ene_true));
+	  }
+	  else {
 	    ++energy_lost;
-
-	  // In the next "if" is used for energy a threshold
-	  // proportional to CHARGE_NOISE_DEV_ variable defined in
-	  // TimeSim.h.
-	  // Digitization executable does not save TimeSim object
-	  // parameters used to generate time measures.
-	  // Would be better that Digitization saves TimeSim parameters
-	  // to read them in analysis.
-
-	  if(meas.time[m] >= 0 && meas.energy[m] > 8*300*ENERGY_COUPLE)
-	    {
-	      h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
-	      h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
-
-	      if (_calo_flag) {
-		if(Ecalo <= Ecalo_max && Ecalo >= Ecalo_min)
-		  h_time_calo->Fill(TMath::Log10(1e+9 * meas.time[m]));
-	      }
-
-	      v_slow_meas.push_back(meas.time[m]);
-	    }
-
-	} //for m
-
-
+	  }
+	}
+	
+	// In the next "if" is used for energy a threshold
+	// proportional to CHARGE_NOISE_DEV_ variable defined in
+	// TimeSim.h.
+	// Digitization executable does not save TimeSim object
+	// parameters used to generate time measures.
+	// Would be better that Digitization saves TimeSim parameters
+	// to read them in analysis.
+	
+	if(meas.time[m] >= 0 && meas.energy[m] > SIGNAL_THRESHOLD) {//the cut is on the single energy measurement since the zero suppression is applied on this
+	  h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
+	  h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
+	  
+	  v_times_meas.push_back(meas.time[m]);
+	}
+	
+      } //for m
+      
       //read only valid position measures without lost ones
-
-      if(TMath::Abs(meas.position) < 1)
+      
+      if (TMath::Abs(meas.position) < 1)
 	// this "if" is a temporary fix for Digitization bug:
 	// Digitization.cpp,  line 424
         h_pos_res->Fill(1e+2 * (meas.position - cl->pos[cl->xy]));
       else
         ++position_lost;
-
+      
     } //for j
-
 
     //fill slow hit
 
-    h_time_MC_slow->Fill
-      (
-       TMath::Log10(1e+9 * TMath::MaxElement(v_slow.size(), &v_slow[0]))
-       );
-
-    h_time_meas15_slow->Fill
-      (
-       TMath::Log10
-       (1e+9 * TMath::MaxElement(v_slow_meas.size(), &v_slow_meas[0]))
-       );
-
-    if (_calo_flag) {
-      if(Ecalo <= Ecalo_max && Ecalo >= Ecalo_min) {
-	h_time_calo_slow->Fill
-	  (
-	   TMath::Log10
-	   (
-	    1e+9 *
-	    TMath::MaxElement(v_slow_meas.size(), &v_slow_meas[0])
-	    )
-	   );
+    mytime_t slower = TMath::MaxElement(v_times.size(), &v_times[0]);
+    mytime_t slower_meas = TMath::MaxElement(v_times_meas.size(), &v_times_meas[0]);
+    
+    h_time_MC_slow->Fill(TMath::Log10(1e+9 * slower));
+    h_time_meas15_slow->Fill(TMath::Log10(1e+9 * slower_meas));
+    
+    // Find tStart and tMean
+    
+    float tStart = v[0][0].time;
+    float tMean = 0;
+    int _n = 0;
+    for (auto il : v) {
+      for (auto hit : il) {
+	if (tStart>hit.time) tStart = hit.time;
+	if (hit.parID != 0) continue;
+	tMean += hit.time;
+	_n++;
       }
     }
+    tMean /= _n;
+        
+    //Particle identification
+    
+    for (int il = 0; il<(int)(v.size()); il++) { //layer
+      for (int hit = 0; hit<(int)(v[il].size()); hit++) { //hit	
+	if (v[il][hit].clust[0]>SIGNAL_THRESHOLD || v[il][hit].clust[1]>SIGNAL_THRESHOLD) {
+	  
+	  if (v[il][hit].parID == 0) {
+	    primaries->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart )));
+	  }
+	  else {
+	    if (
+		v[il][hit].parPdg == 2212 //proton
+		)
+	      protons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart )));
+	    
+	    if (
+		v[il][hit].parPdg == -2212 //antiproton
+		)
+	      antip->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
+	    
+	    if (
+		v[il][hit].parPdg == 2112 //neeutron
+		)
+	      neutrons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
+	    
+	    if (
+		v[il][hit].parPdg == 11 //electron
+		)
+	      electrons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
+	    
+	    if (
+		v[il][hit].parPdg == -11 //positron
+		)
+	      positrons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
+	    
+	    if (
+		v[il][hit].parPdg == 211 //pi+
+		||
+		v[il][hit].parPdg == -211 //pi-
+		)
+	      pions->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
+	    
+	    if (
+		v[il][hit].parPdg == 130 //K0L
+		||
+		v[il][hit].parPdg == 310 //K0S
+		||
+		v[il][hit].parPdg == 311 //K0
+		||
+		v[il][hit].parPdg == 321 //K+ 
+		||
+		v[il][hit].parPdg == -321 //K-
+		)
+	      kaons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
+	    
+	    if (
+		v[il][hit].parPdg == 13 //mu-
+		||
+		v[il][hit].parPdg == -13 //mu+
+		)
+	      muons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
+	    
+	    if (
+		v[il][hit].parPdg == 22 //gamma
+		)
+	      gamma->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
+	    
+	    if (
+		v[il][hit].parPdg > 1000000000 //isotopes
+		)
+	      isotopes->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
+	  }
+	  
+	  //time
+	  double deltat = v[il][hit].time - tStart;
+	  double smeared_deltat = tr->Gaus(deltat, TIME_RESOLUTION);
+	  double deltat_mean = v[il][hit].time - tMean;
+	  
+	  deltat_wrt_start->Fill(1e+9 * deltat);
+	  deltat_wrt_start_longscale->Fill(1e+9 * deltat);
+	  deltat_wrt_start_log->Fill(log10(1.0 + 1e+9 * deltat));
+	  
+	  deltat_smeared_wrt_start->Fill(1e+9 * smeared_deltat);
+	  deltat_smeared_wrt_start_longscale->Fill(1e+9 * smeared_deltat);
+	  deltat_smeared_wrt_start_log->Fill(log10(1.0 + 1e+9 * smeared_deltat));
+
+	  if (v[il][hit].parID == 0) {
+	    pri_deltat_wrt_mean->Fill(1e+9 * deltat_mean);
+	    pri_deltat_wrt_start->Fill(1e+9 * deltat);
+	    pri_deltat_wrt_start_longscale->Fill(1e+9 * deltat);
+	    pri_deltat_wrt_start_log->Fill(log10(1.0 + 1e+9 * deltat));
+	  }
+	  else {
+	    nopri_deltat_smeared_wrt_start->Fill(1e+9 * smeared_deltat);
+	    nopri_deltat_smeared_wrt_start_longscale->Fill(1e+9 * smeared_deltat);
+	    nopri_deltat_smeared_wrt_start_log->Fill(log10(1.0 + 1e+9 * smeared_deltat));
+	  }
+	  
+	  if (v[9].size()>5) {//MD: v[9] is the last layer. Maybe the point is "iff the activity is low"
+	    nomip_deltat_smeared_wrt_start->Fill(1e+9 * smeared_deltat);
+	    nomip_deltat_smeared_wrt_start_longscale->Fill(1e+9 * smeared_deltat);
+	    nomip_deltat_smeared_wrt_start_log->Fill(log10(1.0 + 1e+9 * smeared_deltat));
+	  }
+
+	}
+      }
+    }
+
+    double deltat_slower = slower - tStart;
+    double smeared_deltat_slower = tr->Gaus(deltat_slower, TIME_RESOLUTION);
+
+    slower_deltat_wrt_start->Fill(1e+9 * deltat_slower);
+    slower_deltat_wrt_start_longscale->Fill(1e+9 * deltat_slower);
+    slower_deltat_wrt_start_log->Fill(log10(1.0 + 1e+9 * deltat_slower));
+    
+    slower_deltat_smeared_wrt_start->Fill(1e+9 * smeared_deltat_slower);
+    slower_deltat_smeared_wrt_start_longscale->Fill(1e+9 * smeared_deltat_slower);
+    slower_deltat_smeared_wrt_start_log->Fill(log10(1.0 + 1e+9 * smeared_deltat_slower));
     
   } //for i
-
-
+  
   COUT(INFO) <<ENDL;
-
-  COUT(INFO) <<"Lost energies:  " <<energy_lost <<" on " <<iMeas*2
-	     <<ENDL;
-
-  COUT(INFO) <<"Lost positions: " <<position_lost <<" on " <<iMeas
-	     <<ENDL;
-
-
-  // Find tStart and tMean
-
-  float tStart = v[0][0].time;
-  float tMean = 0;
-  int _n = 0;
-  for (auto il : v) {
-    for (auto hit : il) {
-      if(tStart>hit.time) tStart = hit.time;
-      if (hit.parID != 0) continue;
-      tMean += hit.time;
-      _n++;
-    }
-  }
-  tMean /= _n;
-
-
-  COUT(INFO) <<ENDL;
-  COUT(INFO) <<"Particle identification..." <<ENDL;
-
-  //Particle identification
-
-  for (int il = 0; il<(int)(v.size()); il++) {
-    for (int hit = 0; hit<(int)(v[il].size()); hit++) {
-
-      if (v[il][hit].parPdg == 2212)
-	hprotons->Fill(log10(v[il][hit].time - tStart + 1));
-      if (v[il][hit].parPdg == -2212)
-	hantip->Fill(log10(v[il][hit].time - tStart + 1));
-      if (v[il][hit].parPdg == 2112)
-	hneutrons->Fill(log10(v[il][hit].time - tStart + 1));
-      if (v[il][hit].parPdg == 11)
-	helectron->Fill(log10(v[il][hit].time - tStart + 1));
-      if (v[il][hit].parPdg == 211 || v[il][hit].parPdg == -211)
-	hpi->Fill(log10(v[il][hit].time - tStart + 1));
-      if (v[il][hit].parPdg == 130 || v[il][hit].parPdg == 310 || v[il][hit].parPdg == 311 || v[il][hit].parPdg == 321 || v[il][hit].parPdg == -321)
-	hk->Fill(log10(v[il][hit].time - tStart + 1));
-      if (v[il][hit].parPdg == 13 || v[il][hit].parPdg == -13)
-	helectronmu->Fill(log10(v[il][hit].time - tStart + 1));
-      if (v[il][hit].parPdg == 22)
-	hgamma->Fill(log10(v[il][hit].time - tStart + 1));
-      if (v[il][hit].parPdg > 1000000000)
-	hisotopes->Fill(log10(v[il][hit].time - tStart + 1));
-
-      //time
-      double smearedtime = tr->Gaus(v[il][hit].time - tStart,0.1);
-      h1->Fill(v[il][hit].time - tStart);
-      h2->Fill(v[il][hit].time - tStart);
-      h3->Fill(log10(v[il][hit].time - tStart + 1));
-      h4->Fill(smearedtime);
-      h5->Fill(smearedtime);
-
-      if (smearedtime<0.55) h5cut->Fill(smearedtime);
-      if (v[il][hit].parID != 0) h5nopri->Fill(smearedtime);
-      if (v[9].size()>5) h5nomip->Fill(smearedtime);
-      if (v[il][hit].parID == 0) h->Fill(v[il][hit].time - tMean); //ns
-    }
-  }
-  v.clear();
-
+  
+  COUT(INFO) << "Lost energies:  " <<energy_lost << " on " << iMeas << ENDL;
+  COUT(INFO) << "Lost positions: " <<position_lost << " on " << iMeas << ENDL;
 
   COUT(INFO) <<"Writing output..." <<ENDL;
   
-  outFile->WriteTObject(h);
-  outFile->WriteTObject(h1);
-  outFile->WriteTObject(h2);
-  outFile->WriteTObject(h3);
-  outFile->WriteTObject(h4);
-  outFile->WriteTObject(h5);
-  outFile->WriteTObject(h5cut);
-  outFile->WriteTObject(h5nopri);
-  outFile->WriteTObject(h5nomip);
-  
-  outFile->WriteTObject(hprotons);
-  outFile->WriteTObject(hneutrons);
-  outFile->WriteTObject(hgamma);
-  outFile->WriteTObject(hisotopes);
-  outFile->WriteTObject(helectron);
-  outFile->WriteTObject(hpositron);
-  outFile->WriteTObject(helectronmu);
-  outFile->WriteTObject(hpi);
-  outFile->WriteTObject(hk);
-
-  outFile->WriteTObject(h_time_res15);
-  outFile->WriteTObject(h_time_meas15);
-  outFile->WriteTObject(h_time_meas15_slow);
-  if (_calo_flag){
-    outFile->WriteTObject(h_time_calo);
-    outFile->WriteTObject(h_time_calo_slow);
-  }
-  
-  outFile->WriteTObject(h_energy_res);
-  outFile->WriteTObject(h_energy_meas);
-  if (_calo_flag){
-    outFile->WriteTObject(h_energy_calo);
-  }
-  
-  outFile->WriteTObject(h_pos_res);
+  outFile->Write();
 
   outFile->Close();
 
   COUT(INFO) <<"Output written in " <<outFileName <<ENDL;
-  //debug::end_debug();
+
+#ifdef _DEBUG_
+  debug::end_debug();
+#endif
 
   return 0;
 }

@@ -1,4 +1,3 @@
-
 //simple struct to save simulation results
 
 #ifndef MEASURE_INCLUDE

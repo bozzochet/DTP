@@ -95,10 +95,6 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
   delete messenger_;
   messenger_ = NULL;
 
-  
-  //  G4double l = 0.0001 * mm;//0.1 um? MD: maybe just to avoid overlaps
-  G4double l = 0.0;
-
   G4NistManager *nist = G4NistManager::Instance();
   G4Material *silicon = nist->FindOrBuildMaterial("G4_Si");
   G4Material *default_mat = nist->FindOrBuildMaterial("G4_Galactic");
@@ -133,11 +129,14 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
 
   //  printf("%f %f %f\n", pad_x, pad_y, pad_z);
 
-  G4double StkDepth = Nlayers * (pad_z + LayerGap) + (Nlayers/2.0-1) * PlaneGap; // profondità tracker
-  G4Box *padMother = new G4Box("pad", 0.5 * (pad_x + l), 0.5 * (pad_y + l), 0.5 * (StkDepth + l));
+  //  G4double StkDepth = Nlayers*pad_z + (Nlayers/2.0)*LayerGap + (Nlayers/2.0-1)*PlaneGap; // profondità tracker
+  G4double StkDepth = (Nlayers/2.0)*LayerGap + (Nlayers/2.0-1)*PlaneGap + pad_z; // profondità tracker
+  //le distanze sono fra i centri
+  // --> gli spessori non contano (tranne il fatto che il primo e l'ultimo poi stanno "mezzo thickness" fuori)
+  G4Box *padMother = new G4Box("pad", 0.5 * (pad_x), 0.5 * (pad_y), 0.5 * (StkDepth));
   G4LogicalVolume *padLogic = new G4LogicalVolume(padMother, default_mat, "pad");//sort of box containing the whole Stk
   new G4PVPlacement(0,                            // no rotation
-   		    G4ThreeVector(0, 0, -StkDepth/2.0), // at (0,0,depth/2)
+   		    G4ThreeVector(0, 0, -StkDepth/2.0), // at (0,0,depth/2) --> one face is at z=0
    		    // = its "center" is at depth/2
    		    // --> the top face is touching (0,0,0)
    		    padLogic,                     // its logical volume
@@ -156,7 +155,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
   for (int i = 0; i < N; i++) { //8 wafers per ladder but also 8 ladders side-by-side
     //    printf("%f, %f, %f\n", i * dim - 0.5 * (pad_x - dim), 0.0, 0.0),
     new G4PVPlacement(0,
-  		      G4ThreeVector(i * dim - 0.5 * (pad_x - dim), 0.0, 0.0),
+  		      G4ThreeVector(i * dim - 0.5 * (pad_x - dim), 0.0, 0.0),//il posizionamento è relativo al volume madre
   		      siLadderLogic, //current
   		      "siLadder", //name
   		      siLayerLogic, //mother
@@ -174,13 +173,18 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
   G4RotationMatrix* rotationMatrixX = new G4RotationMatrix();
   G4RotationMatrix* rotationMatrixY = new G4RotationMatrix();
   rotationMatrixY->rotateZ(90.*deg);
-  
-  G4double z = -StkDepth/2.0;
+
+  //  printf("StkDepth = %f\n", -StkDepth);
+  G4double z = -StkDepth/2.0;// il posizionamento è relativo al volume madre:
+  //  printf("abs z_in = %f\n", z - StkDepth/2.0);
+  // siccome quello è a -StkDepth/2.0, qui inizio da -StkDepth/2.0 (relativo) i.e.
+  // -StkDepth (che è il bordo).
   for (int i = 0; i < Nlayers; i++) {
+    //    printf("abs z = %f\n", z - StkDepth/2.0);
     G4RotationMatrix* rotationMatrix = rotationMatrixX;
     if (i%2) rotationMatrix = rotationMatrixY;
     new G4PVPlacement(rotationMatrix,
-		      G4ThreeVector(0, 0, z),
+		      G4ThreeVector(0, 0, z + thickness/2.0),//il posizionamento è relativo al volume madre
 		      siLayerLogic,
 		      "siLayer",
 		      padLogic,
@@ -189,7 +193,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
 		      fCheckOverlaps);
     if (!(i%2)) z += LayerGap;
     else z += PlaneGap;
-    z += thickness;
+    //    z += thickness;//le distanze sono fra i centri --> gli spessori non contano
   }
   
 #ifndef _NOCALO_

@@ -31,7 +31,7 @@ float eps = std::numeric_limits<float>::epsilon();
 //#define COSTANT_FRACTION_FOR_TIMING 0.15
 
 int findStrip
-  (double position, int Nsquares, int Nstrips, double pitch)
+(double position, int Nsquares, int Nstrips, double pitch)
 {
   int stripHit = (position+(Nsquares*Nstrips*pitch*0.5))/pitch;
   return stripHit % (int(Nstrips));
@@ -39,13 +39,13 @@ int findStrip
 
 
 int findLadder
-  (int ID, int layer, bool condition, int Nsquares)
+(int ID, int layer, bool condition, int Nsquares)
 {
   if(!condition) {
     int row = (ID - (pow(Nsquares,2)*layer))/Nsquares;
     bool leftOrRight = ID % (int(Nsquares)) > (Nsquares*0.5);
     return row + (Nsquares*leftOrRight) + (Nsquares*2*layer);
-    }
+  }
   else
     return (ID % ((int(Nsquares))*2)) + (layer*Nsquares*2);
 }
@@ -112,8 +112,8 @@ int main(int argc, char **argv)
   geo->LayerGap = GEO->GetIntGeoParam("LayerGap");
   geo->PlaneGap = GEO->GetIntGeoParam("PlaneGap");
   geo->Nstrips = GEO->GetIntGeoParam("Nstrips");
-  geo->pitch = 1e-2 * GEO->GetRealGeoParam("pitch");
-  geo->thickness = 1e-3 * GEO->GetRealGeoParam("thickness");
+  geo->pitch = GEO->GetRealGeoParam("pitch");
+  geo->thickness = GEO->GetRealGeoParam("thickness");
 
   geo->ComputeDerived();
   
@@ -126,6 +126,7 @@ int main(int argc, char **argv)
   COUT(INFO) <<"  ladders per 'column':   " <<geo->Nrows  <<ENDL;
   COUT(INFO) <<"  layers:                 " <<geo->Nlayers <<ENDL;
   COUT(INFO) <<"  gap between layers:     " <<geo->LayerGap <<ENDL;
+  printf("%E\n", geo->LayerGap);
   COUT(INFO) <<"  gap between planes:     " <<geo->PlaneGap <<ENDL;
   COUT(INFO) <<"  strips per ladder:      " <<geo->Nstrips <<ENDL;
   COUT(INFO) <<"  implant pitch:          " <<geo->pitch  <<ENDL;
@@ -180,11 +181,10 @@ int fillGeoTree(TTree *geo_tree, TDirectory* outFile, Geometry *geo)
   COUT(INFO) <<"Saving geometric parameters..." <<ENDL;
 
   geo_tree->Branch
-  (
-    "Geometry", &(geo->Nlayers),
-    "Nlayers:Nstrips:Nrows:Nsquares:pitch/D:thickness/D:squareSide/D:Nladders"
-  );
-
+    (
+     "Geometry", &geo
+     );
+  
   outFile->cd();
   geo_tree->Fill();
 
@@ -216,7 +216,8 @@ int fillEvTree
   hReader->SetDetector("siSensor", kTRUE);
 
   // Retrieve the MC truth sub-reader
-  GGSTMCTruthReader *mcReader = reader.GetReader<GGSTMCTruthReader>();
+  GGSTMCTruthReader *mcReader = NULL;
+  mcReader = reader.GetReader<GGSTMCTruthReader>();
 
   // Create and retrieve the hadronic interaction sub-reader
   GGSTHadrIntReader *hadrReader = reader.GetReader<GGSTHadrIntReader>();
@@ -237,18 +238,19 @@ int fillEvTree
     int nHits = hReader->GetNHits("siSensor"); // Number of hit siLayers for current event
     a.Clear();
 
-    GGSTHadrIntInfo *intInfo = hadrReader->GetInelastic();
+    GGSTHadrIntInfo *intInfo = NULL;
+    intInfo = hadrReader->GetInelastic();
 
     /*
-    if (intInfo)
+      if (intInfo)
       cout << "\n  Inelastic interaction happened at z = " << intInfo->GetInteractionPoint()[2] << endl;
-    if (hadrReader->GetNQuasiElastic() > 0) {
+      if (hadrReader->GetNQuasiElastic() > 0) {
       for (int iqe = 0; iqe < hadrReader->GetNQuasiElastic(); iqe++) {
-        GGSTHadrIntInfo *qintInfo = hadrReader->GetQuasiElastic(iqe);
-        if (qintInfo)
-          cout << "\n  QuasiElastic interaction happened at z = " << qintInfo->GetInteractionPoint()[2] << endl;
+      GGSTHadrIntInfo *qintInfo = hadrReader->GetQuasiElastic(iqe);
+      if (qintInfo)
+      cout << "\n  QuasiElastic interaction happened at z = " << qintInfo->GetInteractionPoint()[2] << endl;
       }
-    }
+      }
     */
 
     // Hits loop
@@ -282,14 +284,14 @@ int fillEvTree
         c->ID = inthit->GetVolumeID();
 	
         //Find the nearest strip to the left
-        c->strip = findStrip(c->pos[c->xy], geo->Nsquares, geo->Nstrips, geo->pitch);
+        c->strip = findStrip(c->pos[c->xy], geo->Nsquares, geo->Nstrips, 1e-2*geo->pitch);
 	
         // Find the ladder it belongs
         c->ladder = findLadder(c->ID, c->layer, c->xy, geo->Nsquares);
 	
         //Deposit energy and create cluster
-        double thisPos = ((c->ladder%geo->Nsquares)*geo->squareSide) + (c->strip*geo->pitch) - (geo->Nsquares*geo->squareSide*0.5);
-        double fraction = (c->pos[c->xy]-thisPos)/geo->pitch;
+        double thisPos = ((c->ladder%geo->Nsquares)*geo->squareSide) + (c->strip*(1e-2*geo->pitch)) - (geo->Nsquares*geo->squareSide*0.5);
+        double fraction = (c->pos[c->xy]-thisPos)/(1e-2*geo->pitch);
 	
         c->clust[0] = c->eDep * (1-fraction);
         c->clust[1] = c->eDep * (fraction);
@@ -359,48 +361,48 @@ int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree, TDirectory* outFile)
   // Set which hit detectors are to be read
   // The name is the same of the sensitive logical volume name in the simulation
   try
-  {
-    hReader->SetDetector("calorimeter");
-  }
+    {
+      hReader->SetDetector("calorimeter");
+    }
   catch(const std::runtime_error &e) //calorimeter not sensitive
-  {
-    COUT(INFO) <<"!!! calorimeter hits not available" <<ENDL;
-    COUT(INFO) <<"If needed, setup sensitive calo in" <<ENDL;
-    COUT(INFO) <<" macros/run.mac and run again the simulation" <<ENDL;
-    return 0;
-  }
+    {
+      COUT(INFO) <<"!!! calorimeter hits not available" <<ENDL;
+      COUT(INFO) <<"If needed, setup sensitive calo in" <<ENDL;
+      COUT(INFO) <<" macros/run.mac and run again the simulation" <<ENDL;
+      return 0;
+    }
 
   COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
 
   std::clock_t start = std::clock();
 
   for (int iEv = 0; iEv < reader.GetEntries(); iEv++)
-  {
-
-    //print and update progress bar
-    info::progress(start, iEv, reader.GetEntries());
-
-    //reset energy for new event
-    calo_energy = 0;
-
-    reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
-
-    GGSTIntHit *inthit;
-
-    int nHits = hReader->GetNHits("calorimeter"); // Number of hit siLayers for current event
-
-    for (int iHit = 0; iHit < nHits; iHit++)
     {
-      inthit = (GGSTIntHit *)hReader->GetHit("calorimeter", iHit);
 
-      //add to total energy deposited in calo by event iEv
-      calo_energy += 1e+9 * inthit->eDep;
-    }
+      //print and update progress bar
+      info::progress(start, iEv, reader.GetEntries());
 
-    outFile->cd();
-    calo_tree->Fill();
+      //reset energy for new event
+      calo_energy = 0;
 
-  } //for iEv
+      reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
+
+      GGSTIntHit *inthit;
+
+      int nHits = hReader->GetNHits("calorimeter"); // Number of hit siLayers for current event
+
+      for (int iHit = 0; iHit < nHits; iHit++)
+	{
+	  inthit = (GGSTIntHit *)hReader->GetHit("calorimeter", iHit);
+
+	  //add to total energy deposited in calo by event iEv
+	  calo_energy += 1e+9 * inthit->eDep;
+	}
+
+      outFile->cd();
+      calo_tree->Fill();
+
+    } //for iEv
 
   outFile->cd();
   calo_tree->Write();
@@ -422,14 +424,14 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, TDirectory* outFile, Geom
   //set branch in which write measures
   measure meas;
   meas_tree->Branch
-  (
-    "Measures", &(meas.energy),
-    "energy[2]/D:time[2]/D:position/D:xy/I"
-  );
+    (
+     "Measures", &(meas.energy),
+     "energy[2]/D:time[2]/D:position/D:xy/I"
+     );
 
   //get MC truth
   TClonesArray *a = new TClonesArray("TrCluster", 200);
-	events_tree->SetBranchAddress("Events", &a);
+  events_tree->SetBranchAddress("Events", &a);
 
 
   TRandom3 *tr = new TRandom3(9298);
@@ -445,118 +447,117 @@ int fillMeasTree(TTree *events_tree, TTree *meas_tree, TDirectory* outFile, Geom
   std::clock_t start = std::clock();
 
   for (int i = 0; i < events_tree->GetEntries(); i++)
-  {
-
-    //print and update progress bar
-    info::progress(start, i, events_tree->GetEntries());
-
-		events_tree->GetEntry(i);
-
-		for (int j = 0; j < a->GetEntries(); j++)
     {
-      TrCluster *cl = (TrCluster*) a->At(j);
 
-      pos_sim->Clear(); //clear previuos hit
+      //print and update progress bar
+      info::progress(start, i, events_tree->GetEntries());
 
-      // scan clusts
-      for(int k = 0; k<2; ++k)
-      {
-        int strip = cl->strip;
-        int ladder = cl->ladder;
+      events_tree->GetEntry(i);
 
+      for (int j = 0; j < a->GetEntries(); j++)
+	{
+	  TrCluster *cl = (TrCluster*) a->At(j);
 
-        //go to next strip or stay?
+	  pos_sim->Clear(); //clear previuos hit
 
-        //hit on the last strip of the last ladder of the layer row
-        if
-        (
-          k==1
-          && cl->strip == geo->Nstrips-1
-          && (cl->ladder+1) % geo->Nsquares == 0
-        )
-        {
-          //other fraction of energy is lost: no strip on right
-          meas.energy[k] = 0;
-          meas.time[k] = -9999;
-          continue;
-        }
-
-    		else if(k==1 && cl->strip==geo->Nstrips-1)
-        {
-          strip = 0;
-          ++ladder;
-        }
-
-    		else if(k==1)
-          ++strip;
+	  // scan clusts
+	  for(int k = 0; k<2; ++k)
+	    {
+	      int strip = cl->strip;
+	      int ladder = cl->ladder;
 
 
-        //set hit pos one time for clust (clust refers to same pos)
+	      //go to next strip or stay?
 
-        if(k==0) pos_sim->SetHitPos(cl->layer, cl->pos[cl->xy]);
+	      //hit on the last strip of the last ladder of the layer row
+	      if
+		(
+		 k==1
+		 && cl->strip == geo->Nstrips-1
+		 && (cl->ladder+1) % geo->Nsquares == 0
+		 )
+		{
+		  //other fraction of energy is lost: no strip on right
+		  meas.energy[k] = 0;
+		  meas.time[k] = -9999;
+		  continue;
+		}
 
+	      else if(k==1 && cl->strip==geo->Nstrips-1)
+		{
+		  strip = 0;
+		  ++ladder;
+		}
 
-        //time measure and energy
-
-        TGraph *charge = new TGraph();
-
-        //ideal charge signal
-        time_sim->GetChargeSignal
-          (cl->time, cl->clust[k], charge, false);
-
-        //add noise to charge signal and to energy
-        meas.energy[k] = cl->clust[k]
-          + time_sim->AddChargeNoise(charge) / FOND_CHARGE
-            * ENERGY_COUPLE ;
-
-
-        if(meas.energy[k] > 0)
-          pos_sim->DepositEnergy(ladder, strip, meas.energy[k]);
-
-        else
-        //deposit 0: a negative energy could affect pos calculation
-          pos_sim->DepositEnergy(ladder, strip, 0);
-
-        meas.time[k] = time_sim->GetMeas(charge, COSTANT_FRACTION_FOR_TIMING);
-
-        delete charge;
-
-		  } //for k
+	      else if(k==1)
+		++strip;
 
 
-      //signal lost completely => unable to measure pos
-      if(meas.energy[0] <= 0 && meas.energy[1] <= 0)
-        meas.position = -9999;
+	      //set hit pos one time for clust (clust refers to same pos)
 
-      else
-      {
-        pos_sim->ShareEnergy(); //share energies between active strips
-        meas.position = pos_sim->GetMeas();
-      }
+	      if(k==0) pos_sim->SetHitPos(cl->layer, cl->pos[cl->xy]);
 
-      meas.xy = cl->xy;
 
-      /*********************
-      * DEBUG:
-      * data calculated here does not correspond with the ones
-      * read in DataAnalysis. This happens not regularly it seems and
-      * only for sme parameters; now it seems to affect position
-      * measures pos_meas read in analysis is inf while in
-      * Digitization was good (also well reconstructed);
-      * probably there is some unexpected behaviuour in the use
-      * of TTree object meas_tree
-      **********************/
+	      //time measure and energy
 
-/*
-      if(i==2 && j==4)
-        COUT(INFO) <<ENDL <<"\n\tE: " <<cl->clust[0] <<" " <<cl->clust[1] <<"\n\tE + noise: " <<meas.energy[0] <<" " <<meas.energy[1] <<"\n\tt: " <<cl->time <<"\n\tt meas: " <<meas.time[0] <<" " <<meas.time[1] <<"\n\tpos: " <<cl->pos[cl->xy] <<"\n\tpos meas: " <<meas.position <<ENDL;
-*/
+	      TGraph *charge = new TGraph();
 
-      outFile->cd();
-      meas_tree->Fill();
+	      //ideal charge signal
+	      time_sim->GetChargeSignal
+		(cl->time, cl->clust[k], charge, false);
 
-    } //for j
-  } //for i
+	      //add noise to charge signal and to energy
+	      meas.energy[k] = cl->clust[k]
+		+ time_sim->AddChargeNoise(charge) / FOND_CHARGE
+		* ENERGY_COUPLE ;
+
+
+	      if(meas.energy[k] > 0)
+		pos_sim->DepositEnergy(ladder, strip, meas.energy[k]);
+	      else
+		//deposit 0: a negative energy could affect pos calculation
+		pos_sim->DepositEnergy(ladder, strip, 0);
+
+	      meas.time[k] = time_sim->GetMeas(charge, COSTANT_FRACTION_FOR_TIMING);
+
+	      delete charge;
+
+	    } //for k
+
+
+	  //signal lost completely => unable to measure pos
+	  if(meas.energy[0] <= 0 && meas.energy[1] <= 0)
+	    meas.position = -9999;
+
+	  else
+	    {
+	      pos_sim->ShareEnergy(); //share energies between active strips
+	      meas.position = pos_sim->GetMeas();
+	    }
+
+	  meas.xy = cl->xy;
+
+	  /*********************
+	   * DEBUG:
+	   * data calculated here does not correspond with the ones
+	   * read in DataAnalysis. This happens not regularly it seems and
+	   * only for sme parameters; now it seems to affect position
+	   * measures pos_meas read in analysis is inf while in
+	   * Digitization was good (also well reconstructed);
+	   * probably there is some unexpected behaviuour in the use
+	   * of TTree object meas_tree
+	   **********************/
+
+	  /*
+	    if(i==2 && j==4)
+	    COUT(INFO) <<ENDL <<"\n\tE: " <<cl->clust[0] <<" " <<cl->clust[1] <<"\n\tE + noise: " <<meas.energy[0] <<" " <<meas.energy[1] <<"\n\tt: " <<cl->time <<"\n\tt meas: " <<meas.time[0] <<" " <<meas.time[1] <<"\n\tpos: " <<cl->pos[cl->xy] <<"\n\tpos meas: " <<meas.position <<ENDL;
+	  */
+
+	  outFile->cd();
+	  meas_tree->Fill();
+
+	} //for j
+    } //for i
 
   outFile->cd();
   meas_tree->Write();
