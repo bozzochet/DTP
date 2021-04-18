@@ -22,9 +22,7 @@ public:
 	int ladder;
 	double clust[2]; //eV
 
-ClassDef(TrCluster, 2)
-
-	void Dump(){
+	void Dump() const {
 	std::cout << "xy = " << xy << std::endl;
 	std::cout << "pos = (" << pos[0] << " , " << pos[1] << "," << pos[2] << ")" << std::endl;
 	std::cout << "time = " << time << std::endl;
@@ -39,6 +37,8 @@ ClassDef(TrCluster, 2)
 	std::cout << "ladder = " << ladder << std::endl;
 	std::cout << "cluster = (" << clust[0] << " , " << clust[1] << std::endl;
 	}
+
+  ClassDef(TrCluster, 2)
 };
 
 #endif

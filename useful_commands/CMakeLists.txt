@@ -7,6 +7,7 @@ configure_file(run_short.sh run_short.sh COPYONLY)
 configure_file(run_hs.sh run_hs.sh COPYONLY)
 configure_file(show_events.sh show_events.sh COPYONLY)
 configure_file(show_geometry.sh show_geometry.sh COPYONLY)
+configure_file(produce_and_show_events.sh produce_and_show_events.sh COPYONLY)
 
 install(DIRECTORY . DESTINATION useful_commands
        USE_SOURCE_PERMISSIONS

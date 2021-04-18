@@ -185,10 +185,13 @@ int main(int argc, char **argv) {
   energy_t Ecalo_max = -999999;
   
   if (_calo_flag){
-    beam_energy = std::atof(argv[shift]) * 1e+9;
-    Ecalo_min = std::atof(argv[shift+1]) * 1e+9;
-    Ecalo_max = std::atof(argv[shift+2]) * 1e+9;
+    beam_energy = std::atof(argv[shift]);
+    Ecalo_min = std::atof(argv[shift+1]);
+    Ecalo_max = std::atof(argv[shift+2]);
     printf("%f %f %f\n", beam_energy, Ecalo_min, Ecalo_max);
+    beam_energy *= 1e+9;
+    Ecalo_min *= 1e+9;
+    Ecalo_max *= 1e+9;
   }
   
   //histos
@@ -242,23 +245,6 @@ int main(int argc, char **argv) {
   TRandom3 *tr = new TRandom3();
   tr->SetSeed(time(NULL));
   
-  /*
-
-    Passing the parameters from DetectorConstruction.cc, not working yet
-
-    GGSTRootReader reader;
-    const GGSTGeoParams *geoParams = reader.GetGeoParams();
-
-    const int Nsquares = geoParams->GetRealGeoParam("Nsquares"); //squares per side
-    const int Nladders = Nsquares*5; //number of ladders
-    const int Nstrips = geoParams->GetRealGeoParam("Nstrips"); //strips per ladder
-    const double squareSide = geoParams->GetRealGeoParam("squareSide");
-    const double pitch = squareSide/(double(Nstrips));
-    double eDepSegm[Nladders][Nstrips];
-    double PrimeDepSegm[Nladders][Nstrips];
-
-  */
-
   events_tree->Print();
 
   TClonesArray *a = new TClonesArray("TrCluster", 200);
@@ -280,23 +266,7 @@ int main(int argc, char **argv) {
   */
 
   geo.ComputeDerived();
-  
-  COUT(INFO) <<ENDL;
-  COUT(INFO) <<"=================================" <<ENDL;
-  COUT(INFO) <<"Geometric parameters:     " <<ENDL;
-  COUT(INFO) <<"  Calo side:              " <<geo.CaloSide <<ENDL;
-  COUT(INFO) <<"  Calo-Stk gap:           " <<geo.CaloStkGap <<ENDL;
-  COUT(INFO) <<"  wafers per side:        " <<geo.Nsquares  <<ENDL;
-  COUT(INFO) <<"  ladders per 'column':   " <<geo.Nrows  <<ENDL;
-  COUT(INFO) <<"  layers:                 " <<geo.Nlayers <<ENDL;
-  COUT(INFO) <<"  gap between layers:     " <<geo.LayerGap <<ENDL;
-  COUT(INFO) <<"  gap between planes:     " <<geo.PlaneGap <<ENDL;
-  COUT(INFO) <<"  strips per ladder:      " <<geo.Nstrips <<ENDL;
-  COUT(INFO) <<"  implant pitch:          " <<geo.pitch  <<ENDL;
-  COUT(INFO) <<"  layers thickness:       " <<geo.thickness <<ENDL;
-  COUT(INFO) <<"  wafer side:             " <<geo.squareSide <<ENDL;
-  COUT(INFO) <<"  total # of ladders:     " <<geo.Nladders <<ENDL;
-  COUT(INFO) <<"=================================" <<ENDL;
+  geo.Dump();  
 
   COUT(INFO) <<ENDL;
   COUT(INFO) <<"Begin loop over " <<events_tree->GetEntries() <<ENDL;
@@ -321,7 +291,7 @@ int main(int argc, char **argv) {
       
       h_energy_calo->Fill(Ecalo * 1e-9);
  
-      if (Ecalo <= Ecalo_max && Ecalo >= Ecalo_min) continue;
+      if (Ecalo < Ecalo_min && Ecalo > Ecalo_max) continue;
     }
     
     /*

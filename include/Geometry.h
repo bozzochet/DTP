@@ -9,7 +9,7 @@
 
 #include "TObject.h"
 #include "physics.h"
-
+#include <iostream>
 
 class Geometry: public TObject {
 
@@ -33,6 +33,25 @@ public:
     Nladders = Nsquares * Nrows * Nlayers;
   }
 
+  void Dump() const {
+    std::cout << std::endl;
+    std::cout <<"=================================" << std::endl;
+    std::cout <<"Geometric parameters:     " << std::endl;
+    std::cout <<"  Calo side:              " << CaloSide << std::endl;
+    std::cout <<"  Calo-Stk gap:           " << CaloStkGap << std::endl;
+    std::cout <<"  wafers per side:        " << Nsquares  << std::endl;
+    std::cout <<"  ladders per 'column':   " << Nrows  << std::endl;
+    std::cout <<"  layers:                 " << Nlayers << std::endl;
+    std::cout <<"  gap between layers:     " << LayerGap << std::endl;
+    std::cout <<"  gap between planes:     " << PlaneGap << std::endl;
+    std::cout <<"  strips per ladder:      " << Nstrips << std::endl;
+    std::cout <<"  implant pitch:          " << pitch  << std::endl;
+    std::cout <<"  layers thickness:       " << thickness << std::endl;
+    std::cout <<"  wafer side:             " << squareSide << std::endl;
+    std::cout <<"  total # of ladders:     " << Nladders << std::endl;
+    std::cout <<"=================================" << std::endl;
+  }
+  
   ClassDef(Geometry, 2)
 };
 

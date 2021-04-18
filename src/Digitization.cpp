@@ -104,37 +104,19 @@ int main(int argc, char **argv)
   const GGSTGeoParams *GEO = reader.GetGeoParams();
   Geometry *geo = new Geometry();
 
-  geo->CaloSide = GEO->GetIntGeoParam("CaloSide");
-  geo->CaloStkGap = GEO->GetIntGeoParam("CaloStkGap");
+  geo->CaloSide = GEO->GetRealGeoParam("CaloSide");
+  geo->CaloStkGap = GEO->GetRealGeoParam("CaloStkGap");
   geo->Nsquares = GEO->GetIntGeoParam("Nsquares");
   geo->Nrows = GEO->GetIntGeoParam("Nrows");
   geo->Nlayers = GEO->GetIntGeoParam("Nlayers");
-  geo->LayerGap = GEO->GetIntGeoParam("LayerGap");
-  geo->PlaneGap = GEO->GetIntGeoParam("PlaneGap");
+  geo->LayerGap = GEO->GetRealGeoParam("LayerGap");
+  geo->PlaneGap = GEO->GetRealGeoParam("PlaneGap");
   geo->Nstrips = GEO->GetIntGeoParam("Nstrips");
   geo->pitch = GEO->GetRealGeoParam("pitch");
   geo->thickness = GEO->GetRealGeoParam("thickness");
 
   geo->ComputeDerived();
-  
-  COUT(INFO) <<ENDL;
-  COUT(INFO) <<"=================================" <<ENDL;
-  COUT(INFO) <<"Geometric parameters:     " <<ENDL;
-  COUT(INFO) <<"  Calo side:              " <<geo->CaloSide <<ENDL;
-  COUT(INFO) <<"  Calo-Stk gap:           " <<geo->CaloStkGap <<ENDL;
-  COUT(INFO) <<"  wafers per side:        " <<geo->Nsquares  <<ENDL;
-  COUT(INFO) <<"  ladders per 'column':   " <<geo->Nrows  <<ENDL;
-  COUT(INFO) <<"  layers:                 " <<geo->Nlayers <<ENDL;
-  COUT(INFO) <<"  gap between layers:     " <<geo->LayerGap <<ENDL;
-  printf("%E\n", geo->LayerGap);
-  COUT(INFO) <<"  gap between planes:     " <<geo->PlaneGap <<ENDL;
-  COUT(INFO) <<"  strips per ladder:      " <<geo->Nstrips <<ENDL;
-  COUT(INFO) <<"  implant pitch:          " <<geo->pitch  <<ENDL;
-  COUT(INFO) <<"  layers thickness:       " <<geo->thickness <<ENDL;
-  COUT(INFO) <<"  wafer side:             " <<geo->squareSide <<ENDL;
-  COUT(INFO) <<"  total # of ladders:     " <<geo->Nladders <<ENDL;
-  COUT(INFO) <<"=================================" <<ENDL;
-
+  geo->Dump();
 
   //trees
   outFile->cd();

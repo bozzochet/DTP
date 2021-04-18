@@ -232,13 +232,13 @@ void DetectorConstruction::updateGeometry() { G4RunManager::GetRunManager()->Def
 
 bool DetectorConstruction::ExportParameters() {
   bool result = true;
-  result = result && ExportIntParameter("CaloSide", CaloSide / cm);
-  result = result && ExportIntParameter("CaloStkGap", CaloStkGap / cm);
+  result = result && ExportRealParameter("CaloSide", CaloSide / cm);
+  result = result && ExportRealParameter("CaloStkGap", CaloStkGap / cm);
   result = result && ExportIntParameter("Nsquares", Nsquares);
   result = result && ExportIntParameter("Nrows", Nrows);
   result = result && ExportIntParameter("Nlayers", Nlayers);
-  result = result && ExportIntParameter("LayerGap", LayerGap / cm);
-  result = result && ExportIntParameter("PlaneGap", PlaneGap / cm);
+  result = result && ExportRealParameter("LayerGap", LayerGap / cm);
+  result = result && ExportRealParameter("PlaneGap", PlaneGap / cm);
   result = result && ExportIntParameter("Nstrips", Nstrips);
   result = result && ExportRealParameter("pitch", pitch / cm);
   result = result && ExportRealParameter("thickness", thickness / cm);
