@@ -199,9 +199,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
   G4LogicalVolume *LGADLayerLogic = new G4LogicalVolume(LGADlayer, silicon, "LGADLayer"); 
 
   
-  G4double save_first_layer = 0. * cm; 
-  G4double save_last_layer = 0. * cm;
-
+  G4double save_first_layer = 0.0 * cm; 
 
   for (int i=0; i<N; i++) {
     new G4PVPlacement(0,                          // no rotation
@@ -218,9 +216,6 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
     }
     if (i == 0) {
       save_first_layer = Distance + LGADthickness/2.0;
-    }
-    if (i == N-1) {
-      save_last_layer = Distance + LGADthickness/2.0;
     }
   }
 
@@ -243,6 +238,9 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
   G4Box *LYSOcube = new G4Box("LYSOcube", CaloSideX/2.0, CaloSideY/2.0, CaloSideZ/2.0); //LYSO CUBE
   G4LogicalVolume *LYSOcubeLogic = new G4LogicalVolume(LYSOcube, LYSO, "LYSOcube");
 
+
+  // In questo caso il posizionamento dei cubetti di LYSO è gestito da più for in maniera tale da differenziare 
+  // righe pari o dispari (se pari vanno spostate di CaloSideY/2.0)
   for (int k = 0; k < planes; k++) {
     if(LYSOrows % 2 != 0 ) { // Dispari
       for (int i = round(-LYSOcolumns/2); i <= round(LYSOcolumns/2); i++) {
@@ -264,7 +262,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
       for (int i = round(-LYSOcolumns/2); i <= round(LYSOcolumns/2); i++) { 
         for (int j = round(-LYSOrows/2); j < round(LYSOrows/2); j++) {
                     new G4PVPlacement(0,                            // no rotation
-                        G4ThreeVector( i * CaloSideX, j * CaloSideY + CaloSideY/2.0, Distance + CaloSideZ/2.0), // at (0,0,0)
+                        G4ThreeVector( i * CaloSideX, j * CaloSideY + CaloSideY/2.0, Distance + CaloSideZ/2.0),
                         LYSOcubeLogic,                     // its logical volume
                         "LYSOcube",                        // its name
                         logicWorld,                        // its mother  volume
@@ -289,12 +287,13 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
   
 
 
-  //BARRE SCINTILLATORE
-  for (int i = 0; i<number_of_scintillators; i++) {     
+  //FOGLI SCINTILLATORE
+  //La profondità mi sembra spostata verso il calorimetro
+  for (int i = 0; i < number_of_scintillators; i++) {     
 
     //sopra
     new G4PVPlacement(0,                          // no rotation
-                    G4ThreeVector(LGADSide/2.0  - ScintillatorX/2.0 - i * (ScintillatorGap + ScintillatorX),
+                    G4ThreeVector(LGADSide/2.0  - ScintillatorX/2.0 - i * (ScintillatorGap + ScintillatorX), 
                     LGADSide/2.0 + ScintillatorY/2.0 + ScintillatorGap,
                     (Distance + CaloSideZ + (save_first_layer - LGADthickness/2.0))/2.0),
                     longscintillatorLogic,                     // its logical volume
@@ -366,8 +365,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
 
 void DetectorConstruction::updateGeometry() { G4RunManager::GetRunManager()->DefineWorldVolume(Construct()); }
 
-// QUESTO E' IMPORTANTE SU Geometry.h
-// RICORDATI DI AGGIORNARE CON LE VARIABILI DEL GEO.MAC
+
 bool DetectorConstruction::ExportParameters() {
   bool result = true;
   result = result && ExportIntParameter("Nlayers", Nlayers);
