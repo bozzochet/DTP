@@ -1,15 +1,12 @@
 # geometric parameters for detector
 
-/Detector/Nlayers                40           #number of layers
-/Detector/thickness             0.015         #thickness of layers in cm
-/Detector/interdistance         0.1512820513  #distance between layers in cm
-/Detector/DistanceLayersCalo     10           #distance between layers and calorimeter in cm
-/Detector/NCaloPlanes            1            #number of planes of calorimeter
-/Detector/PlanesDistance         0            #distance between planes of calorimeter in cm
-/Detector/CubeX                  3            #width of LYSO cube in cm
-/Detector/CubeY                  3           #height of LYSO cube in cm
-/Detector/CubeZ                  3            #depth of LYSO cube in cm
-/Detector/rows_of_cubes          3            #number of lines of cubes
-/Detector/columns_of_cubes       3            #number of column of cubes
-/Detector/NScintillators         4            #number of bars of scintillators for each side
-/Detector/LayerGapScintillator   0            #depth gap betwenn scintillator layers in cm
+/Detector/CaloSide    60       # calo side in cm
+/Detector/CaloStkGap   2       # STK-Calo distance in cm
+/Detector/Nsquares     8       # wafers (9.5 * 9.5 cm^2) per side on layer
+/Detector/Nrows        2       # number of layers per column (each ladder is made of Nsquares/Nrows wafers)
+/Detector/Nlayers     10       # number of layers (every two layers, i.e. a plane, one layer would be X and one would be Y)
+/Detector/LayerGap     0.2     # gap between two ladders of the same plane in cm
+/Detector/PlaneGap     2       # gap between planes in cm
+/Detector/Nstrips    640       # strips per ladder
+/Detector/pitch        0.015   # strips pitch in cm
+/Detector/thickness    0.03    # thickness of layers in cm
