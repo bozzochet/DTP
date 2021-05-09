@@ -105,15 +105,24 @@ int main(int argc, char **argv)
   Geometry *geo = new Geometry();
 
   geo->CaloSide = GEO->GetRealGeoParam("CaloSide");
-  geo->CaloStkGap = GEO->GetRealGeoParam("CaloStkGap");
+  geo->LayerGap = GEO->GetRealGeoParam("LayerGap");
   geo->Nsquares = GEO->GetIntGeoParam("Nsquares");
   geo->Nrows = GEO->GetIntGeoParam("Nrows");
   geo->Nlayers = GEO->GetIntGeoParam("Nlayers");
-  geo->LayerGap = GEO->GetRealGeoParam("LayerGap");
+  geo->CaloStkGap = GEO->GetRealGeoParam("CaloStkGap");
   geo->PlaneGap = GEO->GetRealGeoParam("PlaneGap");
   geo->Nstrips = GEO->GetIntGeoParam("Nstrips");
   geo->pitch = GEO->GetRealGeoParam("pitch");
   geo->thickness = GEO->GetRealGeoParam("thickness");
+  geo->NCaloPlanes = GEO->GetIntGeoParam("NCaloPlanes");
+  geo->PlanesDistance = GEO->GetRealGeoParam("PlanesDistance");
+  geo->CubeX = GEO->GetRealGeoParam("CubeX");
+  geo->CubeY = GEO->GetRealGeoParam("CubeY");
+  geo->CubeZ = GEO->GetRealGeoParam("CubeZ");
+  geo->RowsOfCubes = GEO->GetIntGeoParam("RowsOfCubes");
+  geo->ColumnsOfCubes = GEO->GetIntGeoParam("ColumnsOfCubes");
+  geo->NScintillators = GEO->GetIntGeoParam("NScintillators");
+  geo->LayerGapScintillator = GEO->GetRealGeoParam("LayerGapScintillator");
 
   geo->ComputeDerived();
   geo->Dump();
