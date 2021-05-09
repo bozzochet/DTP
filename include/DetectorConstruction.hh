@@ -57,19 +57,16 @@ private:
 
   //GEOMETRIC DEFAULT VALUES
 
-  G4int Nlayers = 40;                          //silicon layers
-  G4double thickness = 0.015 * cm;             //layers thickness
-  G4double interdistance = 0.1512820513 * cm;  //distance between layers in cm
-  G4double DistanceLayersCalo = 10 * cm;       //distance between layers and calorimeter
-  G4int NCaloPlanes = 1;    //calorimeter planes
-  G4double PlanesDistance = 3 * cm; //distance between calo planes
-  G4double CubeX = 3 * cm;  //width of cube
-  G4double CubeY = 3 * cm;  //height of cube
-  G4double CubeZ = 3 * cm;  //depth of cube
-  G4int rows_of_cubes = 3; //number of cubes in line
-  G4int columns_of_cubes = 3; //number of cubes in column
-  G4int NScintillators = 4; //number of bars of scintillators
-  G4double LayerGapScintillator = 0.1 * cm; //depth gap betwenn scintillator layers in cm
+  G4double CaloSide = 60;         // Calo side in cm
+  G4double CaloStkGap = 2;        // STK-Calo ditance in cm
+  G4int Nsquares = 8;             // squares per side on layer
+  G4int Nrows = 2;                // number of ladders per 'column' (i.e. each ladders has Nsquares/Nrows wafers)
+  G4int Nlayers = 10;             // number of layers (every two layers, i.e. a plane, one layer would be X and one would be Y)
+  G4double LayerGap = 0.2;        // gap between two ladders of the same plane in cm
+  G4double PlaneGap = 2;          // gap between planes in cm
+  G4int Nstrips = 640;            //strips per ladder
+  G4double pitch = 0.015 * cm;    //strips pitch in cm
+  G4double thickness = 0.03 * cm;  //thickness of layers in cm
 
 };
 
