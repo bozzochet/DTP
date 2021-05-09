@@ -57,16 +57,34 @@ private:
 
   //GEOMETRIC DEFAULT VALUES
 
-  G4double CaloSide = 60;         // Calo side in cm
-  G4double CaloStkGap = 2;        // STK-Calo ditance in cm
-  G4int Nsquares = 8;             // squares per side on layer
-  G4int Nrows = 2;                // number of ladders per 'column' (i.e. each ladders has Nsquares/Nrows wafers)
-  G4int Nlayers = 10;             // number of layers (every two layers, i.e. a plane, one layer would be X and one would be Y)
-  G4double LayerGap = 0.2;        // gap between two ladders of the same plane in cm
-  G4double PlaneGap = 2;          // gap between planes in cm
-  G4int Nstrips = 640;            //strips per ladder
-  G4double pitch = 0.015 * cm;    //strips pitch in cm
-  G4double thickness = 0.03 * cm;  //thickness of layers in cm
+// VARIABILI DTP
+  G4double CaloSide = 60 ;
+  G4int Nrows = 1 ;
+  G4int Nsquares = 1 ;
+  G4double PlaneGap = 2 ; // Non so se questa ha bisogno di un altro valore
+
+//////////////////////////////////////////////////////////////////////
+  G4int Nstrips = 576 ;  //Queste due si possono mettere anche su comuni ma per ora le lasciamo qui
+  G4double pitch = 0.015625 * cm ; //156.25 um
+//////////////////////////////////////////////////////////////////////
+  
+  
+  // VARIABILI SLA
+  G4int NCaloPlanes = 1 ;
+  G4double PlanesDistance = 3.0 * cm ;
+  G4double CubeX = 3.0 * cm ;
+  G4double CubeY = 3.0 * cm ;
+  G4double CubeZ = 3.0 * cm ;
+  G4int RowsOfCubes = 3 ;
+  G4int ColumnsOfCubes = 3 ;
+  G4int NScintillators = 4 ;
+  G4double LayerGapScintillator = 0.0 * cm ;
+
+  // VARIABILI COMUNI
+  G4int Nlayers = 40 ;
+  G4double thickness = 0.015 * cm ;
+  G4double LayerGap = 0.1512820513 * cm ;
+  G4double CaloStkGap = 10.0 * cm ;
 
 };
 
