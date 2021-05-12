@@ -1,5 +1,6 @@
 //#define _DEBUG_
 
+
 #ifdef _DEBUG_
 #include "DEBUG.h"
 #endif
@@ -38,6 +39,7 @@ using namespace std;
 #define TIME_RESOLUTION 1.0E-9*0.1
 
 int main(int argc, char **argv) {
+
 
 #ifdef _DEBUG_
   debug::start_debug(); //DEBUG.h
@@ -91,7 +93,6 @@ int main(int argc, char **argv) {
     geo_tree->Add(argv[shift]);
   }
 
-  
   COUT(INFO) <<"Recreating output file " <<outFileName <<"..." <<ENDL;
   TFile *outFile = new TFile(outFileName, "recreate");
   outFile->cd();
@@ -238,7 +239,6 @@ int main(int argc, char **argv) {
   if (_calo_flag) {    
     h_energy_calo = new TH1F("h_energy_calo", ";energy [GeV];", 1000, 0, beam_energy * 1e-9);
   }
-  
   //end of histos
 
 
@@ -271,6 +271,7 @@ int main(int argc, char **argv) {
   COUT(INFO) <<ENDL;
   COUT(INFO) <<"Begin loop over " <<events_tree->GetEntries() <<ENDL;
 
+
   int iMeas = 0; //iterator for meas_tree
 
   //lost measures counters
@@ -278,14 +279,19 @@ int main(int argc, char **argv) {
   int energy_lost = 0;//energy measured < 0
   int position_lost = 0;//|position measured| < 1 (to be re-thought)
 
+  //-------------------------------------------------------------------------------------------------------
   for (int i = 0; i < events_tree->GetEntries(); i++) {
+    std::cout << "ITERATION #: " << i << std::endl;
     
     vector2<TrCluster> v;
     //    v.resize(geo.Nlayers);
-    v.resize(10);//there's a bug and the values of geo are not retrieved correctly
-    
-    events_tree->GetEntry(i);
+    v.resize(40);//there's a bug and the values of geo are not retrieved correctly
+    //QUI IL VALORE ERA 10, MA TOCCA METTERCI I LAYER DISPONIBILI CHE SU SLA SONO 40
 
+    //std::cout << i << " RIGA 293" << std::endl;
+    events_tree->GetEntry(i);
+  
+    //std::cout << i << " RIGA 296" << std::endl;
     if (_calo_flag) {
       calo_tree->GetEntry(i);
       
@@ -307,18 +313,26 @@ int main(int argc, char **argv) {
     //measured times for primary/event i;
     //the slowest is used afterwards to fill h_time_meas15_slow
     //and h_time_MC_slow
+
+    //std::cout << i << " RIGA 318" << std::endl;
     std::vector<mytime_t> v_times;
+    //std::cout << i << " RIGA 320" << std::endl;
     std::vector<mytime_t> v_times_meas;
 
-    for (int j = 0; j < a->GetEntries(); j++) {
+    // ---------> ALLA SECONDA INTERAZIONE DEL CICLO FOR CON i NON ENTRA IN QUESTO for CON j <------------
 
-      //cout<<endl<<"Entry #"<<i+j<<endl;
+    for (int j = 0; j < a->GetEntries(); j++) {
+      //std::cout << i << " RIGA 324 " << j << std::endl;
+      std::cout<<"Entry # "<< j <<std::endl;
       TrCluster *cl = (TrCluster *)a->At(j);
 
+      //std::cout << i << " RIGA 328 " << j << std::endl;
       v[cl->layer].push_back(*cl);
 
+      //std::cout << i << " RIGA 331 " << j << std::endl;
       h_time_MC->Fill(TMath::Log10(1e+9 * cl->time));
 
+      //std::cout << i << " RIGA 334 " << j << std::endl;
       v_times.push_back(cl->time);
 
       /* while Events branch work with two indexes (i,j),
@@ -327,7 +341,7 @@ int main(int argc, char **argv) {
        * entry i in Events branch, corresponds to measure on entry
        * iMeas of Measures branch. Look in Digitization.cpp,
        * digitization function */
-
+      //std::cout << i << " RIGA 343 " << j << std::endl;
       meas_tree->GetEntry(iMeas);
       ++iMeas;
 
@@ -336,21 +350,24 @@ int main(int argc, char **argv) {
       for (int m=0; m<2; ++m) { //the clusters are two since there're the two strips around the hit position
 	//most likely for the timing this is even correct (at leat when there's no "grouping")
 	//but for the energy this is WRONG
+        //std::cout << i << " RIGA 352 " << j << " " << m << std::endl;
+	      static double ene_true = 0;
+	      static double ene_meas = 0;
+	      if (m==0) {
+          //std::cout << i << " RIGA 356 " << j << " " << m << std::endl;
+	        ene_true = cl->clust[m];
+	        ene_meas = meas.energy[m];
+	      }
+	      else {
+          //std::cout << i << " RIGA 361 " << j << " " << m << std::endl;
+	        ene_true += cl->clust[m];
+	        ene_meas += meas.energy[m];
+    	  }
 
-	static double ene_true = 0;
-	static double ene_meas = 0;
-	if (m==0) {
-	  ene_true = cl->clust[m];
-	  ene_meas = meas.energy[m];
-	}
-	else {
-	  ene_true += cl->clust[m];
-	  ene_meas += meas.energy[m];
-	}
-
-	if (m==1) {
-	  h_energy_MC->Fill(ene_true * 1e-6);
-	}
+	      if (m==1) {
+          //std::cout << i << " RIGA 367 " << j << " " << m << std::endl;
+	        h_energy_MC->Fill(ene_true * 1e-6);
+	      }
 	
 #ifdef _DEBUG_
 	debug::out <<"\ni: " <<i <<" j: " <<j <<" m: " <<m;
@@ -367,15 +384,17 @@ int main(int argc, char **argv) {
 	
 	//analyze valid measures
 
-	if (m==1) {
-	  if(ene_meas > 0) {
-	    h_energy_meas->Fill(ene_meas * 1e-6);
-	    h_energy_res->Fill(1e-3 * (ene_meas - ene_true));
-	  }
-	  else {
-	    ++energy_lost;
-	  }
-	}
+	      if (m==1) {
+	        if(ene_meas > 0) {
+            //std::cout << i << " RIGA 388 " << j << " " << m << std::endl;
+	          h_energy_meas->Fill(ene_meas * 1e-6);
+	          h_energy_res->Fill(1e-3 * (ene_meas - ene_true));
+	        }
+	        else {
+          //std::cout << i << " RIGA 393 " << j << " " << m << std::endl;
+	        ++energy_lost;
+	        }
+	      }
 	
 	// In the next "if" is used for energy a threshold
 	// proportional to CHARGE_NOISE_DEV_ variable defined in
@@ -385,135 +404,149 @@ int main(int argc, char **argv) {
 	// Would be better that Digitization saves TimeSim parameters
 	// to read them in analysis.
 	
-	if(meas.time[m] >= 0 && meas.energy[m] > SIGNAL_THRESHOLD) {//the cut is on the single energy measurement since the zero suppression is applied on this
-	  h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
-	  h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
+	      if(meas.time[m] >= 0 && meas.energy[m] > SIGNAL_THRESHOLD) {//the cut is on the single energy measurement since the zero suppression is applied on this
+          //std::cout << i << " RIGA 407 " << j << " " << m << std::endl; 
+	        h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
+	        h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
 	  
-	  v_times_meas.push_back(meas.time[m]);
-	}
+	        v_times_meas.push_back(meas.time[m]);
+	      }
 	
       } //for m
       
       //read only valid position measures without lost ones
       
-      if (TMath::Abs(meas.position) < 1)
+      if (TMath::Abs(meas.position) < 1) {
 	// this "if" is a temporary fix for Digitization bug:
 	// Digitization.cpp,  line 424
+        //td::cout << i << " RIGA 421 " << j << std::endl;
         h_pos_res->Fill(1e+2 * (meas.position - cl->pos[cl->xy]));
-      else
+      }
+      else {
         ++position_lost;
+      }
       
     } //for j
 
     //fill slow hit
+    std::cout << i << " slower (RIGA CRASH N.1) " << std::endl;
+    mytime_t slower = TMath::MaxElement(v_times.size(), &v_times[0]); //<------------------ QUI CRASHA
+    std::cout << i << " slower_meas (RIGA CRASH N.2) " << std::endl;
+    mytime_t slower_meas = TMath::MaxElement(v_times_meas.size(), &v_times_meas[0]); //<--- QUI CRASHA
 
-    mytime_t slower = TMath::MaxElement(v_times.size(), &v_times[0]);
-    mytime_t slower_meas = TMath::MaxElement(v_times_meas.size(), &v_times_meas[0]);
-    
+    //std::cout << i << " RIGA 436 " << std::endl;
     h_time_MC_slow->Fill(TMath::Log10(1e+9 * slower));
     h_time_meas15_slow->Fill(TMath::Log10(1e+9 * slower_meas));
     
     // Find tStart and tMean
     
-    float tStart = v[0][0].time;
+    std::cout << i << " tstart (RIGA CRASH N.3) " << std::endl;
+    float tStart = v[0][0].time; // <------------------------------------------------------- QUI CRASHA
+    // ----------> Mettendo su slower, slower_meas e tStart una costante non crasha più <-------------------
+
+
     float tMean = 0;
     int _n = 0;
     for (auto il : v) {
       for (auto hit : il) {
-	if (tStart>hit.time) tStart = hit.time;
-	if (hit.parID != 0) continue;
-	tMean += hit.time;
-	_n++;
+	      if (tStart>hit.time) tStart = hit.time;
+	      if (hit.parID != 0) continue;
+	    tMean += hit.time;
+	    _n++;
       }
     }
     tMean /= _n;
         
     //Particle identification
-    
+    //std::cout << i << " RIGA 457 " << std::endl;
     for (int il = 0; il<(int)(v.size()); il++) { //layer
       for (int hit = 0; hit<(int)(v[il].size()); hit++) { //hit	
-	if (v[il][hit].clust[0]>SIGNAL_THRESHOLD || v[il][hit].clust[1]>SIGNAL_THRESHOLD) {
+	      if (v[il][hit].clust[0]>SIGNAL_THRESHOLD || v[il][hit].clust[1]>SIGNAL_THRESHOLD) {
 	  
-	  if (v[il][hit].parID == 0) {
-	    primaries->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart )));
-	  }
-	  else {
-	    if (
-		v[il][hit].parPdg == 2212 //proton
-		)
+	      if (v[il][hit].parID == 0) {
+	        primaries->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart )));
+	      }
+	      else {
+	      if (
+		      v[il][hit].parPdg == 2212 //proton
+		    )
 	      protons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart )));
 	    
-	    if (
-		v[il][hit].parPdg == -2212 //antiproton
-		)
+	      if (
+		      v[il][hit].parPdg == -2212 //antiproton
+	    	)
 	      antip->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
 	    
-	    if (
-		v[il][hit].parPdg == 2112 //neeutron
-		)
+	      if (
+		      v[il][hit].parPdg == 2112 //neeutron
+		    )
 	      neutrons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
 	    
-	    if (
-		v[il][hit].parPdg == 11 //electron
-		)
+	      if (
+		      v[il][hit].parPdg == 11 //electron
+		    )
 	      electrons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
 	    
-	    if (
-		v[il][hit].parPdg == -11 //positron
-		)
+	      if (
+		      v[il][hit].parPdg == -11 //positron
+		    )
 	      positrons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
 	    
-	    if (
-		v[il][hit].parPdg == 211 //pi+
-		||
-		v[il][hit].parPdg == -211 //pi-
-		)
+	      if (
+		      v[il][hit].parPdg == 211 //pi+
+		      ||
+		      v[il][hit].parPdg == -211 //pi-
+		    ) 
 	      pions->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
 	    
-	    if (
-		v[il][hit].parPdg == 130 //K0L
-		||
-		v[il][hit].parPdg == 310 //K0S
-		||
-		v[il][hit].parPdg == 311 //K0
-		||
-		v[il][hit].parPdg == 321 //K+ 
-		||
-		v[il][hit].parPdg == -321 //K-
-		)
+	      if (
+		      v[il][hit].parPdg == 130 //K0L
+		      ||
+		      v[il][hit].parPdg == 310 //K0S
+		      ||
+		      v[il][hit].parPdg == 311 //K0
+		      ||
+		      v[il][hit].parPdg == 321 //K+ 
+		      ||
+		      v[il][hit].parPdg == -321 //K-
+		    )
 	      kaons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
 	    
-	    if (
-		v[il][hit].parPdg == 13 //mu-
-		||
-		v[il][hit].parPdg == -13 //mu+
-		)
+	      if (
+		      v[il][hit].parPdg == 13 //mu-
+		      ||
+		      v[il][hit].parPdg == -13 //mu+
+		    )
 	      muons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
 	    
-	    if (
-		v[il][hit].parPdg == 22 //gamma
-		)
+	      if (
+		      v[il][hit].parPdg == 22 //gamma
+		    )
 	      gamma->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
 	    
-	    if (
-		v[il][hit].parPdg > 1000000000 //isotopes
-		)
+	      if (
+		    v[il][hit].parPdg > 1000000000 //isotopes
+		    )
 	      isotopes->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
 	  }
 	  
 	  //time
+    //std::cout << i << " RIGA 530 " << std::endl;
 	  double deltat = v[il][hit].time - tStart;
 	  double smeared_deltat = tr->Gaus(deltat, TIME_RESOLUTION);
 	  double deltat_mean = v[il][hit].time - tMean;
 	  
+    //std::cout << i << " RIGA 535 " << std::endl;
 	  deltat_wrt_start->Fill(1e+9 * deltat);
 	  deltat_wrt_start_longscale->Fill(1e+9 * deltat);
 	  deltat_wrt_start_log->Fill(log10(1.0 + 1e+9 * deltat));
 	  
+    //std::cout << i << " RIGA 540 " << std::endl;
 	  deltat_smeared_wrt_start->Fill(1e+9 * smeared_deltat);
 	  deltat_smeared_wrt_start_longscale->Fill(1e+9 * smeared_deltat);
 	  deltat_smeared_wrt_start_log->Fill(log10(1.0 + 1e+9 * smeared_deltat));
 
+    //std::cout << i << " RIGA 545 " << std::endl;
 	  if (v[il][hit].parID == 0) {
 	    pri_deltat_wrt_mean->Fill(1e+9 * deltat_mean);
 	    pri_deltat_wrt_start->Fill(1e+9 * deltat);
@@ -526,7 +559,11 @@ int main(int argc, char **argv) {
 	    nopri_deltat_smeared_wrt_start_log->Fill(log10(1.0 + 1e+9 * smeared_deltat));
 	  }
 	  
-	  if (v[9].size()>5) {//MD: v[9] is the last layer. Maybe the point is "iff the activity is low"
+    //std::cout << i << " RIGA 558 " << std::endl;
+
+    //v[9] è stato cambiato in v[39], in quanto v[39] è l'ultimo layer,
+    // sicuramente il >5 andrà cambiato di conseguenza 
+	  if (v[39].size()>5) {//MD: v[9] is the last layer. Maybe the point is "iff the activity is low"
 	    nomip_deltat_smeared_wrt_start->Fill(1e+9 * smeared_deltat);
 	    nomip_deltat_smeared_wrt_start_longscale->Fill(1e+9 * smeared_deltat);
 	    nomip_deltat_smeared_wrt_start_log->Fill(log10(1.0 + 1e+9 * smeared_deltat));
@@ -536,6 +573,7 @@ int main(int argc, char **argv) {
       }
     }
 
+    //std::cout << i << " RIGA 569 " << std::endl;
     double deltat_slower = slower - tStart;
     double smeared_deltat_slower = tr->Gaus(deltat_slower, TIME_RESOLUTION);
 
@@ -546,9 +584,10 @@ int main(int argc, char **argv) {
     slower_deltat_smeared_wrt_start->Fill(1e+9 * smeared_deltat_slower);
     slower_deltat_smeared_wrt_start_longscale->Fill(1e+9 * smeared_deltat_slower);
     slower_deltat_smeared_wrt_start_log->Fill(log10(1.0 + 1e+9 * smeared_deltat_slower));
-    
+
   } //for i
-  
+  //-------------------------------------------------------------------------------------
+
   COUT(INFO) <<ENDL;
   
   COUT(INFO) << "Lost energies:  " <<energy_lost << " on " << iMeas << ENDL;
