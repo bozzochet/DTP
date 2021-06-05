@@ -15,7 +15,7 @@ SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # which point to directories outside the build tree to the install RPATH
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-find_package(GGS 2.6.0 REQUIRED)
+find_package(GGS 2.7.0 REQUIRED)
 set(CMAKE_CXX_FLAGS "${GGS_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
 # Remove /usr/include from list of include folders.
 # This folder is added by Geant4 through GGS, and it causes this error:
