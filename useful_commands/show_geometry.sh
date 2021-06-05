@@ -5,7 +5,7 @@ GGSWolowitz -g lib/libTestGeometry.so -gd macros/geo.mac -t vgm -o lib/TestGeome
 #GGSLeonard -g lib/TestGeometry.gdml
 GGSLeonard -g lib/TestGeometry.vgm.root
 
-rm -fv lib/TestGeometry_nocalo.vgm.root
-GGSWolowitz -g lib/libTestGeometry_nocalo.so -gd macros/geo.mac -t vgm -o lib/TestGeometry_nocalo.vgm.root
-#GGSLeonard -g lib/TestGeometry_nocalo.gdml
-GGSLeonard -g lib/TestGeometry_nocalo.vgm.root
+#rm -fv lib/TestGeometry_nocalo.vgm.root
+#GGSWolowitz -g lib/libTestGeometry_nocalo.so -gd macros/geo.mac -t vgm -o lib/TestGeometry_nocalo.vgm.root
+##GGSLeonard -g lib/TestGeometry_nocalo.gdml
+#GGSLeonard -g lib/TestGeometry_nocalo.vgm.root
