@@ -57,19 +57,16 @@ private:
 
   //GEOMETRIC DEFAULT VALUES
 
-// VARIABILI DTP
+// DTP VARIABLES
   G4double CaloSide = 60 ;
   G4int Nrows = 1 ;
   G4int Nsquares = 1 ;
   G4double PlaneGap = 2 ; // Non so se questa ha bisogno di un altro valore
 
-//////////////////////////////////////////////////////////////////////
-  G4int Nstrips = 576 ;  //Queste due si possono mettere anche su comuni ma per ora le lasciamo qui
-  G4double pitch = 0.015625 * cm ; //156.25 um
-//////////////////////////////////////////////////////////////////////
+
   
   
-  // VARIABILI SLA
+  // SLA VARIABLES
   G4int NCaloPlanes = 1 ;
   G4double PlanesDistance = 3.0 * cm ;
   G4double CubeX = 3.0 * cm ;
@@ -80,11 +77,13 @@ private:
   G4int NScintillators = 4 ;
   G4double LayerGapScintillator = 0.0 * cm ;
 
-  // VARIABILI COMUNI
+  // COMMON VARIABLES BETWEEN SLA AND DTP
   G4int Nlayers = 40 ;
   G4double thickness = 0.015 * cm ;
   G4double LayerGap = 0.1512820513 * cm ;
   G4double CaloStkGap = 10.0 * cm ;
+  G4int Nstrips = 576 ;
+  G4double pitch = 0.015625 * cm ; //156.25 um
 
 };
 
