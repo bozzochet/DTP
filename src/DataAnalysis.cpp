@@ -272,7 +272,7 @@ int main(int argc, char **argv) {
     
 
     for (int j = 0; j < a->GetEntries(); j++) {
-      std::cout<<"Entry # "<< j <<std::endl;
+      //std::cout<<"Entry # "<< j <<std::endl;
       TrCluster *cl = (TrCluster *)a->At(j);
 
       v[cl->layer].push_back(*cl);
@@ -401,17 +401,14 @@ int main(int argc, char **argv) {
       for (int hit = 0; hit<(int)(v[il].size()); hit++) { //hit
 	      if (v[il][hit].clust[0]>SIGNAL_THRESHOLD || v[il][hit].clust[1]>SIGNAL_THRESHOLD) {
           if (v[il][hit].parPdg == 22) {
-            std::cout << "layer hit fotoni: "   << v[il][hit].layer << std::endl;
             photon_conversion -> Fill(v[il][hit].layer);
           }
           if (v[il][hit].parPdg == 11) {
-            std::cout << "layer hit elettroni:  " << v[il][hit].layer << std::endl;
             electron_hit -> Fill(v[il][hit].layer);
             energy_distribution_electrons -> Fill(v[il][hit].layer, v[il][hit].eDep);
           }
           if (v[il][hit].parPdg == -11) {
-            std::cout << "layer hit positroni:  " << v[il][hit].layer << std::endl;
-            positron_hit -> Fill(v[il][hit].layer + 1);
+            positron_hit -> Fill(v[il][hit].layer);
             energy_distribution_positrons -> Fill(v[il][hit].layer, v[il][hit].eDep);
           }
 
@@ -546,6 +543,7 @@ int main(int argc, char **argv) {
   //COUT(INFO) << "Lost positions: " <<position_lost << " on " << iMeas << ENDL;
 
   COUT(INFO) <<"Writing output..." <<ENDL;
+
 
   
   outFile->Write();
