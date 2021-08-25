@@ -238,7 +238,7 @@ int fillEvTree
     for (int iHit = 0; iHit < nHits; iHit++) {
       inthit = (GGSTIntHit *)hReader->GetHit("siSensor", iHit);
       int nPHit = inthit->GetNPartHits();
-      int llayer = inthit->GetVolumeID() / (geo->Nsquares * geo->Nsquares);
+      int llayer = inthit->GetVolumeID() / (geo->Nsquares * geo->Nsquares); //FIX ME, CHECK IF CORRECT (WE SHOULD SEE 8 LAYERS INSTEAD OF 10)
       //cout<<"layer : "<<llayer<<endl;
       //cout<<"square : "<<inthit->GetVolumeID()<<endl;
       
