@@ -21,6 +21,8 @@ public:
 	int strip;
 	int ladder;
 	double clust[2]; //eV
+	int trID;
+	float primIntPoint[3]={-99999, -99999, -99999};
 
 	void Dump() const {
 	std::cout << "xy = " << xy << std::endl;
