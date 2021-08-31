@@ -65,6 +65,7 @@
 #include "TString.h"
 #include "TBranch.h"
 #include "TMath.h"
+#include "THStack.h"
 
 #include "utils/GGSSmartLog.h"
 #include "montecarlo/readers/GGSTRootReader.h"
@@ -171,13 +172,16 @@ int main(int argc, char **argv) {
   // 4) Quante hit fanno elettrone e positrone (Praticamente identico al numero di hit del plot precedente)
   // 5) Istogramma delle energia depositata separata tra elettrone e positrone
 
-  TH1D *photon_conversion = new TH1D ("photon_conversion", "Photon conversion", 40, 0, 40);
+  TH1D *primaries = new TH1D ("primaries", "Primaries ", 40, 0, 40);
+  TH1D *photon_primaries = new TH1D ("photon_primaries", "Photon primaries", 40, 0, 40);
+  TH1D *photon_parID = new TH1D ("photon_parID", "Photon parentID", 40, 0, 40);
   TH1D *electron_positron_generation = new TH1D ("electron_positron_generation", "Photon that generated electrons and positrons", 40, 0, 40);
   TH1D *energy_distribution = new TH1D ("energy_distribution", "Energy distribution", 40, 0, 40);
   TH1D *electron_hit = new TH1D("electron_hit", "Electron hit", 40, 0, 40);
   TH1D *positron_hit = new TH1D("positron_hit", "Positron hit", 40, 0, 40);
   TH1D *energy_distribution_electrons = new TH1D("energy_distribution_electrons", "Energy distributions of electrons", 40, 0, 40);
   TH1D *energy_distribution_positrons = new TH1D("energy_distribution_positrons", "Energy distributions of positrons", 40, 0, 40);
+
   
   //MC
 
@@ -231,9 +235,10 @@ int main(int argc, char **argv) {
   int energy_lost = 0;//energy measured < 0
   int position_lost = 0;//|position measured| < 1 (to be re-thought)
 
+
   //-------------------------------------------------------------------------------------------------------
   for (int i = 0; i < events_tree->GetEntries(); i++) {
-    std::cout << "ITERATION #: " << i << std::endl;
+    //std::cout << "ITERATION #: " << i << std::endl;
     
     vector2<TrCluster> v;
     //v.resize(geo.Nlayers);
@@ -252,15 +257,16 @@ int main(int argc, char **argv) {
     }
     
     
-    
-      if (a->GetEntries()>40) { // Che qui ci voglia 40?
-      printf("\nEvent %d: %d hits\n", i, a->GetEntries());
-      for (int j = 0; j < a->GetEntries(); j++) {
-      TrCluster *cl = (TrCluster *)a->At(j);
-      printf("%d) %d %f\n", j, cl->parID, cl->eDep);
+    /*
+      if (a->GetEntries()>10) { // Che qui ci voglia 40?
+        printf("\nEvent %d: %d hits\n", i, a->GetEntries());
+        for (int j = 0; j < a->GetEntries(); j++) {
+          TrCluster *cl = (TrCluster *)a->At(j);
+          printf("%d) %d %f\n", j, cl->parID, cl->eDep);
+        }
       }
-      }
-    
+
+    */
 
     //measured times for primary/event i;
     //the slowest is used afterwards to fill h_time_meas15_slow
@@ -297,22 +303,18 @@ int main(int argc, char **argv) {
       for (int m=0; m<2; ++m) { //the clusters are two since there're the two strips around the hit position
 	//most likely for the timing this is even correct (at leat when there's no "grouping")
 	//but for the energy this is WRONG
-        //std::cout << i << " RIGA 352 " << j << " " << m << std::endl;
 	      static double ene_true = 0;
 	      static double ene_meas = 0;
 	      if (m==0) {
-          //std::cout << i << " RIGA 356 " << j << " " << m << std::endl;
 	        ene_true = cl->clust[m];
 	        ene_meas = meas.energy[m];
 	      }
 	      else {
-          //std::cout << i << " RIGA 361 " << j << " " << m << std::endl;
 	        ene_true += cl->clust[m];
 	        ene_meas += meas.energy[m];
     	  }
 
 	      if (m==1) {
-          //std::cout << i << " RIGA 367 " << j << " " << m << std::endl;
 	        //h_energy_MC->Fill(ene_true * 1e-6);
 	      }
 	
@@ -323,12 +325,10 @@ int main(int argc, char **argv) {
 
 	      if (m==1) {
 	        if(ene_meas > 0) {
-            //std::cout << i << " RIGA 388 " << j << " " << m << std::endl;
 	          //h_energy_meas->Fill(ene_meas * 1e-6);
 	          //h_energy_res->Fill(1e-3 * (ene_meas - ene_true));
 	        }
 	        else {
-          //std::cout << i << " RIGA 393 " << j << " " << m << std::endl;
 	        ++energy_lost;
 	        }
 	      }
@@ -344,7 +344,6 @@ int main(int argc, char **argv) {
 	
 
 	      if(meas.time[m] >= 0 && meas.energy[m] > SIGNAL_THRESHOLD) {//the cut is on the single energy measurement since the zero suppression is applied on this
-          //std::cout << i << " RIGA 407 " << j << " " << m << std::endl; 
 	        //h_time_meas15->Fill(TMath::Log10(1e+9 * meas.time[m]));
 	        //h_time_res15->Fill(1e+9 * (meas.time[m] - cl->time));
 	  
@@ -360,7 +359,6 @@ int main(int argc, char **argv) {
       if (TMath::Abs(meas.position) < 1) {
 	// this "if" is a temporary fix for Digitization bug:
 	// Digitization.cpp,  line 424
-        //td::cout << i << " RIGA 421 " << j << std::endl;
         //h_pos_res->Fill(1e+2 * (meas.position - cl->pos[cl->xy]));
       }
       else {
@@ -370,9 +368,7 @@ int main(int argc, char **argv) {
     } //for j
 
     //fill slow hit
-    //std::cout << i << " slower (RIGA CRASH N.1) " << std::endl;
     //mytime_t slower = TMath::MaxElement(v_times.size(), &v_times[0]);
-    //std::cout << i << " slower_meas (RIGA CRASH N.2) " << std::endl;
     //mytime_t slower_meas = TMath::MaxElement(v_times_meas.size(), &v_times_meas[0]); 
 
     //h_time_MC_slow->Fill(TMath::Log10(1e+9 * slower));
@@ -400,9 +396,20 @@ int main(int argc, char **argv) {
     for (int il = 0; il<(int)(v.size()); il++) { //layer, la dimensione del vector va bene
       for (int hit = 0; hit<(int)(v[il].size()); hit++) { //hit
 	      if (v[il][hit].clust[0]>SIGNAL_THRESHOLD || v[il][hit].clust[1]>SIGNAL_THRESHOLD) {
-          if (v[il][hit].parPdg == 22) {
-            photon_conversion -> Fill(v[il][hit].layer);
+          energy_distribution -> Fill(v[il][hit].layer, v[il][hit].eDep);
+          primaries -> Fill(v[il][hit].primIntPoint[2]);
+          if (v[il][hit].parPdg == 22 && v[il][hit].primIntPoint[2] != -99999) {
+            photon_primaries -> Fill(v[il][hit].primIntPoint[2]);
+            photon_parID -> Fill(v[il][hit].layer);
+            std::cout << std::endl;
+            std::cout << "X: " << v[il][hit].pos[0] << "  Y: " << v[il][hit].pos[1] << "  Z: " << v[il][hit].pos[2] <<
+            "  time: "  << v[il][hit].time << "  eDep: " << v[il][hit].eDep << "  layer: " << v[il][hit].layer <<
+             "  parID: " << v[il][hit].parID << "  ID: " << v[il][hit].ID << "  strip: " << v[il][hit].strip <<
+            " ladder: " << v[il][hit].ladder << "  clust[0]: " << v[il][hit].clust[0] << "  clust[1]: " << v[il][hit].clust[1] <<
+            std::endl;
+            std::cout << std::endl;
           }
+
           if (v[il][hit].parPdg == 11) {
             electron_hit -> Fill(v[il][hit].layer);
             energy_distribution_electrons -> Fill(v[il][hit].layer, v[il][hit].eDep);
@@ -412,129 +419,10 @@ int main(int argc, char **argv) {
             energy_distribution_positrons -> Fill(v[il][hit].layer, v[il][hit].eDep);
           }
 
-        /*
-	      if (v[il][hit].parID == 0) {
-	        primaries->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart )));
 	      }
-	      else {
-	      if (
-		      v[il][hit].parPdg == 2212 //proton
-		    )
-	      protons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart )));
-	    
-	      if (
-		      v[il][hit].parPdg == -2212 //antiproton
-	    	)
-	      antip->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
-	    
-	      if (
-		      v[il][hit].parPdg == 2112 //neeutron
-		    )
-	      neutrons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
-	    
-	      if (
-		      v[il][hit].parPdg == 11 //electron
-		    )
-	      electrons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
-	    
-	      if (
-		      v[il][hit].parPdg == -11 //positron
-		    )
-	      positrons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
-	    
-	      if (
-		      v[il][hit].parPdg == 211 //pi+
-		      ||
-		      v[il][hit].parPdg == -211 //pi-
-		    ) 
-	      pions->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
-	    
-	      if (
-		      v[il][hit].parPdg == 130 //K0L
-		      ||
-		      v[il][hit].parPdg == 310 //K0S
-		      ||
-		      v[il][hit].parPdg == 311 //K0
-		      ||
-		      v[il][hit].parPdg == 321 //K+ 
-		      ||
-		      v[il][hit].parPdg == -321 //K-
-		    )
-	      kaons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
-	    
-	      if (
-		      v[il][hit].parPdg == 13 //mu-
-		      ||
-		      v[il][hit].parPdg == -13 //mu+
-		    )
-	      muons->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
-	    
-	      if (
-		      v[il][hit].parPdg == 22 //gamma
-		    )
-	      gamma->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
-	    
-	      if (
-		    v[il][hit].parPdg > 1000000000 //isotopes
-		    )
-	      isotopes->Fill(log10(1.0 + 1e+9 * (v[il][hit].time - tStart)));
-	  }
-	  
-	  //time
-    //std::cout << i << " RIGA 530 " << std::endl;
-	  double deltat = v[il][hit].time - tStart;
-	  double smeared_deltat = tr->Gaus(deltat, TIME_RESOLUTION);
-	  double deltat_mean = v[il][hit].time - tMean;
-	  
-    //std::cout << i << " RIGA 535 " << std::endl;
-	  deltat_wrt_start->Fill(1e+9 * deltat);
-	  deltat_wrt_start_longscale->Fill(1e+9 * deltat);
-	  deltat_wrt_start_log->Fill(log10(1.0 + 1e+9 * deltat));
-	  
-    //std::cout << i << " RIGA 540 " << std::endl;
-	  deltat_smeared_wrt_start->Fill(1e+9 * smeared_deltat);
-	  deltat_smeared_wrt_start_longscale->Fill(1e+9 * smeared_deltat);
-	  deltat_smeared_wrt_start_log->Fill(log10(1.0 + 1e+9 * smeared_deltat));
-
-    //std::cout << i << " RIGA 545 " << std::endl;
-	  if (v[il][hit].parID == 0) {
-	    pri_deltat_wrt_mean->Fill(1e+9 * deltat_mean);
-	    pri_deltat_wrt_start->Fill(1e+9 * deltat);
-	    pri_deltat_wrt_start_longscale->Fill(1e+9 * deltat);
-	    pri_deltat_wrt_start_log->Fill(log10(1.0 + 1e+9 * deltat));
-	  }
-	  else {
-	    nopri_deltat_smeared_wrt_start->Fill(1e+9 * smeared_deltat);
-	    nopri_deltat_smeared_wrt_start_longscale->Fill(1e+9 * smeared_deltat);
-	    nopri_deltat_smeared_wrt_start_log->Fill(log10(1.0 + 1e+9 * smeared_deltat));
-	  }
-	  
-    //std::cout << i << " RIGA 558 " << std::endl;
-
-    //v[9] è stato cambiato in v[39], in quanto v[39] è l'ultimo layer,
-    // sicuramente il >5 andrà cambiato di conseguenza 
-	  if (v[39].size()>5) {//MD: v[9] is the last layer. Maybe the point is "iff the activity is low"
-	    nomip_deltat_smeared_wrt_start->Fill(1e+9 * smeared_deltat);
-	    nomip_deltat_smeared_wrt_start_longscale->Fill(1e+9 * smeared_deltat);
-	    nomip_deltat_smeared_wrt_start_log->Fill(log10(1.0 + 1e+9 * smeared_deltat));
-	  }
-    */
-	}
       }
     }
-
-    //double deltat_slower = slower - tStart;
-    //double smeared_deltat_slower = tr->Gaus(deltat_slower, TIME_RESOLUTION);
-
-    //slower_deltat_wrt_start->Fill(1e+9 * deltat_slower);
-    //slower_deltat_wrt_start_longscale->Fill(1e+9 * deltat_slower);
-    //slower_deltat_wrt_start_log->Fill(log10(1.0 + 1e+9 * deltat_slower));
-    
-    //slower_deltat_smeared_wrt_start->Fill(1e+9 * smeared_deltat_slower);
-    //slower_deltat_smeared_wrt_start_longscale->Fill(1e+9 * smeared_deltat_slower);
-    //slower_deltat_smeared_wrt_start_log->Fill(log10(1.0 + 1e+9 * smeared_deltat_slower));
-
-  } //for i
+  } 
   //-------------------------------------------------------------------------------------
 
   COUT(INFO) <<ENDL;
@@ -545,8 +433,11 @@ int main(int argc, char **argv) {
   COUT(INFO) <<"Writing output..." <<ENDL;
 
 
+
+
   
   outFile->Write();
+
 
   outFile->Close();
 

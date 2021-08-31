@@ -17,6 +17,7 @@
 #include "montecarlo/readers/GGSTHitsReader.h"
 #include "montecarlo/readers/GGSTMCTruthReader.h"
 #include "montecarlo/readers/GGSTRootReader.h"
+#include "montecarlo/readers/GGSTPrimaryDisReader.h"
 #include "utils/GGSSmartLog.h"
 
 #include <iostream>
@@ -225,6 +226,8 @@ int fillEvTree
   // Create and retrieve the hadronic interaction sub-reader
   GGSTHadrIntReader *hadrReader = reader.GetReader<GGSTHadrIntReader>();
 
+  // Create and retrieve info about primaries
+  GGSTPrimaryDisReader *pdr = reader.GetReader<GGSTPrimaryDisReader>();// ----------------------------------------------
 
   COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
 
@@ -238,6 +241,10 @@ int fillEvTree
     reader.GetEntry(iEv); // Reads all the data objects whose sub-readers have already been created
     GGSTPartHit *phit;
     GGSTIntHit *inthit;
+
+    GGSTPrimaryDisInfo *pdi = pdr->GetDisInfo(); //-----------------------------------------------------------
+
+
     int nHits = hReader->GetNHits("siSensor"); // Number of hit siLayers for current event
     a.Clear();
 
@@ -258,6 +265,7 @@ int fillEvTree
 
     // Hits loop
     int ncluster = 0;
+    
     
     for (int iHit = 0; iHit < nHits; iHit++) {
       inthit = (GGSTIntHit *)hReader->GetHit("siSensor", iHit);
@@ -298,7 +306,11 @@ int fillEvTree
 	
         c->clust[0] = c->eDep * (1-fraction);
         c->clust[1] = c->eDep * (fraction);
-	
+
+        c->primIntPoint[2] = pdi -> GetInteractionPoint()[2]; //---------------------------------------------------
+        //std::cout << c->primIntPoint[2] << " PUNTO DI INTERAZIONE SULLA Z <---------------------- " << std::endl;
+
+
 	
         //errors
 	
@@ -344,6 +356,13 @@ int fillEvTree
 
   return 0;
 }
+
+
+
+
+
+
+
 
 
 int fillCaloTree(GGSTRootReader &reader, TTree *calo_tree, TDirectory* outFile)
