@@ -10,12 +10,13 @@
 ##### Setup the particle generator #####
 /GGS/generatorActions/set gun				# Use the GGS gun generator
 #/gun/List
+/GGS/generatorActions/gun/particle gamma
 #/GGS/generatorActions/gun/particle d_quark		# Shoot
 #/GGS/generatorActions/gun/particle u_quark		# Shoot
 #/GGS/generatorActions/gun/particle proton		# Shoot protons
 #/GGS/generatorActions/gun/particle e-			# Shoot electron
 #/GGS/generatorActions/gun/particle ion			# Shoot ?...
-/GGS/generatorActions/gun/particle mu-			# Shoot muon
+#/GGS/generatorActions/gun/particle mu-			# Shoot muon
 #/gun/ion 8 16						# Shoot ?...
 /GGS/generatorActions/gun/energy 100 GeV		# ... of 100 GeV ...
 /GGS/generatorActions/gun/minTheta 0 deg		# ... with a polar angle between 0 ...
@@ -30,6 +31,7 @@
 #/GGS/scoring/addGGSIntHitSD calorimeter
 
 ##### Setup the output on ROOT file #####
+/GGS/userActions/addGGSPrimaryDisAction
 /GGS/userActions/addGGSHitsAction			# Save hits
 /GGS/userActions/addGGSMCTruthAction			# Save MC truth
 /GGS/userActions/addGGSHadrIntAction			# Save information about 1st hadronic interaction...
@@ -39,4 +41,4 @@
 /GGS/userActions/addGGSSaveTGeoAction
 
 ##### Events to produce
-/run/beamOn 5000
+/run/beamOn 100
