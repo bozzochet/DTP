@@ -172,9 +172,7 @@ int main(int argc, char **argv) {
   // 4) Quante hit fanno elettrone e positrone (Praticamente identico al numero di hit del plot precedente)
   // 5) Istogramma delle energia depositata separata tra elettrone e positrone
 
-  TH1D *primaries = new TH1D ("primaries", "Primaries ", 40, 0, 40);
   TH1D *photon_primaries = new TH1D ("photon_primaries", "Photon primaries", 40, 0, 40);
-  TH1D *photon_parID = new TH1D ("photon_parID", "Photon parentID", 40, 0, 40);
   TH1D *electron_positron_generation = new TH1D ("electron_positron_generation", "Photon that generated electrons and positrons", 40, 0, 40);
   TH1D *energy_distribution = new TH1D ("energy_distribution", "Energy distribution", 40, 0, 40);
   TH1D *electron_hit = new TH1D("electron_hit", "Electron hit", 40, 0, 40);
@@ -397,17 +395,8 @@ int main(int argc, char **argv) {
       for (int hit = 0; hit<(int)(v[il].size()); hit++) { //hit
 	      if (v[il][hit].clust[0]>SIGNAL_THRESHOLD || v[il][hit].clust[1]>SIGNAL_THRESHOLD) {
           energy_distribution -> Fill(v[il][hit].layer, v[il][hit].eDep);
-          primaries -> Fill(v[il][hit].primIntPoint[2]);
-          if (v[il][hit].parPdg == 22 && v[il][hit].primIntPoint[2] != -99999) {
-            photon_primaries -> Fill(v[il][hit].primIntPoint[2]);
-            photon_parID -> Fill(v[il][hit].layer);
-            std::cout << std::endl;
-            std::cout << "X: " << v[il][hit].pos[0] << "  Y: " << v[il][hit].pos[1] << "  Z: " << v[il][hit].pos[2] <<
-            "  time: "  << v[il][hit].time << "  eDep: " << v[il][hit].eDep << "  layer: " << v[il][hit].layer <<
-             "  parID: " << v[il][hit].parID << "  ID: " << v[il][hit].ID << "  strip: " << v[il][hit].strip <<
-            " ladder: " << v[il][hit].ladder << "  clust[0]: " << v[il][hit].clust[0] << "  clust[1]: " << v[il][hit].clust[1] <<
-            std::endl;
-            std::cout << std::endl;
+          if (v[il][hit].parPdg == 22 && v[il][hit].firstInteraction == 1 && v[il][hit].primIntPoint[2] != -99999) {
+            photon_primaries -> Fill(v[il][hit].layer);
           }
 
           if (v[il][hit].parPdg == 11) {
