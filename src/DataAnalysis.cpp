@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
   // 4) Quante hit fanno elettrone e positrone (Praticamente identico al numero di hit del plot precedente)
   // 5) Istogramma delle energia depositata separata tra elettrone e positrone
 
-  TH1D *photon_primaries = new TH1D ("photon_primaries", "Photon primaries", 40, 0, 40);
+  TH1F *primaries = new TH1F ("primaries", "Primaries", 40, -500, 500);
   TH1D *electron_positron_generation = new TH1D ("electron_positron_generation", "Photon that generated electrons and positrons", 40, 0, 40);
   TH1D *energy_distribution = new TH1D ("energy_distribution", "Energy distribution", 40, 0, 40);
   TH1D *electron_hit = new TH1D("electron_hit", "Electron hit", 40, 0, 40);
@@ -391,12 +391,12 @@ int main(int argc, char **argv) {
 
         
   //Particle identification
-    for (int il = 0; il<(int)(v.size()); il++) { //layer, la dimensione del vector va bene
+    for (int il = 0; il<(int)(v.size()); il++) { //layer
       for (int hit = 0; hit<(int)(v[il].size()); hit++) { //hit
 	      if (v[il][hit].clust[0]>SIGNAL_THRESHOLD || v[il][hit].clust[1]>SIGNAL_THRESHOLD) {
           energy_distribution -> Fill(v[il][hit].layer, v[il][hit].eDep);
-          if (v[il][hit].parPdg == 22 && v[il][hit].firstInteraction == 1 && v[il][hit].primIntPoint[2] != -99999) {
-            photon_primaries -> Fill(v[il][hit].layer);
+          if (v[il][hit].parPdg == 22 && v[il][hit].firstInteraction == 1) {
+            primaries -> Fill(v[il][hit].primIntPoint[2]);
           }
 
           if (v[il][hit].parPdg == 11) {

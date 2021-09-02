@@ -262,39 +262,33 @@ int fillEvTree
     */
    int ncluster = 0;
    
-    std::cout << pdi->GetNProducts() << " Particelle prodotte <------------------------ " << std::endl;
-    std::cout << std::endl;
-    if (pdi->GetNProducts() > 0) {
-      cout << "\n  interaction happened at z = " << pdi->GetInteractionPoint()[2] << endl;
-    }
+    //GGSTParticle *ppar = pdi->primary; 
       
     TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
-    inthit = (GGSTIntHit *)hReader->GetHit("siSensor", iEv);
-    phit = (GGSTPartHit *)inthit->GetPartHit(iEv);
 
-    c->xy = -99999;
-    c->pos[0] = -99999; // x coordinate
-    c->pos[1] = -99999; // y coordinate
-    c->pos[2] = -99999; // z coordinate
-    c->time = -99999;
-    c->eDep = -99999;
+    c->xy = 0;
+    c->pos[0] = 0; // x coordinate
+    c->pos[1] = 0; // y coordinate
+    c->pos[2] = 0; // z coordinate
+    c->time = 0;
+    c->eDep = 0;
     //c->spRes = 0.00007;
-    c->layer = inthit->GetVolumeID() / (geo->Nsquares * geo->Nsquares);
-    c->parID = phit->parentID;
-    c->parPdg = phit->particlePdg;
-    c->ID = inthit->GetVolumeID();
+    c->layer = 0;
+    c->parID = 0;
+    c->parPdg = pdi->primary.PDGCode;
+    c->ID = 0;
 	
     //Find the nearest strip to the left
-    c->strip = -99999;
+    c->strip = 0;
 
-    c->clust[0] = -99999;
-    c->clust[1] = -99999;
+    c->clust[0] = 0;
+    c->clust[1] = 0;
 	
     // Find the ladder it belongs
-    c->ladder = -99999;
-    c->primIntPoint[0] = pdi -> GetInteractionPoint()[0]; 
-    c->primIntPoint[1] = pdi -> GetInteractionPoint()[1]; 
-    c->primIntPoint[2] = pdi -> GetInteractionPoint()[2]; 
+    c->ladder = 0;
+    c->primIntPoint[0] = pdi->GetInteractionPoint()[0];
+    c->primIntPoint[1] = pdi->GetInteractionPoint()[1];
+    c->primIntPoint[2] = pdi->GetInteractionPoint()[2];
     c->firstInteraction = 1; 
 	
     //Deposit energy and create cluster
@@ -304,15 +298,15 @@ int fillEvTree
     
     
     for (int iHit = 0; iHit < nHits; iHit++) {
-      //inthit = (GGSTIntHit *)hReader->GetHit("siSensor", iHit);
+      inthit = (GGSTIntHit *)hReader->GetHit("siSensor", iHit);
       int nPHit = inthit->GetNPartHits();
       int llayer = inthit->GetVolumeID() / (geo->Nsquares * geo->Nsquares); 
       //cout<<"layer : "<<llayer<<endl;
       //cout<<"square : "<<inthit->GetVolumeID()<<endl;
       
       for (int i = 0; i < nPHit; i++) {
-        //TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
-        //phit = (GGSTPartHit *)inthit->GetPartHit(i);
+        TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
+        phit = (GGSTPartHit *)inthit->GetPartHit(i);
         //cout<<"Entry #"<<iHit+i+1<<endl;
 	
 	
