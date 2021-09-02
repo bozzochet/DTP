@@ -262,7 +262,6 @@ int fillEvTree
     */
    int ncluster = 0;
    
-   /*
     std::cout << pdi->GetNProducts() << " Particelle prodotte <------------------------ " << std::endl;
     std::cout << std::endl;
     if (pdi->GetNProducts() > 0) {
@@ -287,11 +286,17 @@ int fillEvTree
 	
     //Find the nearest strip to the left
     c->strip = -99999;
+
+    c->clust[0] = -99999;
+    c->clust[1] = -99999;
 	
     // Find the ladder it belongs
     c->ladder = -99999;
+    c->primIntPoint[0] = pdi -> GetInteractionPoint()[0]; 
+    c->primIntPoint[1] = pdi -> GetInteractionPoint()[1]; 
+    c->primIntPoint[2] = pdi -> GetInteractionPoint()[2]; 
+    c->firstInteraction = 1; 
 	
-    */
     //Deposit energy and create cluster
     
     // Hits loop
@@ -299,81 +304,50 @@ int fillEvTree
     
     
     for (int iHit = 0; iHit < nHits; iHit++) {
-      inthit = (GGSTIntHit *)hReader->GetHit("siSensor", iHit);
+      //inthit = (GGSTIntHit *)hReader->GetHit("siSensor", iHit);
       int nPHit = inthit->GetNPartHits();
       int llayer = inthit->GetVolumeID() / (geo->Nsquares * geo->Nsquares); 
       //cout<<"layer : "<<llayer<<endl;
       //cout<<"square : "<<inthit->GetVolumeID()<<endl;
       
       for (int i = 0; i < nPHit; i++) {
-        TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
-        phit = (GGSTPartHit *)inthit->GetPartHit(i);
+        //TrCluster *c = (TrCluster *)a.ConstructedAt(ncluster++);
+        //phit = (GGSTPartHit *)inthit->GetPartHit(i);
         //cout<<"Entry #"<<iHit+i+1<<endl;
 	
 	
         //fill with MC truth
-        if ( iHit == 0 && i == 0 ) { //primaries
-          c->xy = llayer % 2 == 0;
-          c->pos[0] = 1e-2 * 0.5 * (phit->entrancePoint[0] + phit->exitPoint[0]); // x coordinate
-          c->pos[1] = 1e-2 * 0.5 * (phit->entrancePoint[1] + phit->exitPoint[1]); // y coordinate
-          c->pos[2] = 1e-2 * 0.5 * (phit->entrancePoint[2] + phit->exitPoint[2]); // z coordinate
-          c->time = 1e-9 * phit->time;
-          c->eDep = 1e+9 * phit->eDep;
-          //c->spRes = 0.00007;
-          c->layer = llayer;
-          c->parID = phit->parentID;
-          c->parPdg = phit->particlePdg;
-          c->ID = inthit->GetVolumeID();
 	
-          //Find the nearest strip to the left
-          c->strip = findStrip(c->pos[c->xy], geo->Nsquares, geo->Nstrips, 1e-2*geo->pitch);
+        c->xy = llayer % 2 == 0;
+        c->pos[0] = 1e-2 * 0.5 * (phit->entrancePoint[0] + phit->exitPoint[0]); // x coordinate
+        c->pos[1] = 1e-2 * 0.5 * (phit->entrancePoint[1] + phit->exitPoint[1]); // y coordinate
+        c->pos[2] = 1e-2 * 0.5 * (phit->entrancePoint[2] + phit->exitPoint[2]); // z coordinate
+        c->time = 1e-9 * phit->time;
+        c->eDep = 1e+9 * phit->eDep;
+        //c->spRes = 0.00007;
+        c->layer = llayer;
+        c->parID = phit->parentID;
+        c->parPdg = phit->particlePdg;
+        c->ID = inthit->GetVolumeID();
 	
-          // Find the ladder it belongs
-          c->ladder = findLadder(c -> layer);
+        //Find the nearest strip to the left
+        c->strip = findStrip(c->pos[c->xy], geo->Nsquares, geo->Nstrips, 1e-2*geo->pitch);
 	
-          //Deposit energy and create cluster
-          double thisPos = ((c->ladder%geo->Nsquares)*geo->squareSide) + (c->strip*(1e-2*geo->pitch)) - (geo->Nsquares*geo->squareSide*0.5);
-          double fraction = (c->pos[c->xy]-thisPos)/(1e-2*geo->pitch);
+        // Find the ladder it belongs
+        c->ladder = findLadder(c -> layer);
 	
-          c->clust[0] = c->eDep * (1-fraction);
-          c->clust[1] = c->eDep * (fraction);
+        //Deposit energy and create cluster
+        double thisPos = ((c->ladder%geo->Nsquares)*geo->squareSide) + (c->strip*(1e-2*geo->pitch)) - (geo->Nsquares*geo->squareSide*0.5);
+        double fraction = (c->pos[c->xy]-thisPos)/(1e-2*geo->pitch);
+	
+        c->clust[0] = c->eDep * (1-fraction);
+        c->clust[1] = c->eDep * (fraction);
 
-          c->primIntPoint[0] = pdi -> GetInteractionPoint()[0]; //---------------------------------------------------
-          c->primIntPoint[1] = pdi -> GetInteractionPoint()[1]; //---------------------------------------------------
-          c->primIntPoint[2] = pdi -> GetInteractionPoint()[2]; //---------------------------------------------------
-          c->firstInteraction = 1; //--------------------------------------------------------------------------------
+        c->primIntPoint[0] = pdi -> GetInteractionPoint()[0]; //---------------------------------------------------
+        c->primIntPoint[1] = pdi -> GetInteractionPoint()[1]; //---------------------------------------------------
+        c->primIntPoint[2] = pdi -> GetInteractionPoint()[2]; //---------------------------------------------------
+        c->firstInteraction = 0; //--------------------------------------------------------------------------------
 
-        } else {
-          c->xy = llayer % 2 == 0;
-          c->pos[0] = 1e-2 * 0.5 * (phit->entrancePoint[0] + phit->exitPoint[0]); // x coordinate
-          c->pos[1] = 1e-2 * 0.5 * (phit->entrancePoint[1] + phit->exitPoint[1]); // y coordinate
-          c->pos[2] = 1e-2 * 0.5 * (phit->entrancePoint[2] + phit->exitPoint[2]); // z coordinate
-          c->time = 1e-9 * phit->time;
-          c->eDep = 1e+9 * phit->eDep;
-          //c->spRes = 0.00007;
-          c->layer = llayer;
-          c->parID = phit->parentID;
-          c->parPdg = phit->particlePdg;
-          c->ID = inthit->GetVolumeID();
-	
-          //Find the nearest strip to the left
-          c->strip = findStrip(c->pos[c->xy], geo->Nsquares, geo->Nstrips, 1e-2*geo->pitch);
-	
-          // Find the ladder it belongs
-          c->ladder = findLadder(c -> layer);
-	
-          //Deposit energy and create cluster
-          double thisPos = ((c->ladder%geo->Nsquares)*geo->squareSide) + (c->strip*(1e-2*geo->pitch)) - (geo->Nsquares*geo->squareSide*0.5);
-          double fraction = (c->pos[c->xy]-thisPos)/(1e-2*geo->pitch);
-	
-          c->clust[0] = c->eDep * (1-fraction);
-          c->clust[1] = c->eDep * (fraction);
-
-          c->primIntPoint[0] = -99999; //---------------------------------------------------
-          c->primIntPoint[1] = -99999; //---------------------------------------------------
-          c->primIntPoint[2] = -99999; //---------------------------------------------------
-          c->firstInteraction = 0; //--------------------------------------------------------------------------------
-        }
 
 
 	
