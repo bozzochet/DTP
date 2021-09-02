@@ -343,10 +343,10 @@ int fillEvTree
         c->clust[0] = c->eDep * (1-fraction);
         c->clust[1] = c->eDep * (fraction);
 
-        c->primIntPoint[0] = pdi -> GetInteractionPoint()[0]; //---------------------------------------------------
-        c->primIntPoint[1] = pdi -> GetInteractionPoint()[1]; //---------------------------------------------------
-        c->primIntPoint[2] = pdi -> GetInteractionPoint()[2]; //---------------------------------------------------
-        c->firstInteraction = 0; //--------------------------------------------------------------------------------
+        c->primIntPoint[0] = -99999; 
+        c->primIntPoint[1] = -99999;
+        c->primIntPoint[2] = -99999; 
+        c->firstInteraction = 0;
 
 
 
