@@ -21,8 +21,12 @@ public:
 	int strip;
 	int ladder;
 	double clust[2]; //eV
-	int trID;
-	float primIntPoint[3]={-99999, -99999, -99999};
+
+
+	float primIntPoint[3];
+	int firstInteraction; //not primary particle == 0, primary particle == 1
+
+
 
 	void Dump() const {
 	std::cout << "xy = " << xy << std::endl;
