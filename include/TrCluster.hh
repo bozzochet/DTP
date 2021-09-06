@@ -1,4 +1,3 @@
-
 #ifndef TR_CLUSTER_INCLUDE
 #define TR_CLUSTER_INCLUDE
 
@@ -25,6 +24,8 @@ public:
 
 	float primIntPoint[3];
 	int firstInteraction; //not primary particle == 0, primary particle == 1
+	
+	int isDead; //short
 
 
 
