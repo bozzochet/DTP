@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
   // 4) Quante hit fanno elettrone e positrone (Praticamente identico al numero di hit del plot precedente)
   // 5) Istogramma delle energia depositata separata tra elettrone e positrone
 
-  TH1F *primaries = new TH1F ("primaries", "Primaries", 40, -500, 500);
+  TH1F *primaries = new TH1F ("primaries", "Primaries", 40, 0, 40);
   TH1D *electron_positron_generation = new TH1D ("electron_positron_generation", "Photon that generated electrons and positrons", 40, 0, 40);
   TH1D *energy_distribution = new TH1D ("energy_distribution", "Energy distribution", 40, 0, 40);
   TH1D *electron_hit = new TH1D("electron_hit", "Electron hit", 40, 0, 40);
@@ -233,7 +233,6 @@ int main(int argc, char **argv) {
   int energy_lost = 0;//energy measured < 0
   int position_lost = 0;//|position measured| < 1 (to be re-thought)
 
-
   //-------------------------------------------------------------------------------------------------------
   for (int i = 0; i < events_tree->GetEntries(); i++) {
     //std::cout << "ITERATION #: " << i << std::endl;
@@ -278,6 +277,27 @@ int main(int argc, char **argv) {
     for (int j = 0; j < a->GetEntries(); j++) {
       //std::cout<<"Entry # "<< j <<std::endl;
       TrCluster *cl = (TrCluster *)a->At(j);
+      if(cl->firstInteraction == 1 && cl -> parPdg && cl->primIntPoint[2] > 0) {
+        primaries -> Fill(cl->primIntPoint[2]);
+        
+      }
+
+      if(cl->primIntPoint[2] != -99999) {
+        std::cout << " Posizione interazione: " << cl->primIntPoint[2] << "  Dead: " << cl->isDead << std::endl;
+      }
+
+      /*
+      if(cl->firstInteraction == 1 && cl->parPdg == 22 && cl->primIntPoint[2] > 0) {         
+        double distance = 0;
+        for (int q = 0; q < 40; q++) { // q  < geo.Nlayers
+          if(distance < cl->primIntPoint[2] && cl->primIntPoint[2] < distance + 0.015) { //< distance + geo.thickness 
+            
+            break;
+          }
+          distance += 0.015 + 0.1512820513;
+        }
+      }
+      */
 
       v[cl->layer].push_back(*cl);
 
@@ -395,15 +415,12 @@ int main(int argc, char **argv) {
       for (int hit = 0; hit<(int)(v[il].size()); hit++) { //hit
 	      if (v[il][hit].clust[0]>SIGNAL_THRESHOLD || v[il][hit].clust[1]>SIGNAL_THRESHOLD) {
           energy_distribution -> Fill(v[il][hit].layer, v[il][hit].eDep);
-          if (v[il][hit].parPdg == 22 && v[il][hit].firstInteraction == 1) {
-            primaries -> Fill(v[il][hit].primIntPoint[2]);
-          }
-
-          if (v[il][hit].parPdg == 11) {
+          if (v[il][hit].parPdg == 11 && v[il][hit].parID == 1) {
             electron_hit -> Fill(v[il][hit].layer);
             energy_distribution_electrons -> Fill(v[il][hit].layer, v[il][hit].eDep);
+            std::cout << "ELETTRONE ->  " << "  Layer: " << v[il][hit].layer << "  Time: " << v[il][hit].time << std::endl;
           }
-          if (v[il][hit].parPdg == -11) {
+          if (v[il][hit].parPdg == -11 && v[il][hit].parID == 1) {
             positron_hit -> Fill(v[il][hit].layer);
             energy_distribution_positrons -> Fill(v[il][hit].layer, v[il][hit].eDep);
           }

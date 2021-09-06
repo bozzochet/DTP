@@ -225,12 +225,11 @@ int fillEvTree
   GGSTHadrIntReader *hadrReader = reader.GetReader<GGSTHadrIntReader>();
 
   // Create and retrieve info about primaries
-  GGSTPrimaryDisReader *pdr = reader.GetReader<GGSTPrimaryDisReader>();// ----------------------------------------------
+  GGSTPrimaryDisReader *pdr = reader.GetReader<GGSTPrimaryDisReader>();
 
   COUT(INFO) << "Begin loop over " << reader.GetEntries() << " events" << ENDL;
 
   std::clock_t start = std::clock();
-
   for (int iEv = 0; iEv < reader.GetEntries(); iEv++) {
 
     //print and update progress bar
@@ -240,7 +239,7 @@ int fillEvTree
     GGSTPartHit *phit;
     GGSTIntHit *inthit;
 
-    GGSTPrimaryDisInfo *pdi = pdr->GetDisInfo(); //-----------------------------------------------------------
+    GGSTPrimaryDisInfo *pdi = pdr->GetDisInfo();
 
 
     int nHits = hReader->GetNHits("siSensor"); // Number of hit siLayers for current event
@@ -270,7 +269,7 @@ int fillEvTree
     c->pos[0] = 0; // x coordinate
     c->pos[1] = 0; // y coordinate
     c->pos[2] = 0; // z coordinate
-    c->time = 0;
+    c->time = pdi->primary.time;
     c->eDep = 0;
     //c->spRes = 0.00007;
     c->layer = 0;
@@ -289,8 +288,9 @@ int fillEvTree
     c->primIntPoint[0] = pdi->GetInteractionPoint()[0];
     c->primIntPoint[1] = pdi->GetInteractionPoint()[1];
     c->primIntPoint[2] = pdi->GetInteractionPoint()[2];
-    c->firstInteraction = 1; 
-	
+    c->firstInteraction = 1;
+    c->isDead = pdi->primary.isTrackKilled;
+
     //Deposit energy and create cluster
     
     // Hits loop
@@ -322,7 +322,7 @@ int fillEvTree
         c->layer = llayer;
         c->parID = phit->parentID;
         c->parPdg = phit->particlePdg;
-        c->ID = inthit->GetVolumeID();
+        c->ID = phit->trackID;
 	
         //Find the nearest strip to the left
         c->strip = findStrip(c->pos[c->xy], geo->Nsquares, geo->Nstrips, 1e-2*geo->pitch);
@@ -342,6 +342,7 @@ int fillEvTree
         c->primIntPoint[2] = -99999; 
         c->firstInteraction = 0;
 
+        c->isDead = pdi->primary.isTrackKilled;
 
 
 	
