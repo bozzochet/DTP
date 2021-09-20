@@ -24,8 +24,8 @@ public:
 
 	float primIntPoint[3];
 	int firstInteraction; //not primary particle == 0, primary particle == 1
+	int numberOfProducts;
 	
-	int isDead; //short
 
 
 
