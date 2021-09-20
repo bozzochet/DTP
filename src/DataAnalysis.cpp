@@ -1,42 +1,3 @@
-// Ispirazione da POX, da un punto di vista tecnico tocca consultare però DTP
-// Tocca pescare le informazioni dalla digitizzazione, la digitizzazione potrebbe non avere tutte le informazioni necessarie
-// per la DataAnalysis
-// Cosa produrre:
-//
-// - Vedere quanti fotoni hanno convertito nei silici, specificando il layer, e nel calorimetro, specificando il cubetto
-//
-// - Contare, dopo la conversione del fotone, quante volte elettrone e positrone hanno hit nei piani di silicio successivo
-//
-// - Contare quante volte gli elettroni e i positroni vanno a finire nel calorimetro, e in quale cubo, e quante volte escono
-//
-// - Contare quanti degli elettroni e positroni che vanno a finire nel calorimetro lo attraversano senza rilasciare energia (?)
-//
-// - Quanta energia viene rilasciata nel calorimetro da positrone ed elettrone?
-//
-// - Distinzione del fondo -> Protone che simula le caratteristiche del fotone
-//
-// - Quante volte l'evento converte nella posizione giusta (che poi definiremo)
-// in qualche modo questa rappresenta l'accettanza del rivelatore (calcoli sul taccuino)
-// PLOT FINALE: quanti fotoni potrebbe vedere SLA se sta in orbita un certo periodo di tempo guardando Crab Nebula a diverse energie
-//
-// - (se ci si riesce) Valutazione di elettrone e positrone come singolo oggetto: quando escono troppo vicini non siamo
-// in grado di distinguere le particelle -> Quante volte sono talmente vicini da non riuscire a distinguerli?
-//
-// 
-//
-// Informazioni ricostruite non servono (ie: posizione ricostruita con la digitizzazione)
-//
-// vedere POX, fa le stesse cose
-
-// 1) Plot di: Numero di conversioni, fotoni che convertono e in quale silicio che stanno in una certa z
-// Istogramma con sulle x il numero di piani e sui bin il numero delle conversioni
-// 2) Plot di: Quante hit nei silici hanno generato elettrone e positrone e quante fanno più di 10keV
-// 3) Per elettrone e positrone distribuzione dell'energia di deposito
-// 4) Quante hit fanno elettrone e positrone (Praticamente identico al numero di hit del plot precedente)
-// 5) Istogramma delle energia depositata separata tra elettrone e positrone
-
-
-
 //#define _DEBUG_
 
 
@@ -56,6 +17,7 @@
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
+#include "TH2F.h"
 #include "TGraph.h"
 #include "TRandom3.h"
 #include "TStyle.h"
@@ -65,7 +27,6 @@
 #include "TString.h"
 #include "TBranch.h"
 #include "TMath.h"
-#include "THStack.h"
 
 #include "utils/GGSSmartLog.h"
 #include "montecarlo/readers/GGSTRootReader.h"
@@ -75,7 +36,7 @@
 
 using namespace std;
 
-#define SIGNAL_THRESHOLD 0 //8.0*300.0*ENERGY_COUPLE
+#define SIGNAL_THRESHOLD 10000 //eV 
 #define TIME_RESOLUTION 1.0E-9*0.1
 
 int main(int argc, char **argv) {
@@ -163,22 +124,35 @@ int main(int argc, char **argv) {
     Ecalo_min *= 1e+9;
     Ecalo_max *= 1e+9;
   }
-  
-  //histos
-  // 1) Plot di: Numero di conversioni, fotoni che convertono e in quale silicio che stanno in una certa z
-  // Istogramma con sulle x il numero di piani e sui bin il numero delle conversioni
-  // 2) Plot di: Quante hit nei silici hanno generato elettrone e positrone e quante fanno più di 10keV
-  // 3) Per elettrone e positrone distribuzione dell'energia di deposito
-  // 4) Quante hit fanno elettrone e positrone (Praticamente identico al numero di hit del plot precedente)
-  // 5) Istogramma delle energia depositata separata tra elettrone e positrone
 
-  TH1F *primaries = new TH1F ("primaries", "Primaries", 40, 0, 40);
-  TH1D *electron_positron_generation = new TH1D ("electron_positron_generation", "Photon that generated electrons and positrons", 40, 0, 40);
-  TH1D *energy_distribution = new TH1D ("energy_distribution", "Energy distribution", 40, 0, 40);
-  TH1D *electron_hit = new TH1D("electron_hit", "Electron hit", 40, 0, 40);
-  TH1D *positron_hit = new TH1D("positron_hit", "Positron hit", 40, 0, 40);
-  TH1D *energy_distribution_electrons = new TH1D("energy_distribution_electrons", "Energy distributions of electrons", 40, 0, 40);
-  TH1D *energy_distribution_positrons = new TH1D("energy_distribution_positrons", "Energy distributions of positrons", 40, 0, 40);
+  TH1F *primaries = new TH1F ("primaries", "", 40, 0, 6.5);
+  primaries->GetXaxis()->SetTitle("Z (cm)");
+  primaries->GetYaxis()->SetTitle("Number of hits");
+   
+  TH1D *electron_hit = new TH1D("electron_hit", "", 40, 0, 40);
+  electron_hit->GetXaxis()->SetTitle("Layer");
+  electron_hit->GetYaxis()->SetTitle("Number of hits");
+
+  TH1D *positron_hit = new TH1D("positron_hit", "", 40, 0, 40);
+  electron_hit->GetXaxis()->SetTitle("Layer");;
+  electron_hit->GetYaxis()->SetTitle("Number of hits");
+
+
+  TH2F *energy_distribution = new TH2F ("energy_distribution", "", 40, 0, 40, 10000, 0, 1000000);
+  energy_distribution->GetXaxis()->SetTitle("Layer");
+  energy_distribution->GetYaxis()->SetTitle("Energy (eV)");
+
+  TH2F *energy_distribution_electrons = new TH2F ("energy_distribution_electrons", "", 40, 0, 40, 10000, 0, 1000000);
+  energy_distribution_electrons->GetXaxis()->SetTitle("Layer");
+  energy_distribution_electrons->GetYaxis()->SetTitle("Energy (eV)");
+
+
+  TH2F *energy_distribution_positrons = new TH2F ("energy_distribution_positrons", "", 40, 0, 40, 10000, 0, 1000000);
+  energy_distribution_positrons->GetXaxis()->SetTitle("Layer");
+  energy_distribution_positrons->GetYaxis()->SetTitle("Energy (eV)");
+
+  TH1I *n_products = new TH1I("n_products", "number of products", 50, 0, 50);
+
 
   
   //MC
@@ -233,14 +207,12 @@ int main(int argc, char **argv) {
   int energy_lost = 0;//energy measured < 0
   int position_lost = 0;//|position measured| < 1 (to be re-thought)
 
-  //-------------------------------------------------------------------------------------------------------
   for (int i = 0; i < events_tree->GetEntries(); i++) {
     //std::cout << "ITERATION #: " << i << std::endl;
     
     vector2<TrCluster> v;
     //v.resize(geo.Nlayers);
     v.resize(40);//there's a bug and the values of geo are not retrieved correctly
-    //QUI IL VALORE ERA 10, MA TOCCA METTERCI I LAYER DISPONIBILI CHE SU SLA SONO 40
 
     events_tree->GetEntry(i);
   
@@ -254,6 +226,8 @@ int main(int argc, char **argv) {
     }
     
     
+
+
     /*
       if (a->GetEntries()>10) { // Che qui ci voglia 40?
         printf("\nEvent %d: %d hits\n", i, a->GetEntries());
@@ -271,19 +245,21 @@ int main(int argc, char **argv) {
 
     std::vector<mytime_t> v_times;
     std::vector<mytime_t> v_times_meas;
-
+  
     
 
     for (int j = 0; j < a->GetEntries(); j++) {
       //std::cout<<"Entry # "<< j <<std::endl;
       TrCluster *cl = (TrCluster *)a->At(j);
-      if(cl->firstInteraction == 1 && cl -> parPdg && cl->primIntPoint[2] > 0) {
+      if(cl->firstInteraction == 1 && cl -> parPdg == 22 && cl->primIntPoint[2] > 0 && cl->primIntPoint[2]<6.5) { // Primaries
         primaries -> Fill(cl->primIntPoint[2]);
-        
       }
 
-      if(cl->primIntPoint[2] != -99999) {
-        std::cout << " Posizione interazione: " << cl->primIntPoint[2] << "  Dead: " << cl->isDead << std::endl;
+      if(cl->firstInteraction == 1 && cl -> parPdg == 22) {
+        if(cl->numberOfProducts > 2) {
+          n_products->Fill(cl->numberOfProducts);
+          std::cout << cl-> numberOfProducts << " ";
+        }
       }
 
       /*
@@ -409,18 +385,17 @@ int main(int argc, char **argv) {
     }
     tMean /= _n;
 
-        
   //Particle identification
     for (int il = 0; il<(int)(v.size()); il++) { //layer
+      //std::cout << il << std::endl;
       for (int hit = 0; hit<(int)(v[il].size()); hit++) { //hit
-	      if (v[il][hit].clust[0]>SIGNAL_THRESHOLD || v[il][hit].clust[1]>SIGNAL_THRESHOLD) {
+	      if (v[il][hit].eDep > SIGNAL_THRESHOLD) {
           energy_distribution -> Fill(v[il][hit].layer, v[il][hit].eDep);
-          if (v[il][hit].parPdg == 11 && v[il][hit].parID == 1) {
+          if (v[il][hit].parPdg == 11 && v[il][hit].parID == 1) { // Electrons
             electron_hit -> Fill(v[il][hit].layer);
             energy_distribution_electrons -> Fill(v[il][hit].layer, v[il][hit].eDep);
-            std::cout << "ELETTRONE ->  " << "  Layer: " << v[il][hit].layer << "  Time: " << v[il][hit].time << std::endl;
           }
-          if (v[il][hit].parPdg == -11 && v[il][hit].parID == 1) {
+          if (v[il][hit].parPdg == -11 && v[il][hit].parID == 1) { // Positrons
             positron_hit -> Fill(v[il][hit].layer);
             energy_distribution_positrons -> Fill(v[il][hit].layer, v[il][hit].eDep);
           }
@@ -429,12 +404,8 @@ int main(int argc, char **argv) {
       }
     }
   } 
-  //-------------------------------------------------------------------------------------
 
   COUT(INFO) <<ENDL;
-  
-  //COUT(INFO) << "Lost energies:  " <<energy_lost << " on " << iMeas << ENDL;
-  //COUT(INFO) << "Lost positions: " <<position_lost << " on " << iMeas << ENDL;
 
   COUT(INFO) <<"Writing output..." <<ENDL;
 

@@ -132,6 +132,12 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
   LYSO -> AddElement(elSi, 6.37 * perCent);
   LYSO -> AddElement(elO, 18.15 * perCent);
 
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! VERY IMPORTANT INFO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! GEOMETRY IS ROTATED COMPARED TO DTP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! VERY IMPORTANT INFO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
   G4double world_diameter = 1000. * cm;
   G4Sphere *solidWorld =
@@ -191,6 +197,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
   G4Box *layerscintillator = new G4Box("layerscintillator", LayerSide/2.0, LayerSide/2.0, ScintillatorThickness/2.0);
   G4LogicalVolume *layerscintillatorLogic = new G4LogicalVolume(layerscintillator, scintillator_mat, "layerscintillator");
 
+
   //LAYER SCINTILLATORE DAVANTI AI LAYER
   new G4PVPlacement(0,                            // no rotation
                     G4ThreeVector(0,0, ScintillatorThickness/2.0),
@@ -215,7 +222,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
                     "siSensor",                  // its name
                     logicWorld,                   // its mother  volume
                     false,                        // no boolean operation
-                    0,                            // copy number
+                    i,                            // copy number
                     fCheckOverlaps);              // checking overlaps
 
     if (i != N-1) { // Questa istruzione fa sì che una volta piazzato l'ultimo layer poi Distance non venga più modificata
@@ -243,6 +250,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
 
   // In questo caso il posizionamento dei cubetti di LYSO è gestito da più for in maniera tale da differenziare 
   // righe pari o dispari (se pari vanno spostate di CaloCubeSideY/2.0)
+  int cube = 1;
   for (int k = 0; k < planes; k++) {
     if(CaloCubeRows % 2 != 0 ) { // Dispari
       for (int i = round(-CaloCubeColumns/2); i <= round(CaloCubeColumns/2); i++) {
@@ -253,8 +261,9 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
                         "calorimeter",                        // its name
                         logicWorld,                        // its mother  volume
                         false,                             // no boolean operation
-                        0,                                 // copy number
+                        cube,                                 // copy number
                         fCheckOverlaps);
+            cube++;
           }
         }
 
@@ -269,8 +278,9 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
                         "calorimeter",                        // its name
                         logicWorld,                        // its mother  volume
                         false,                             // no boolean operation
-                        0,                                 // copy number
+                        cube,                                 // copy number
                         fCheckOverlaps);
+            cube++;
         }
       }
      }

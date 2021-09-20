@@ -289,7 +289,7 @@ int fillEvTree
     c->primIntPoint[1] = pdi->GetInteractionPoint()[1];
     c->primIntPoint[2] = pdi->GetInteractionPoint()[2];
     c->firstInteraction = 1;
-    c->isDead = pdi->primary.isTrackKilled;
+    c->numberOfProducts = pdi->GetNProducts();
 
     //Deposit energy and create cluster
     
@@ -341,8 +341,8 @@ int fillEvTree
         c->primIntPoint[1] = -99999;
         c->primIntPoint[2] = -99999; 
         c->firstInteraction = 0;
+        c->numberOfProducts = -99999;
 
-        c->isDead = pdi->primary.isTrackKilled;
 
 
 	
