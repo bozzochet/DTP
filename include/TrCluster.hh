@@ -1,4 +1,3 @@
-
 #ifndef TR_CLUSTER_INCLUDE
 #define TR_CLUSTER_INCLUDE
 
@@ -21,6 +20,14 @@ public:
 	int strip;
 	int ladder;
 	double clust[2]; //eV
+
+
+	float primIntPoint[3];
+	int firstInteraction; //not primary particle == 0, primary particle == 1
+	int numberOfProducts;
+	
+
+
 
 	void Dump() const {
 	std::cout << "xy = " << xy << std::endl;
