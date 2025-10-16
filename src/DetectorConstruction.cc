@@ -61,6 +61,7 @@ DetectorConstruction::DetectorConstruction()
   messenger_->DeclarePropertyWithUnit("pitch", "cm", pitch, "DTP");
 
 
+  messenger_->DeclarePropertyWithUnit("LayerSide", "cm", LayerSide, "Overall layer side in cm");
   messenger_->DeclareProperty("Nlayers", Nlayers, "layers number");
   messenger_->DeclarePropertyWithUnit("thickness", "cm", thickness, "thickness of layers in cm");
   messenger_->DeclarePropertyWithUnit("LayerGap", "cm", LayerGap, "LayerGap between layers in cm");
@@ -147,7 +148,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
                                                     default_mat, // its material
                                                     "World");    // its name
 
-  logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
+  logicWorld->SetVisAttributes(G4VisAttributes::GetInvisible());
 
   fPhysicalWorld = new G4PVPlacement(0,                      // no rotation
                                      G4ThreeVector(0, 0, 0), // at (0,0,0)
@@ -160,7 +161,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
 
 
   //PARAMETRI LGAD
-  G4double LayerSide = 9.0 * cm;
+  //  G4double LayerSide = 9.0 * cm;
   G4double N = Nlayers;
   G4double LGADthickness = thickness;
   G4double inter = LayerGap;
@@ -183,12 +184,13 @@ G4VPhysicalVolume *DetectorConstruction::Construct() {
   
   //PARAMETRI SCINTILLATORE
   G4int NumberOfScintillatorsBars = NScintillators;
-  G4double ScintillatorLayerGap = 0.1 * cm;
-  G4double ScintillatorWidth = 9.6 * cm / NumberOfScintillatorsBars; //width of scintillator
+  G4double ScintillatorLayerGap = 0.1 * cm; // laterally between Stk and Scintillators?
+  G4double ScintillatorGap = 0.1 * cm; //gap between bars of scintillators
+  G4double ScintillatorGapZ = LayerGapScintillator; //on Z
   G4double ScintillatorThickness = 0.5 * cm; //thickness of scintillator  
-  G4double ScintillatorGap = 0.1 * cm; //gap between sheets of scintillators
-  G4double ScintillatorGapZ = LayerGapScintillator;
-
+  G4double ScintillatorWidth = (LayerSide + 1*(ScintillatorThickness + ScintillatorLayerGap) - 1*(NumberOfScintillatorsBars-1)*ScintillatorGap) / NumberOfScintillatorsBars; //width of scintillator
+  printf("%f %f %d %f %d\n", ScintillatorWidth, LayerSide, NumberOfScintillatorsBars, ScintillatorGap, NumberOfScintillatorsBars); 
+  
 
   //DISTANZA PERCORSA NEL CORSO DELLA SIMULAZIONE
   G4double Distance = 0.0 * cm;
@@ -387,6 +389,7 @@ bool DetectorConstruction::ExportParameters() {
   result = result && ExportIntParameter("Nstrips", Nstrips);
   result = result && ExportRealParameter("pitch", pitch / cm);
 
+  result = result && ExportIntParameter("LayerSide", LayerSide /cm);
   result = result && ExportIntParameter("Nlayers", Nlayers);
   result = result && ExportRealParameter("thickness", thickness / cm);
   result = result && ExportRealParameter("LayerGap", LayerGap / cm);

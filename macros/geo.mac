@@ -8,15 +8,16 @@
 /Detector/Nstrips               576           #DTP
 /Detector/pitch               0.015625        #DTP
 
+/Detector/LayerSide            7.7            #Overall layer side in cm
 /Detector/Nlayers                40           #number of layers
 /Detector/thickness            0.015          #thickness of layers in cm
 /Detector/LayerGap          0.1512820513      #distance between layers in cm
-/Detector/CaloStkGap             10           #distance between layers and calorimeter in cm
+/Detector/CaloStkGap             8           #distance between layers and calorimeter in cm
 /Detector/NCaloPlanes            1            #number of planes of calorimeter
 /Detector/PlanesDistance         0            #distance between planes of calorimeter in cm
-/Detector/CubeX                  3            #width of LYSO cube in cm
-/Detector/CubeY                  3            #height of LYSO cube in cm
-/Detector/CubeZ                  3            #depth of LYSO cube in cm
+/Detector/CubeX                2.4            #width of LYSO cube in cm
+/Detector/CubeY                2.4            #height of LYSO cube in cm
+/Detector/CubeZ                2.4            #depth of LYSO cube in cm
 /Detector/RowsOfCubes            3            #number of lines of cubes
 /Detector/ColumnsOfCubes         3            #number of column of cubes
 /Detector/NScintillators         4            #number of bars of scintillators for each side

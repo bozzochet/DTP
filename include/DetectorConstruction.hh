@@ -57,14 +57,11 @@ private:
 
   //GEOMETRIC DEFAULT VALUES
 
-// DTP VARIABLES
+  // DTP VARIABLES
   G4double CaloSide = 60 ;
   G4int Nrows = 1 ;
   G4int Nsquares = 1 ;
   G4double PlaneGap = 2 ; // Non so se questa ha bisogno di un altro valore
-
-
-  
   
   // SLA VARIABLES
   G4int NCaloPlanes = 1 ;
@@ -78,6 +75,7 @@ private:
   G4double LayerGapScintillator = 0.0 * cm ;
 
   // COMMON VARIABLES BETWEEN SLA AND DTP
+  G4double LayerSide = 5 * cm ;
   G4int Nlayers = 40 ;
   G4double thickness = 0.015 * cm ;
   G4double LayerGap = 0.1512820513 * cm ;
